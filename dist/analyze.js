@@ -44,6 +44,100 @@ function tupleElems(expr) {
     }
     return [e];
 }
+/** Trailing [n] indexes this whole expression, and n is not 0. */
+function suffixAnchorsAll(e) {
+    if (!e.endsWith(']'))
+        return false;
+    let i = e.length - 1;
+    let d = 0;
+    for (; i >= 0; i--) {
+        if (e[i] === ']')
+            d++;
+        else if (e[i] === '[') {
+            d--;
+            if (d === 0)
+                break;
+        }
+    }
+    if (i <= 0)
+        return false;
+    let depth = 0;
+    for (let k = 0; k < i; k++) {
+        const c = e[k];
+        if (c === '(' || c === '[')
+            depth++;
+        else if (c === ')' || c === ']')
+            depth--;
+        else if (depth === 0 && '+-*/%?:<>=!'.includes(c))
+            return false;
+    }
+    const inside = e.slice(i + 1, e.length - 1).trim();
+    if (inside === '0')
+        return false;
+    if (e.startsWith('[') && (0, lexer_1.matchBracket)(e, 0) === e.length - 1)
+        return false;
+    return true;
+}
+/** Depth-0 arithmetic / ternary cuts. Unary minus is not a cut. */
+function depth0Ops(e) {
+    const cuts = [];
+    let d = 0;
+    for (let i = 0; i < e.length; i++) {
+        const c = e[i];
+        if (c === '(' || c === '[')
+            d++;
+        else if (c === ')' || c === ']')
+            d--;
+        else if (d === 0) {
+            const unaryMinus = c === '-' && (i === 0 || '+-*/%?:<>=!(['.includes(e[i - 1]));
+            if (!unaryMinus && '+-*/%?:<>=!'.includes(c))
+                cuts.push(i);
+        }
+    }
+    return cuts;
+}
+/**
+ * Value is taken from a bar before the current one: a trailing `[n]` with n ≠ 0,
+ * or an arithmetic / ternary combination of such values and constants.
+ * `close[1] ? 1 : 0` and `ta.sma(close, 14)[1] / close[1]` do not read the current bar.
+ */
+function historicallyAnchored(expr, depth = 0) {
+    if (depth > 6)
+        return false;
+    let e = norm(expr);
+    if (!e)
+        return true;
+    while (e.startsWith('(') && (0, lexer_1.matchBracket)(e, 0) === e.length - 1)
+        e = e.slice(1, -1).trim();
+    if (!e)
+        return true;
+    if (SAFE_ATOMS.test(e) || /^-?\d+(\.\d+)?$/.test(e))
+        return true;
+    if (suffixAnchorsAll(e))
+        return true;
+    const call = /^([A-Za-z_][\w.]*)\s*\(/.exec(e);
+    if (call && /^(?:int|float|bool|string|nz|math\.(?:abs|round|floor|ceil|sign|log|log10|sqrt|max|min))$/.test(call[1])) {
+        const open = call[0].length - 1;
+        if ((0, lexer_1.matchBracket)(e, open) === e.length - 1) {
+            const args = (0, lexer_1.splitTop)(e, open + 1, e.length - 1).map(([s, t]) => e.slice(s, t).trim()).filter(Boolean);
+            if (args.length === 0 || args.every((a) => historicallyAnchored(a, depth + 1)))
+                return true;
+        }
+    }
+    const cuts = depth0Ops(e);
+    if (!cuts.length)
+        return false;
+    const clean = (p) => p.replace(/^[!=<>]+/, '').replace(/[!=<>]+$/, '').trim();
+    const parts = [];
+    let from = 0;
+    for (const i of cuts) {
+        parts.push(clean(e.slice(from, i)));
+        from = i + 1;
+    }
+    parts.push(clean(e.slice(from)));
+    const kept = parts.filter(Boolean);
+    return kept.length > 1 && kept.every((p) => historicallyAnchored(p, depth + 1));
+}
 function hasOffset(el) {
     const e = el.trim();
     const m = HISTORY_OFFSET.exec(e);
@@ -331,13 +425,18 @@ function stmtOk(stmt, locals) {
     const t = stmt.trim();
     if (DRAW_START.test(t) || LOG_START.test(t))
         return true;
+    // label.delete(lb) is covered by DRAW_START; lb.delete() / boxes.clear() are the method form.
+    if (/\.\s*(?:delete|clear)\s*\(/.test(t))
+        return true;
     const m = ASSIGN_STMT.exec(t);
     if (!m)
         return false;
     const creates = m[4] === '=' || !!m[1];
     if (!rhsSafe(m[5]))
         return false;
-    if (!creates && !locals.has(m[3]))
+    // `lb := label.new(...)` rebinds a drawing handle declared outside the if.
+    const rebindsDrawing = new RegExp(`^${DRAW_NS}\\s*\\.\\s*new\\b`).test(m[5].trim());
+    if (!creates && !locals.has(m[3]) && !rebindsDrawing)
         return false;
     if (creates)
         locals.add(m[3]);
@@ -485,7 +584,7 @@ function analyze(src, file = '<input>') {
             continue;
         const lookOn = !!la && /barmerge\.lookahead_on/.test(la.text);
         const elems = tupleElems(ex.text);
-        const unsafe = elems.filter((e) => !SAFE_ATOMS.test(norm(e)) && !hasOffset(e));
+        const unsafe = elems.filter((e) => !SAFE_ATOMS.test(norm(e)) && !hasOffset(e) && !historicallyAnchored(e));
         if (lookOn) {
             if (unsafe.length === 0)
                 continue;
@@ -543,6 +642,8 @@ function analyze(src, file = '<input>') {
     for (const c of findCalls(lx, /(?<![\w.])(alertcondition)\s*\(/g)) {
         const cond = arg(c, 'condition', 0);
         if (!cond)
+            continue;
+        if (c.args.some((a) => /alert\.freq_once_per_bar_close/.test(a.text)))
             continue;
         if (!isConfirmedExpr(lx, cond.text, c.start))
             add('PRC007', c.start, `alertcondition(${norm(cond.text).slice(0, 60)}) is not gated by barstate.isconfirmed; it may fire intrabar (unless users pick "Once Per Bar Close").`);

@@ -1,0 +1,327 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © andrewmalek55
+
+//@version=6
+indicator("Andrew Malek Trading - Ultimate Overlay", overlay=true, max_labels_count=500)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// USER SETTINGS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+string OR_SESSION = input.session("0930-0945", "Opening Range")
+string RTH_SESSION = input.session("0930-1600", "RTH Session")
+string OVERNIGHT_SESSION = input.session("1800-0929", "Overnight Session")
+
+bool showVWAP = input.bool(true, "Show VWAP")
+bool showPDLevels = input.bool(true, "Show Previous Day High/Low")
+bool showONLevels = input.bool(true, "Show Overnight High/Low")
+bool showMidpoint = input.bool(true, "Show Opening Range Midpoint")
+bool showSignals = input.bool(true, "Show Trade Signals")
+bool showTargets = input.bool(true, "Show 1R / 2R Targets")
+
+float pullbackTolerance = input.float(2.0, "Pullback Tolerance (Points)", minval=0.0, step=0.25)
+float stopBuffer = input.float(1.0, "Stop Buffer (Points)", minval=0.0, step=0.25)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SESSION DETECTION
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+bool inOR = not na(time(timeframe.period, OR_SESSION, "America/New_York"))
+bool inRTH = not na(time(timeframe.period, RTH_SESSION, "America/New_York"))
+bool inOvernight = not na(time(timeframe.period, OVERNIGHT_SESSION, "America/New_York"))
+
+bool newDay = ta.change(time("D")) != 0
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// OPENING RANGE
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+var float orHigh = na
+var float orLow = na
+var bool orComplete = false
+
+if newDay
+    orHigh := na
+    orLow := na
+    orComplete := false
+
+if inOR
+    orHigh := na(orHigh) ? high : math.max(orHigh, high)
+    orLow := na(orLow) ? low : math.min(orLow, low)
+
+if not inOR and inRTH and not na(orHigh) and not na(orLow)
+    orComplete := true
+
+float orMid = na(orHigh) or na(orLow) ? na : (orHigh + orLow) / 2.0
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VWAP
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+float vwapValue = ta.vwap(hlc3)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PREVIOUS DAY HIGH / LOW
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+float previousDayHigh = request.security(
+     syminfo.tickerid,
+     "D",
+     high[1],
+     lookahead=barmerge.lookahead_on)
+
+float previousDayLow = request.security(
+     syminfo.tickerid,
+     "D",
+     low[1],
+     lookahead=barmerge.lookahead_on)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// OVERNIGHT HIGH / LOW
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+var float overnightHigh = na
+var float overnightLow = na
+
+if newDay
+    overnightHigh := na
+    overnightLow := na
+
+if inOvernight
+    overnightHigh := na(overnightHigh) ? high : math.max(overnightHigh, high)
+    overnightLow := na(overnightLow) ? low : math.min(overnightLow, low)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BREAKOUT DETECTION
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+bool bullishBreakout = orComplete and close > orHigh and close[1] <= orHigh
+bool bearishBreakout = orComplete and close < orLow and close[1] >= orLow
+
+var bool longBreakout = false
+var bool shortBreakout = false
+
+var bool longPullbackSeen = false
+var bool shortPullbackSeen = false
+
+var bool longTradeTaken = false
+var bool shortTradeTaken = false
+
+var float longPullbackLow = na
+var float shortPullbackHigh = na
+
+if newDay
+    longBreakout := false
+    shortBreakout := false
+    longPullbackSeen := false
+    shortPullbackSeen := false
+    longTradeTaken := false
+    shortTradeTaken := false
+    longPullbackLow := na
+    shortPullbackHigh := na
+
+if bullishBreakout
+    longBreakout := true
+    shortBreakout := false
+
+if bearishBreakout
+    shortBreakout := true
+    longBreakout := false
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PULLBACK DETECTION
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Long:
+// Price breaks above OR High,
+// then returns to OR High within tolerance.
+
+bool longPullback = longBreakout and
+     not longPullbackSeen and
+     low <= orHigh + pullbackTolerance and
+     low >= orHigh - pullbackTolerance and
+     close > orHigh
+
+// Short:
+// Price breaks below OR Low,
+// then returns to OR Low within tolerance.
+
+bool shortPullback = shortBreakout and
+     not shortPullbackSeen and
+     high >= orLow - pullbackTolerance and
+     high <= orLow + pullbackTolerance and
+     close < orLow
+
+if longPullback
+    longPullbackSeen := true
+    longPullbackLow := low
+
+if shortPullback
+    shortPullbackSeen := true
+    shortPullbackHigh := high
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ENTRY CONFIRMATION
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// V1 confirmation:
+// Long = bullish candle after successful pullback
+// Short = bearish candle after successful pullback
+
+bool bullishConfirmation = longPullbackSeen and
+     close > open and
+     close > orHigh
+
+bool bearishConfirmation = shortPullbackSeen and
+     close < open and
+     close < orLow
+
+bool longEntry = bullishConfirmation and not longTradeTaken
+bool shortEntry = bearishConfirmation and not shortTradeTaken
+
+if longEntry
+    longTradeTaken := true
+
+if shortEntry
+    shortTradeTaken := true
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TRADE LEVELS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+var float entryPrice = na
+var float stopPrice = na
+var float riskPoints = na
+var float target1 = na
+var float target2 = na
+
+if longEntry
+    entryPrice := close
+    stopPrice := longPullbackLow - stopBuffer
+    riskPoints := entryPrice - stopPrice
+    target1 := entryPrice + riskPoints
+    target2 := entryPrice + riskPoints * 2.0
+
+if shortEntry
+    entryPrice := close
+    stopPrice := shortPullbackHigh + stopBuffer
+    riskPoints := stopPrice - entryPrice
+    target1 := entryPrice - riskPoints
+    target2 := entryPrice - riskPoints * 2.0
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PLOTS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+plot(orHigh, "Opening Range High", color=color.green, linewidth=2)
+plot(orLow, "Opening Range Low", color=color.red, linewidth=2)
+
+plot(
+     showMidpoint ? orMid : na,
+     "Opening Range Midpoint",
+     color=color.gray,
+     linewidth=1)
+
+plot(
+     showVWAP ? vwapValue : na,
+     "VWAP",
+     color=color.blue,
+     linewidth=2)
+
+plot(
+     showPDLevels ? previousDayHigh : na,
+     "Previous Day High",
+     color=color.orange,
+     linewidth=1,
+     style=plot.style_linebr)
+
+plot(
+     showPDLevels ? previousDayLow : na,
+     "Previous Day Low",
+     color=color.orange,
+     linewidth=1,
+     style=plot.style_linebr)
+
+plot(
+     showONLevels ? overnightHigh : na,
+     "Overnight High",
+     color=color.purple,
+     linewidth=1,
+     style=plot.style_linebr)
+
+plot(
+     showONLevels ? overnightLow : na,
+     "Overnight Low",
+     color=color.purple,
+     linewidth=1,
+     style=plot.style_linebr)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ENTRY MARKERS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+plotshape(
+     showSignals and longEntry,
+     title="LONG",
+     style=shape.labelup,
+     location=location.belowbar,
+     text="LONG",
+     color=color.green,
+     textcolor=color.white,
+     size=size.small)
+
+plotshape(
+     showSignals and shortEntry,
+     title="SHORT",
+     style=shape.labeldown,
+     location=location.abovebar,
+     text="SHORT",
+     color=color.red,
+     textcolor=color.white,
+     size=size.small)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TRADE LEVELS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+plot(
+     showTargets and not na(entryPrice) ? entryPrice : na,
+     "Entry",
+     color=color.white,
+     linewidth=2,
+     style=plot.style_linebr)
+
+plot(
+     showTargets and not na(stopPrice) ? stopPrice : na,
+     "Stop",
+     color=color.red,
+     linewidth=2,
+     style=plot.style_linebr)
+
+plot(
+     showTargets and not na(target1) ? target1 : na,
+     "1R Target",
+     color=color.yellow,
+     linewidth=1,
+     style=plot.style_linebr)
+
+plot(
+     showTargets and not na(target2) ? target2 : na,
+     "2R Target",
+     color=color.green,
+     linewidth=2,
+     style=plot.style_linebr)
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ALERTS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+alertcondition(
+     longEntry,
+     title="MNQ V1 LONG",
+     message="MNQ V1 LONG setup confirmed")
+
+alertcondition(
+     shortEntry,
+     title="MNQ V1 SHORT",
+     message="MNQ V1 SHORT setup confirmed")

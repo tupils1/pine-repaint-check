@@ -1,0 +1,725 @@
+//@version=6
+// Z-Score Probability Pro KAMA — confirmed signals research update.
+// Original indicator by Erika Barker. Scores measure rule agreement, not win probability.
+
+indicator("Z-Score Probability Pro KAMA", shorttitle="Z-Pro KAMA",
+     overlay=false,
+     max_lines_count=300,
+     max_labels_count=300,
+     max_bars_back=500)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════════
+SEC_PER_DAY     = 86400.0
+EPS             = 1e-10
+MAD_K           = 0.6745   // Iglewicz & Hoaglin scaling constant
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 1: Core Settings
+// ═══════════════════════════════════════════════════════════════════════════════
+coreGroup = "① Core Settings"
+
+autoAdaptTF     = input.bool(true, "Auto-Adapt to Timeframe", group=coreGroup,
+     tooltip="Scales target days by chart duration, then clamps to the minimum and maximum bars. This is a heuristic, not an exact count of exchange sessions. No manual change is needed when switching timeframes.")
+
+targetDays      = input.float(3.0, "Target Calendar Window (days)", minval=1.0, maxval=30.0, step=0.5, group=coreGroup,
+     tooltip="Target days multiplied by 86400 seconds and divided by chart duration, then clamped. Daily and weekly charts can hit the minimum; intraday charts can hit the maximum.")
+
+fixedLength     = input.int(75, "Fixed Lookback (if auto-adapt off)", minval=10, maxval=500, group=coreGroup,
+     tooltip="Used only when Auto-Adapt is disabled. Original v1 default was 75.")
+
+minLookback     = input.int(20, "Minimum Adapted Lookback", minval=10, maxval=100, group=coreGroup,
+     tooltip="Floor for auto-adaptation. Below ~20 the Z-score becomes statistically unstable.")
+
+maxLookback     = input.int(200, "Maximum Adapted Lookback", minval=50, maxval=500, group=coreGroup,
+     tooltip="Ceiling for auto-adaptation. Above ~200 you lose responsiveness to regime shifts.")
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 2: Z-Score Method
+// ═══════════════════════════════════════════════════════════════════════════════
+zGroup = "② Z-Score Method"
+
+zMethod         = input.string("Classical", "Z-Score Method",
+     options=["Classical", "Modified (MAD)"], group=zGroup,
+     tooltip="Classical uses mean ± stdev. Modified uses median ± MAD with the 0.6745 Iglewicz constant — more robust to fat tails and outliers (financial returns are typically Student-t, df 3–5).")
+
+zSource         = input.string("Price − Baseline", "Source",
+     options=["Price − Baseline", "Pct Deviation", "Log Distance"], group=zGroup,
+     tooltip="Price − Baseline: classical residual.  Pct: (price-baseline)/baseline, stable across price levels.  Log Distance: log(price/baseline), not a one-bar return.")
+
+baselineType    = input.string("KAMA", "Baseline Smoother",
+     options=["KAMA", "HMA", "EMA", "ALMA"], group=zGroup,
+     tooltip="KAMA (Kaufman) is recommended — its efficiency ratio self-attenuates in noise. HMA preserves the original v1 behavior. ALMA = Gaussian-weighted.")
+
+zSmoother       = input.string("ALMA", "Z-Score Line Smoother",
+     options=["ALMA", "HMA", "EMA", "None"], group=zGroup,
+     tooltip="Smoothing applied to the residual Z-score. Choose None to see raw Z.")
+
+zSmoothLen      = input.int(9, "Z Smoothing Length", minval=1, maxval=50, group=zGroup,
+     tooltip="Length of the Z-score line smoother. 9 is ALMA's classic default (Legoux).")
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 3: Signals & Confluence
+// ═══════════════════════════════════════════════════════════════════════════════
+sigGroup = "③ Signals & Confluence"
+
+showSignals     = input.bool(true, "Show Strong Buy/Sell Signals", group=sigGroup)
+
+conviction      = input.string("Low", "Signal Conviction",
+     options=["Low", "Medium", "High"], group=sigGroup,
+     tooltip="Required confluence score: Low 50, Medium 65, High 80. A score is rule agreement, not accuracy or probability. Frequency depends on the market.")
+
+trendEntryFilter = input.bool(false, "Long guide: price above EMA 200", group=sigGroup,
+     tooltip="Optional extra entry condition. Applies to the long-only timing guide, not the confluence score.")
+guideBars = input.int(10, "Long guide: maximum holding bars", minval=1, maxval=100, group=sigGroup,
+     tooltip="Research exit policy: next open after an opposite strong signal or this many bars. A model guide, not your actual account position.")
+
+useDivergence   = input.bool(true, "Enable Divergence Detection", group=sigGroup)
+useHurst        = input.bool(true, "Enable Hurst Regime Filter", group=sigGroup)
+useHTF          = input.bool(true, "Enable HTF Confirmation", group=sigGroup)
+useVolume       = input.bool(true, "Enable Volume Confirmation", group=sigGroup,
+     tooltip="Skipped automatically on instruments without volume (FX, indices).")
+
+// Component weights — exposed so users can tune, but defaults sum to 100
+w_zReversal     = input.int(25, "Weight: Z Extreme Reversal", minval=0, maxval=50, group=sigGroup, inline="w1")
+w_divergence    = input.int(25, "Weight: Divergence",         minval=0, maxval=50, group=sigGroup, inline="w2")
+w_slope         = input.int(15, "Weight: Baseline Slope",     minval=0, maxval=50, group=sigGroup, inline="w3")
+w_regime        = input.int(15, "Weight: Regime Agreement",   minval=0, maxval=50, group=sigGroup, inline="w4")
+w_htf           = input.int(10, "Weight: HTF Agreement",      minval=0, maxval=50, group=sigGroup, inline="w5")
+w_volume        = input.int(10, "Weight: Volume Confirm",     minval=0, maxval=50, group=sigGroup, inline="w6")
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 4: Divergence
+// ═══════════════════════════════════════════════════════════════════════════════
+divGroup = "④ Divergence"
+
+showRegularDiv  = input.bool(true, "Use Regular Divergence",  group=divGroup,
+     tooltip="Bull: price LL + Z HL (oversold reversal).  Bear: price HH + Z LH (overbought reversal).")
+
+showHiddenDiv   = input.bool(false, "Use Hidden Divergence",  group=divGroup,
+     tooltip="Bull: price HL + Z LL (continuation in uptrend).  Bear: price LH + Z HH (continuation in downtrend). Optional continuation evidence; accuracy is not assumed.")
+
+pivotLeft       = input.int(5, "Pivot Left Lookback",  minval=2, maxval=20, group=divGroup)
+pivotRight      = input.int(3, "Pivot Right Lookback", minval=1, maxval=10, group=divGroup,
+     tooltip="Signals appear THIS many bars after the actual pivot (non-repainting cost).")
+
+divZoneFilter   = input.bool(true, "Filter by Oversold/Overbought Zones", group=divGroup,
+     tooltip="Include regular divergence only beyond the first zone: ±1 classical or ±1.35 modified. Pivots become known after the right-side confirmation bars.")
+
+divMaxBars      = input.int(60, "Max Bars Between Pivots", minval=10, maxval=200, group=divGroup)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 5: Regime (Hurst)
+// ═══════════════════════════════════════════════════════════════════════════════
+regimeGroup = "⑤ Hurst Regime Filter"
+
+hurstLen        = input.int(100, "Hurst Lookback", minval=30, maxval=300, group=regimeGroup,
+     tooltip="Window for a two-scale variance-ratio regime proxy. This is not a calibrated forecast.")
+
+hurstLag        = input.int(10, "Hurst Lag", minval=2, maxval=50, group=regimeGroup,
+     tooltip="Step size for the variance ratio. Larger = smoother regime classification.")
+
+hurstSmooth     = input.int(5, "Hurst EMA Smoothing", minval=1, maxval=30, group=regimeGroup)
+
+hurstTrendThr   = input.float(0.55, "Trending Threshold (H >)", minval=0.50, maxval=0.70, step=0.01, group=regimeGroup)
+hurstRevertThr  = input.float(0.45, "Mean-Revert Threshold (H <)", minval=0.30, maxval=0.50, step=0.01, group=regimeGroup)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 6: Higher Timeframe
+// ═══════════════════════════════════════════════════════════════════════════════
+htfGroup = "⑥ Higher Timeframe"
+
+htfMode         = input.string("Auto (4×)", "HTF Mode",
+     options=["Auto (4×)", "Auto (6×)", "Manual"], group=htfGroup,
+     tooltip="Auto modes compute the higher timeframe from your chart TF. Manual lets you specify directly.")
+
+htfManual       = input.timeframe("240", "Manual HTF", group=htfGroup,
+     tooltip="Used only when HTF Mode = Manual.")
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  INPUTS  —  Section 7: Display
+// ═══════════════════════════════════════════════════════════════════════════════
+dispGroup = "⑦ Display"
+
+theme           = input.string("Carbon Dark", "Theme",
+     options=["Carbon Dark", "Bloomberg Amber", "Custom"], group=dispGroup,
+     tooltip="Carbon Dark: cyan/coral on near-black, IBM-style. Bloomberg Amber: monochrome amber terminal aesthetic. Custom: use the color pickers below.")
+
+plotStyle       = input.string("Area", "Plot Style",
+     options=["Area", "Candles", "Line"], group=dispGroup)
+
+showZones       = input.bool(false, "Show Filled Zones", group=dispGroup,
+     tooltip="Off by default. The graduated reference lines convey the same information with far less visual noise. Toggle on if you prefer the classic look.")
+
+showDashboard   = input.bool(true, "Show Dashboard", group=dispGroup)
+showZTable      = input.bool(false, "Show Normal Reference Table", group=dispGroup)
+
+// Custom colors (only used when theme = Custom)
+cBullCustom     = input.color(color.rgb(8, 189, 186),  "Bull",     inline="c1", group=dispGroup)
+cBearCustom     = input.color(color.rgb(250, 77, 86),  "Bear",     inline="c1", group=dispGroup)
+cCritCustom     = input.color(color.rgb(241, 194, 27), "Critical", inline="c2", group=dispGroup)
+cNeutralCustom  = input.color(color.rgb(141, 141, 141),"Neutral",  inline="c2", group=dispGroup)
+
+dashPos         = input.string("Top Right", "Dashboard Position",
+     options=["Top Left", "Top Right", "Bottom Left", "Bottom Right", "Middle Right"], group=dispGroup)
+
+dashSize        = input.string("Normal", "Dashboard Size",
+     options=["Small", "Normal", "Large"], group=dispGroup)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THEME RESOLUTION  —  three semantic accents, monochromatic substrate
+// ═══════════════════════════════════════════════════════════════════════════════
+// Carbon Dark: IBM Carbon palette (teal-40 / red-50 / yellow-30) on near-black.
+// Bloomberg Amber: classic terminal monochrome with amber primary.
+// Custom: user-defined via the pickers above.
+
+bullColor    = theme == "Bloomberg Amber" ? color.rgb(255, 176, 0) :
+               theme == "Custom"          ? cBullCustom :
+               color.rgb(8, 189, 186)
+bearColor    = theme == "Bloomberg Amber" ? color.rgb(255, 100, 100) :
+               theme == "Custom"          ? cBearCustom :
+               color.rgb(250, 77, 86)
+critColor    = theme == "Bloomberg Amber" ? color.rgb(255, 220, 100) :
+               theme == "Custom"          ? cCritCustom :
+               color.rgb(241, 194, 27)
+neutralColor = theme == "Custom" ? cNeutralCustom : color.rgb(141, 141, 141)
+
+// Chrome colors derived from theme (used for dashboard, borders, grid)
+chromeBg     = color.rgb(22, 22, 22)     // Carbon gray-100
+chromeBorder = color.rgb(57, 57, 57)     // Carbon gray-80
+chromeDivide = color.rgb(38, 38, 38)     // Carbon gray-90
+textPrimary  = color.rgb(244, 244, 244)  // Carbon gray-10
+textMuted    = color.rgb(141, 141, 141)  // Carbon gray-50
+textDim      = color.rgb(82, 82, 82)     // Carbon gray-70
+
+// Reserve warnColor name for backwards-compatibility within the script
+warnColor    = critColor
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  TIMEFRAME-ADAPTIVE LOOKBACK
+// ═══════════════════════════════════════════════════════════════════════════════
+// Anchor the lookback to a calendar-equivalent window so the same indicator
+// behaves consistently across 1m / 5m / 1H / 1D / 1W charts without re-tuning.
+
+secPerBar       = timeframe.in_seconds()
+targetBars      = int(targetDays * SEC_PER_DAY / math.max(secPerBar, 1.0))
+if minLookback > maxLookback
+    runtime.error("Minimum lookback must not exceed maximum lookback.")
+adaptedLen      = math.max(minLookback, math.min(maxLookback, targetBars))
+effectiveLen    = autoAdaptTF ? adaptedLen : fixedLength
+
+// We need a `simple int` length for built-in ta.* functions. timeframe.in_seconds()
+// is `simple int`, so derived calculations remain simple-qualified.
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SMOOTHER LIBRARY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Kaufman Adaptive Moving Average (KAMA)
+// ER = |net change| / Σ|bar change|  →  interpolates fast↔slow EMA constants
+f_kama(float src_, simple int len_, simple int fast_, simple int slow_) =>
+    change_  = math.abs(src_ - src_[len_])
+    vola_    = math.sum(math.abs(src_ - src_[1]), len_)
+    er_      = nz(vola_ != 0 ? change_ / vola_ : 0.0, 0.0)
+    fastSC_  = 2.0 / (fast_ + 1)
+    slowSC_  = 2.0 / (slow_ + 1)
+    sc_      = math.pow(er_ * (fastSC_ - slowSC_) + slowSC_, 2)
+    var float k_ = na
+    k_ := na(k_[1]) ? src_ : k_[1] + sc_ * (src_ - k_[1])
+    k_
+
+// Unified baseline selector
+f_baseline(float src_, simple int len_, simple string kind_) =>
+    switch kind_
+        "KAMA" => f_kama(src_, len_, 2, 30)
+        "HMA"  => ta.hma(src_, len_)
+        "ALMA" => ta.alma(src_, len_, 0.85, 6)
+        =>        ta.ema(src_, len_)
+
+// Unified Z-line smoother
+f_zsmooth(float src_, simple int len_, simple string kind_) =>
+    switch kind_
+        "ALMA" => ta.alma(src_, len_, 0.85, 6)
+        "HMA"  => ta.hma(src_, len_)
+        "EMA"  => ta.ema(src_, len_)
+        =>        src_
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Z-SCORE CALCULATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+src      = close
+baseline = f_baseline(src, effectiveLen, baselineType)
+
+// Choose residual definition based on user's source selection
+residual = switch zSource
+    "Price − Baseline" => src - baseline
+    "Pct Deviation"    => (src - baseline) / math.max(math.abs(baseline), EPS) * 100.0
+    =>                    math.log(src / math.max(baseline, EPS)) * 100.0
+
+// A lagging baseline does not guarantee a zero-mean residual window.
+meanRes     = ta.sma(residual, effectiveLen)
+sdClassical = ta.stdev(residual, effectiveLen)
+zClassical  = na(sdClassical) ? na : sdClassical != 0 ? (residual - meanRes) / sdClassical : 0.0
+
+// Modified Z (Iglewicz & Hoaglin 1993): 0.6745 * (x - median) / MAD
+medRes      = ta.percentile_linear_interpolation(residual, effectiveLen, 50)
+f_mad(float value, float median, simple int length) =>
+    deviations = array.new_float(length)
+    for i = 0 to length - 1
+        array.set(deviations, i, math.abs(value[i] - median))
+    array.median(deviations)
+
+madRes      = zMethod == "Modified (MAD)" ? f_mad(residual, medRes, effectiveLen) : na
+zModified   = na(madRes) ? na : madRes != 0 ? MAD_K * (residual - medRes) / madRes : 0.0
+
+zRaw        = zMethod == "Modified (MAD)" ? zModified : zClassical
+zSmoothed   = f_zsmooth(zRaw, zSmoothLen, zSmoother)
+
+// For candle plotting we need OHLC-equivalent z-scores
+calcZ(price) =>
+    res = switch zSource
+        "Price − Baseline" => price - baseline
+        "Pct Deviation"    => (price - baseline) / math.max(math.abs(baseline), EPS) * 100.0
+        =>                    math.log(price / math.max(baseline, EPS)) * 100.0
+    if zMethod == "Modified (MAD)"
+        na(madRes) ? na : madRes != 0 ? MAD_K * (res - medRes) / madRes : 0.0
+    else
+        na(sdClassical) ? na : sdClassical != 0 ? (res - meanRes) / sdClassical : 0.0
+
+zO = calcZ(open)
+zH = calcZ(high)
+zL = calcZ(low)
+zC = zRaw   // = calcZ(close)
+
+// Threshold scaling: in MAD mode, ±2σ classical ≈ ±2.0 modified for Gaussian,
+// but for fat-tailed financial data the literature recommends widening to 2.35 / 3.5 / 4.7
+thrLvl1 = zMethod == "Modified (MAD)" ? 1.35 : 1.0
+thrLvl2 = zMethod == "Modified (MAD)" ? 2.35 : 2.0
+thrLvl3 = zMethod == "Modified (MAD)" ? 3.50 : 3.0
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  HURST EXPONENT (regime classifier)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Variance-ratio shortcut:  H = log(var_N / var_1) / (2 · log(N))
+//   H > 0.55  →  trending (persistent)
+//   H < 0.45  →  mean-reverting (anti-persistent)
+//   0.45–0.55 →  random walk
+
+diff1   = src - src[1]
+diffLag = src - src[hurstLag]
+var1    = ta.variance(diff1,   hurstLen)
+varN    = ta.variance(diffLag, hurstLen)
+hurstRaw = math.log(math.max(varN, EPS) / math.max(var1, EPS)) / (2.0 * math.log(hurstLag))
+hurst    = ta.ema(math.max(0.0, math.min(1.0, hurstRaw)), hurstSmooth)
+
+isTrending   = hurst > hurstTrendThr
+isReverting  = hurst < hurstRevertThr
+isRandom     = not isTrending and not isReverting
+
+regimeName = isTrending ? "TRENDING" : isReverting ? "MEAN-REVERT" : "RANDOM"
+regimeColor = isTrending ? bullColor : isReverting ? warnColor : neutralColor
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  HIGHER TIMEFRAME CONFIRMATION
+// ═══════════════════════════════════════════════════════════════════════════════
+// Both values come from completed HTF bars, including on realtime chart bars.
+
+htfTF = switch htfMode
+    "Auto (4×)" => timeframe.from_seconds(int(secPerBar * 4))
+    "Auto (6×)" => timeframe.from_seconds(int(secPerBar * 6))
+    =>             htfManual
+
+if useHTF and timeframe.in_seconds(htfTF) <= secPerBar
+    runtime.error("Choose a higher timeframe than the chart, or disable HTF confirmation.")
+
+[htfZ, htfPrevZ] = request.security(syminfo.tickerid, htfTF, [zSmoothed[1], zSmoothed[2]],
+     gaps=barmerge.gaps_off,
+     lookahead=barmerge.lookahead_on)
+
+htfBullish = htfZ < -thrLvl1 or (htfZ > 0 and htfZ < htfPrevZ)
+htfBearish = htfZ >  thrLvl1 or (htfZ < 0 and htfZ > htfPrevZ)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DIVERGENCE ENGINE  (Regular + Hidden, zone-filtered, non-repainting)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Pivots on Z — both confirmed after `pivotRight` bars
+// (Price extremes are captured directly from high/low at the pivot bar)
+ph_z = ta.pivothigh(zSmoothed, pivotLeft, pivotRight)
+pl_z = ta.pivotlow(zSmoothed,  pivotLeft, pivotRight)
+
+// Track the two most recent confirmed pivots on Z
+var float prevZHigh    = na
+var int   prevZHighBar = na
+var float lastZHigh    = na
+var int   lastZHighBar = na
+var float prevZLow     = na
+var int   prevZLowBar  = na
+var float lastZLow     = na
+var int   lastZLowBar  = na
+
+// Track corresponding price extremes captured at the same bar
+var float prevPHigh    = na
+var float lastPHigh    = na
+var float prevPLow     = na
+var float lastPLow     = na
+
+if not na(ph_z)
+    prevZHigh    := lastZHigh
+    prevZHighBar := lastZHighBar
+    prevPHigh    := lastPHigh
+    lastZHigh    := ph_z
+    lastZHighBar := bar_index - pivotRight
+    lastPHigh    := high[pivotRight]
+
+if not na(pl_z)
+    prevZLow    := lastZLow
+    prevZLowBar := lastZLowBar
+    prevPLow    := lastPLow
+    lastZLow    := pl_z
+    lastZLowBar := bar_index - pivotRight
+    lastPLow    := low[pivotRight]
+
+// Validity: pivots must exist, be within max-bar distance, and (optionally) in-zone
+divBarDistOK_H = not na(prevZHighBar) and not na(lastZHighBar) and (lastZHighBar - prevZHighBar) <= divMaxBars
+divBarDistOK_L = not na(prevZLowBar)  and not na(lastZLowBar)  and (lastZLowBar  - prevZLowBar)  <= divMaxBars
+
+zoneOK_bull = not divZoneFilter or lastZLow  < -thrLvl1
+zoneOK_bear = not divZoneFilter or lastZHigh >  thrLvl1
+
+// Regular bullish: price LL, Z HL  (only fires on the confirmation bar)
+regBullDiv  = barstate.isconfirmed and showRegularDiv and useDivergence and not na(pl_z) and divBarDistOK_L and zoneOK_bull and
+     lastPLow  < prevPLow  and lastZLow > prevZLow
+
+// Regular bearish: price HH, Z LH
+regBearDiv  = barstate.isconfirmed and showRegularDiv and useDivergence and not na(ph_z) and divBarDistOK_H and zoneOK_bear and
+     lastPHigh > prevPHigh and lastZHigh < prevZHigh
+
+// Hidden bullish: price HL, Z LL  (continuation in uptrend)
+hidBullDiv  = barstate.isconfirmed and showHiddenDiv  and useDivergence and not na(pl_z) and divBarDistOK_L and
+     lastPLow  > prevPLow  and lastZLow < prevZLow
+
+// Hidden bearish: price LH, Z HH  (continuation in downtrend)
+hidBearDiv  = barstate.isconfirmed and showHiddenDiv  and useDivergence and not na(ph_z) and divBarDistOK_H and
+     lastPHigh < prevPHigh and lastZHigh > prevZHigh
+
+anyBullDiv = regBullDiv or hidBullDiv
+anyBearDiv = regBearDiv or hidBearDiv
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  CONFLUENCE SCORING ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+// Each component contributes its weight if its bull/bear condition holds.
+// Score range: 0 to sum(weights), normalized to 0–100 for display.
+
+// 1. Z extreme reversal — Z crossing back from extreme toward zero
+zRevBull = ta.crossover(zSmoothed,  -thrLvl2)
+zRevBear = ta.crossunder(zSmoothed,  thrLvl2)
+
+// 2. Baseline slope — KAMA / HMA rising or falling over last 3 bars
+slopeBull = baseline > baseline[3]
+slopeBear = baseline < baseline[3]
+
+// 3. Regime agreement
+//    - In mean-revert regime, favor reversals (regular div + Z extreme reversal)
+//    - In trending regime, favor continuation (hidden div, slope confirmation)
+//    - In random regime, no bonus
+regimeBullOK = isReverting ? (regBullDiv or zRevBull) :
+               isTrending  ? (hidBullDiv or (slopeBull and zSmoothed < 0)) :
+               false
+regimeBearOK = isReverting ? (regBearDiv or zRevBear) :
+               isTrending  ? (hidBearDiv or (slopeBear and zSmoothed > 0)) :
+               false
+
+// 4. Volume confirmation — volume Z above 1, skip if no volume
+hasVol      = nz(volume, 0) > 0
+volMean     = ta.sma(volume, effectiveLen)
+volSD       = ta.stdev(volume, effectiveLen)
+volZ        = (volSD != 0 and hasVol) ? (volume - volMean) / volSD : 0.0
+volOK       = hasVol and volZ > 1.0
+
+totalWeight = w_zReversal + w_slope + (useDivergence and (showRegularDiv or showHiddenDiv) ? w_divergence : 0) +
+  (useHurst ? w_regime : 0) + (useHTF ? w_htf : 0) + (useVolume and hasVol ? w_volume : 0)
+
+// Build component contributions
+bullScore = (zRevBull                       ? w_zReversal  : 0) +
+  (anyBullDiv                     ? w_divergence : 0) +
+  (slopeBull                      ? w_slope      : 0) +
+  (useHurst  and regimeBullOK     ? w_regime     : 0) +
+  (useHTF    and htfBullish       ? w_htf        : 0) +
+  (useVolume and volOK            ? w_volume     : 0)
+
+bearScore = (zRevBear                       ? w_zReversal  : 0) +
+  (anyBearDiv                     ? w_divergence : 0) +
+  (slopeBear                      ? w_slope      : 0) +
+  (useHurst  and regimeBearOK     ? w_regime     : 0) +
+  (useHTF    and htfBearish       ? w_htf        : 0) +
+  (useVolume and volOK            ? w_volume     : 0)
+
+// Normalize to 0–100
+bullPct = totalWeight > 0 ? bullScore / totalWeight * 100.0 : 0.0
+bearPct = totalWeight > 0 ? bearScore / totalWeight * 100.0 : 0.0
+
+// Conviction threshold
+convThreshold = switch conviction
+    "Low"    => 50.0
+    "Medium" => 65.0
+    =>          80.0
+
+strongBuy  = barstate.isconfirmed and bullPct >= convThreshold and bullPct > bearPct
+strongSell = barstate.isconfirmed and bearPct >= convThreshold and bearPct > bullPct
+
+// A "regular" buy/sell (weaker) — useful for the dashboard direction indicator
+weakBuy    = barstate.isconfirmed and bullPct >= 35.0 and bullPct > bearPct and not strongBuy
+weakSell   = barstate.isconfirmed and bearPct >= 35.0 and bearPct > bullPct and not strongSell
+
+
+// This long-only guide shares the research harness's next-open execution policy.
+// Pending instructions take effect at the following bar's open, not at signal close.
+entryEMA = ta.ema(close, 200)
+entryFilterOK = not trendEntryFilter or close > entryEMA
+guideReady = not na(zSmoothed) and (not useHTF or not na(htfPrevZ)) and (not useHurst or not na(hurst))
+var int guideEntryBar = na
+var bool buyNextOpen = false
+var bool exitNextOpen = false
+if exitNextOpen
+    guideEntryBar := na
+if buyNextOpen
+    guideEntryBar := bar_index
+buyNextOpen := guideReady and barstate.isconfirmed and na(guideEntryBar) and strongBuy and entryFilterOK
+exitNextOpen := barstate.isconfirmed and not na(guideEntryBar) and (strongSell or bar_index - guideEntryBar >= guideBars - 1)
+
+guideAction = not guideReady ? "WARMING UP" : buyNextOpen ? "BUY NEXT OPEN" : exitNextOpen ? "EXIT NEXT OPEN" : not na(guideEntryBar) ? "IN LONG" : "WAIT"
+guideReason = not guideReady ? "Loading enough history" : buyNextOpen ? "Confirmed buy setup" : exitNextOpen ? (strongSell ? "Bearish setup confirmed" : "Holding horizon reached") : not na(guideEntryBar) ? str.tostring(guideBars - (bar_index - guideEntryBar)) + " bars left at most" : "No confirmed entry"
+
+plotshape(showSignals and buyNextOpen, "Long guide entry", shape.labelup, location.belowbar,
+     bullColor, text="BUY\nnext open", textcolor=color.black, size=size.tiny, force_overlay=true)
+plotshape(showSignals and exitNextOpen, "Long guide exit", shape.labeldown, location.abovebar,
+     bearColor, text="EXIT\nnext open", textcolor=color.white, size=size.tiny, force_overlay=true)
+alertcondition(buyNextOpen, "Long guide: buy next open", "Z-Pro confirmed long setup on {{ticker}} {{interval}}; research guide enters next open.")
+alertcondition(exitNextOpen, "Long guide: exit next open", "Z-Pro research long guide exits next open on {{ticker}} {{interval}}.")
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PLOT — Z-Score area / line / candles
+// ═══════════════════════════════════════════════════════════════════════════════
+// Area mode: translucent fill below + sharp 1px edge line on top.
+// The edge gives the wave definition; the fill gives magnitude.
+
+zFillColor = zSmoothed >= 0 ? color.new(bullColor, 55) : color.new(bearColor, 55)
+zEdgeColor = zSmoothed >= 0 ? color.new(bullColor, 0)  : color.new(bearColor, 0)
+
+// Translucent area (fill only, no edge)
+plot(plotStyle == "Area" ? zSmoothed : na, "Z-Score Area",
+     color=zFillColor, style=plot.style_area, display=display.pane)
+
+// Sharp edge line on top of the area (defines the wave)
+plot(plotStyle == "Area" or plotStyle == "Line" ? zSmoothed : na, "Z-Score",
+     color=zEdgeColor, linewidth=plotStyle == "Line" ? 2 : 1)
+
+candleClr = zO > zC ? color.new(bearColor, 0) : color.new(bullColor, 0)
+plotcandle(plotStyle == "Candles" ? zO : na,
+           plotStyle == "Candles" ? zH : na,
+           plotStyle == "Candles" ? zL : na,
+           plotStyle == "Candles" ? zC : na,
+     title="Z Candles", color=candleClr, wickcolor=candleClr, bordercolor=candleClr,
+     display=plotStyle == "Candles" ? display.all : display.none)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PLOT — Reference line hierarchy & optional zones
+// ═══════════════════════════════════════════════════════════════════════════════
+// Visual weight follows semantic weight:
+//   ±1σ  →  barely visible (reference only, not actionable)
+//   ±2σ  →  visible dotted gray (this is your actionable threshold)
+//   ±3σ  →  amber dotted (critical extreme, rare)
+//   zero →  solid mid-gray (anchor)
+// All infrastructure plots use display=display.pane to keep the status line clean.
+
+// Anchor plots for optional fills — hidden from the status line entirely
+zeroLineP = plot(0,         "Zero",  color=color.new(color.black, 100), display=display.pane, editable=false)
+p1 = plot( thrLvl1, "+1σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+n1 = plot(-thrLvl1, "-1σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+p2 = plot( thrLvl2, "+2σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+n2 = plot(-thrLvl2, "-2σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+p3 = plot( thrLvl3, "+3σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+n3 = plot(-thrLvl3, "-3σ", color=color.new(color.black, 100), display=display.pane, editable=false)
+
+// Optional zone fills (off by default — graduated lines convey the same info)
+zoneInner = showZones ? color.new(neutralColor, 92) : color.new(color.black, 100)
+zoneMid   = showZones ? color.new(neutralColor, 87) : color.new(color.black, 100)
+zoneOuter = showZones ? color.new(critColor,    86) : color.new(color.black, 100)
+fill(zeroLineP, p1, color=zoneInner)
+fill(zeroLineP, n1, color=zoneInner)
+fill(p1, p2,        color=zoneMid)
+fill(n1, n2,        color=zoneMid)
+fill(p2, p3,        color=zoneOuter)
+fill(n2, n3,        color=zoneOuter)
+
+// Graduated reference lines — visual weight matches semantic weight
+hline(0,         "Zero",   color=color.new(neutralColor, 50), linestyle=hline.style_solid)
+hline( thrLvl1,  "+1σ",    color=color.new(neutralColor, 85), linestyle=hline.style_dotted)
+hline(-thrLvl1,  "-1σ",    color=color.new(neutralColor, 85), linestyle=hline.style_dotted)
+hline( thrLvl2,  "+2σ",    color=color.new(neutralColor, 55), linestyle=hline.style_dotted)
+hline(-thrLvl2,  "-2σ",    color=color.new(neutralColor, 55), linestyle=hline.style_dotted)
+hline( thrLvl3,  "+3σ",    color=color.new(critColor,    40), linestyle=hline.style_dashed)
+hline(-thrLvl3,  "-3σ",    color=color.new(critColor,    40), linestyle=hline.style_dashed)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PLOT — Divergence markers
+// ═══════════════════════════════════════════════════════════════════════════════
+plotshape(regBullDiv, "Regular Bull Div", shape.triangleup,   location.bottom, bullColor,  size=size.tiny)
+plotshape(regBearDiv, "Regular Bear Div", shape.triangledown, location.top,    bearColor,  size=size.tiny)
+plotshape(hidBullDiv, "Hidden Bull Div",  shape.diamond,      location.bottom, bullColor,  size=size.tiny)
+plotshape(hidBearDiv, "Hidden Bear Div",  shape.diamond,      location.top,    bearColor,  size=size.tiny)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PLOT — Strong Buy / Sell signal labels  (Carbon notification pattern)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Single-line, sharp rectangles, monospace text, dark text on saturated fill.
+// Reads as a terminal alert, not a sticker.
+
+if showSignals and strongBuy and not strongBuy[1]
+    label.new(bar_index, -thrLvl3 * 1.05,
+         text=" ▲ STRONG BUY  " + str.tostring(bullPct, "#") + " ",
+         color=bullColor, textcolor=color.black, style=label.style_label_up,
+         size=size.small, textalign=text.align_center)
+
+if showSignals and strongSell and not strongSell[1]
+    label.new(bar_index,  thrLvl3 * 1.05,
+         text=" ▼ STRONG SELL  " + str.tostring(bearPct, "#") + " ",
+         color=bearColor, textcolor=color.black, style=label.style_label_down,
+         size=size.small, textalign=text.align_center)
+
+// Weaker arrows (lower visual priority)
+plotshape(showSignals and weakBuy and not weakBuy[1],  "Buy Arrow",  shape.arrowup,   location.bottom, color.new(bullColor, 50), size=size.tiny)
+plotshape(showSignals and weakSell and not weakSell[1], "Sell Arrow", shape.arrowdown, location.top,    color.new(bearColor, 50), size=size.tiny)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════════
+
+f_dashPos(p) =>
+    switch p
+        "Top Left"      => position.top_left
+        "Top Right"     => position.top_right
+        "Bottom Left"   => position.bottom_left
+        "Bottom Right"  => position.bottom_right
+        "Middle Right"  => position.middle_right
+        =>                 position.top_right
+
+f_dashSize(s) =>
+    switch s
+        "Small"  => size.small
+        "Large"  => size.large
+        =>          size.normal
+
+var table dash = table.new(f_dashPos(dashPos), 2, 6,
+     bgcolor=chromeBg, border_width=1, border_color=chromeDivide)
+
+if showDashboard and barstate.islast
+    txtSize = f_dashSize(dashSize)
+    actionColor = exitNextOpen ? bearColor : buyNextOpen or not na(guideEntryBar) ? bullColor : textPrimary
+    table.cell(dash, 0, 0, "Z-PRO KAMA", text_color=textMuted, text_size=txtSize)
+    table.cell(dash, 1, 0, guideAction, text_color=actionColor, text_size=txtSize, bgcolor=chromeBorder)
+    table.cell(dash, 0, 1, "Why", text_color=textMuted, text_size=txtSize)
+    table.cell(dash, 1, 1, guideReason, text_color=textPrimary, text_size=txtSize)
+    lookbackMode = autoAdaptTF ? (adaptedLen != targetBars ? " auto · clamped" : " auto") : " fixed"
+    table.cell(dash, 0, 2, timeframe.period + " · lookback", text_color=textMuted, text_size=txtSize)
+    table.cell(dash, 1, 2, str.tostring(effectiveLen) + lookbackMode, text_color=textPrimary, text_size=txtSize)
+    table.cell(dash, 0, 3, "Bull / bear score", text_color=textMuted, text_size=txtSize)
+    table.cell(dash, 1, 3, str.tostring(bullPct, "#") + " / " + str.tostring(bearPct, "#") + " · not odds", text_color=textPrimary, text_size=txtSize)
+    table.cell(dash, 0, 4, "Z · regime proxy", text_color=textMuted, text_size=txtSize)
+    table.cell(dash, 1, 4, str.tostring(zSmoothed, "0.00") + " · " + regimeName, text_color=regimeColor, text_size=txtSize)
+    table.cell(dash, 0, 5, "Timing guide", text_color=textMuted, text_size=size.small)
+    table.cell(dash, 1, 5, "Long only · next open · " + str.tostring(guideBars) + " bars max", text_color=textMuted, text_size=size.small)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PROBABILITY TABLE
+// ═══════════════════════════════════════════════════════════════════════════════
+var table zTbl = na
+
+if showZTable and barstate.islast
+    if not na(zTbl)
+        table.delete(zTbl)
+    zTbl := table.new(position.bottom_right, 3, 8,
+         bgcolor=chromeBg,
+         border_width=1, border_color=chromeDivide,
+         frame_width=0)
+
+    zMono = font.family_monospace
+    zHeaderBg = color.new(chromeBorder, 30)
+
+    table.cell(zTbl, 0, 0, "Z",     bgcolor=zHeaderBg, text_color=textPrimary, text_size=size.small, text_font_family=zMono)
+    table.cell(zTbl, 1, 0, "Normal CDF %", bgcolor=zHeaderBg, text_color=textPrimary, text_size=size.small, text_font_family=zMono)
+    table.cell(zTbl, 2, 0, "Zone",  bgcolor=zHeaderBg, text_color=textPrimary, text_size=size.small, text_font_family=zMono)
+
+    zVals = array.from(-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0)
+    pVals = array.from("0.13", "2.28", "15.87", "50.00", "84.13", "97.72", "99.87")
+
+    for i = 0 to 6
+        z = array.get(zVals, i)
+        p = array.get(pVals, i)
+        zc = math.abs(z) >= 2.0 ? (z > 0 ? bullColor : bearColor) : math.abs(z) >= 1.0 ? critColor : textMuted
+        table.cell(zTbl, 0, i + 1, str.tostring(z, "0.0"),
+             text_color=textPrimary, text_size=size.small, text_font_family=zMono, text_halign=text.align_right)
+        table.cell(zTbl, 1, i + 1, p,
+             text_color=textMuted,   text_size=size.small, text_font_family=zMono, text_halign=text.align_right)
+        table.cell(zTbl, 2, i + 1, "",
+             bgcolor=color.new(zc, 60))
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════════════════════════════════════════
+// All alerts fire on barstate.isconfirmed to avoid intrabar repaint.
+
+alertcondition(strongBuy and not strongBuy[1],  title="Strong Buy",
+     message="Z-Pro Strong BUY on {{ticker}} ({{interval}}) — bull score above conviction threshold")
+alertcondition(strongSell and not strongSell[1], title="Strong Sell",
+     message="Z-Pro Strong SELL on {{ticker}} ({{interval}}) — bear score above conviction threshold")
+alertcondition(weakBuy and not weakBuy[1],    title="Buy Setup",
+     message="Z-Pro buy setup forming on {{ticker}} ({{interval}})")
+alertcondition(weakSell and not weakSell[1],   title="Sell Setup",
+     message="Z-Pro sell setup forming on {{ticker}} ({{interval}})")
+alertcondition(regBullDiv, title="Regular Bullish Divergence",
+     message="Z-Pro regular bullish divergence on {{ticker}}")
+alertcondition(regBearDiv, title="Regular Bearish Divergence",
+     message="Z-Pro regular bearish divergence on {{ticker}}")
+alertcondition(hidBullDiv, title="Hidden Bullish Divergence",
+     message="Z-Pro hidden bullish divergence on {{ticker}}")
+alertcondition(hidBearDiv, title="Hidden Bearish Divergence",
+     message="Z-Pro hidden bearish divergence on {{ticker}}")
+crossAboveExtreme = ta.crossover(zSmoothed, thrLvl2)
+crossBelowExtreme = ta.crossunder(zSmoothed, -thrLvl2)
+alertcondition(barstate.isconfirmed and crossAboveExtreme,  title="Z Crosses Above +2σ",
+     message="Z-Pro: {{ticker}} crossed above +2σ — overbought zone")
+alertcondition(barstate.isconfirmed and crossBelowExtreme, title="Z Crosses Below -2σ",
+     message="Z-Pro: {{ticker}} crossed below -2σ — oversold zone")
+alertcondition(barstate.isconfirmed and isTrending and not isTrending[1],   title="Regime → Trending",
+     message="Z-Pro regime shifted to TRENDING on {{ticker}}")
+alertcondition(barstate.isconfirmed and isReverting and not isReverting[1], title="Regime → Mean-Reverting",
+     message="Z-Pro regime shifted to MEAN-REVERTING on {{ticker}}")
+
+

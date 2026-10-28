@@ -14,6 +14,33 @@ test('PRC001 future leak, named and positional', () => {
   assert.strictEqual(analyze(hdr + 'x = request.security(syminfo.tickerid, "D", high, lookahead = barmerge.lookahead_on)')[0].severity, 'error');
 });
 
+test('PRC001 ignores a historical combination under lookahead_on', () => {
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "D", close[1] > open[1] ? 1 : 0, lookahead = barmerge.lookahead_on)'), []);
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "D", ta.sma(high - low, 14)[1] / close[1] * 100, lookahead = barmerge.lookahead_on)'), []);
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "60", close[1] > high ? 1 : 0, lookahead = barmerge.lookahead_on)'), ['PRC001@3']);
+  assert.deepStrictEqual(ids(hdr + 'rep = true\nprice = close\nx = request.security(syminfo.tickerid, timeframe.period, (rep ? price : price[1]), lookahead = barmerge.lookahead_on)'), ['PRC001@5']);
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "D", int(time[1]), lookahead = barmerge.lookahead_on)'), []);
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "D", int(close), lookahead = barmerge.lookahead_on)'), ['PRC001@3']);
+  assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "W", sma20)'), ['PRC002@3']);
+});
+
+test('unclosed string does not shift later line numbers', () => {
+  assert.deepStrictEqual(ids(hdr + 's = "oops\nx = timenow\n'), ['PRC005@4']);
+});
+
+test('alertcondition freq_once_per_bar_close is not an unconfirmed alert', () => {
+  assert.deepStrictEqual(ids(hdr + 'alertcondition(close > open, "t", "m", alert.freq_once_per_bar_close)\n'), []);
+  assert.deepStrictEqual(ids(hdr + 'alertcondition(close > open, "t", "m", alert.freq_once_per_bar)\n'), ['PRC007@3']);
+});
+
+test('PRC006 allows rebinding a drawing on the last bar', () => {
+  const src = hdr + 'var label lb = na\nif barstate.islast\n    label.delete(lb)\n    lb := label.new(bar_index, high, "x")\n';
+  assert.deepStrictEqual(ids(src), []);
+  const loop = hdr + 'var array<label> lbs = array.new<label>()\nif barstate.islast\n    for lb in lbs\n        lb.delete()\n';
+  assert.deepStrictEqual(ids(loop), []);
+  assert.deepStrictEqual(ids(hdr + 'float y = na\nif barstate.islast\n    y := close\n'), ['PRC006@4']);
+});
+
 test('PRC001 not raised for [1] offset, safe atoms, comments, strings', () => {
   assert.deepStrictEqual(ids(hdr + 'x = request.security(syminfo.tickerid, "D", high[1], lookahead = barmerge.lookahead_on)'), []);
   assert.deepStrictEqual(ids(hdr + '[t, tc] = request.security(syminfo.tickerid, "D", [time, time_close], lookahead = barmerge.lookahead_on)'), []);

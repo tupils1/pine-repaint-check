@@ -12,7 +12,7 @@ TradingView 官方估计 95% 以上的指标都有某种形式的重绘，其中
 
 | 编号 | 级别 | 检查内容 |
 |---|---|---|
-| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` 而表达式没加 `[1]`：历史 K 线上泄漏未来数据。表达式是包装函数参数时降为 warning；同一文件里每个调用点都传入带 `[1]`（或其他历史偏移）的表达式时不报告 |
+| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` 而表达式没加 `[1]`：历史 K 线上泄漏未来数据。表达式只由更早 K 线的值组成时不报告。表达式是包装函数参数时降为 warning；同一文件里每个调用点都传入带 `[1]`（或其他历史偏移）的表达式时不报告 |
 | PRC002 | warning | 请求其他周期的 `request.security()` 没用 `[1]` + `lookahead_on`：实时 K 线返回未确认的值 |
 | PRC003 | warning | 策略使用 `calc_on_every_tick = true` |
 | PRC004 | warning | 使用 `varip` |
@@ -57,7 +57,7 @@ x = time > timenow - 86400000      // pine-repaint-check: ignore PRC005
 
 ## 准确率
 
-在 31 个许可证明确的真实脚本和 21 个自写用例上实测，见 [corpus/RESULTS.md](corpus/RESULTS.md)。真实样本少、标注由作者人工完成，数字只能当作初步参考。
+在 31 个许可证明确的真实脚本和 21 个自写用例上实测，见 [corpus/RESULTS.md](corpus/RESULTS.md)。另有一份 200 个公开 `.pine` 文件的误报抽样，见 [docs/false-positive-eval.md](docs/false-positive-eval.md)。标注是对命中的人工复核，不是外部榜单。
 
 已知局限：基于正则和括号匹配，不是完整语法解析；标识符只在单文件内追一层赋值，但 `lookahead_on` 包装函数的参数会检查同文件调用点（含用户函数的元组返回值）；函数内的 alert 不分析调用处；不跟踪 `import` 的库。
 

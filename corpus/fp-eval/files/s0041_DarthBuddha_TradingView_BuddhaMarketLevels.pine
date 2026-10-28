@@ -1,0 +1,1600 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Darth_Buddha
+
+// @version=6
+indicator(
+      title = 'Buddha Market Levels',
+      shorttitle = 'Levels',
+      overlay = true,
+      max_lines_count = 500,
+      max_labels_count = 500,
+      dynamic_requests = true)
+
+//----------------------------------------------------------------------------------------------------< CONSTANTS >---//
+
+//----------------------------------------------------< COLORs
+
+// @variable - Todays Hi Color
+const color CLR_TD_HI = color.rgb(255, 152, 0, 60)
+// @variable - Todays Lo Color
+const color CLR_TD_LO = color.rgb(255, 152, 0, 60)
+// @variable - Todays PreMarket Hi Color
+const color CLR_PM_HI = color.rgb(255, 152, 0, 30)
+// @variable - Todays PreMarket Lo Color
+const color CLR_PM_LO = color.rgb(255, 152, 0, 30)
+// @variable - Yesterday Hi Color
+const color CLR_YD_HI = color.rgb(255, 152, 0, 0)
+// @variable - Yesterday Lo Color
+const color CLR_YD_LO = color.rgb(255, 152, 0, 0)
+
+// @variable - Todays Open Color
+const color CLR_TD_OP = color.rgb(33, 150, 243, 0)
+// @variable - Yesterday Close Color
+const color CLR_YD_CL = color.rgb(255, 82, 82, 50)
+// @variable - Yesterday Open Color
+const color CLR_YD_OP = color.rgb(12, 50, 153, 0)
+
+// @variable - Opening Range - Globex Color
+const color COLOR_GLOBEX = color.rgb(0, 188, 212, 0)
+// @variable - New York Opening Range Color
+const color COLOR_NEWYORK = color.rgb(224, 64, 251, 50)
+// @variable - London Opening Range Color
+const color COLOR_LONDON = color.rgb(255, 235, 59, 50)
+// @variable - Asia Opening Range Color
+const color COLOR_ASIA = color.rgb(0, 230, 118, 50)
+
+// @variable - After Hours Hi Color
+const color CLR_AH_HI = color.rgb(156, 39, 176, 0)
+// @variable - After Hours Lo Color
+const color CLR_AH_LO = color.rgb(156, 39, 176, 0)
+// @variable - Over Night Hi Color
+const color CLR_OV_HI = color.rgb(136, 14, 79, 0)
+// @variable - Over Night Lo Color
+const color CLR_OV_LO = color.rgb(136, 14, 79, 0)
+
+// @variable - No Color
+const color CLR_NONE = color.new(color.gray, 100)
+
+//----------------------------------------------------< STRINGs
+
+const string O = 'open', H = 'high', L = 'low', C = 'close'
+const string HL2 = 'hl2'
+const string HLC3 = 'hlc3'
+const string OHLC4 = 'ohlc4'
+const string HLCC4 = 'hlcc4'
+const string RTH = 'RTH'
+
+//----------------------------------------------------< ENUMs
+
+enum State
+    on = 'ON'
+    off = 'OFF'
+
+// @enum - Line Style
+enum Ls
+    solid = 'Solid'
+    dashed = 'Dashed'
+    dotted = 'Dotted'
+
+//-------------------------------------------------------------------------------------------------------< INPUTS >---//
+
+const string g_Pm = 'PreMarket'
+i_PmOnOff = input.enum(defval = State.on, title = '',
+    group = g_Pm, inline = 'PmHiLo', display = display.none)
+i_PmHiClr = input.color(defval = CLR_PM_HI, title = 'High',
+    group = g_Pm, inline = 'PmHiLo', display = display.none)
+i_PmLoClr = input.color(defval = CLR_PM_LO, title = 'Low',
+    group = g_Pm, inline = 'PmHiLo', display = display.none)
+
+const string g_Td = 'Today'
+i_TdOnOff = input.enum(defval = State.on, title = '',
+    group = g_Td, inline = 'TdHiLo', display = display.none)
+i_TdHiClr = input.color(defval = CLR_TD_HI, title = 'High',
+    group = g_Td, inline = 'TdHiLo', display = display.none)
+i_TdLoClr = input.color(defval = CLR_TD_LO, title = 'Low',
+    group = g_Td, inline = 'TdHiLo', display = display.none)
+
+i_TdOpOnOff = input.enum(defval = State.off, title = '',
+    group = g_Td, inline = 'TdOp', display = display.none)
+i_TdOpClr = input.color(defval = CLR_TD_OP, title = 'Open',
+    group = g_Td, inline = 'TdOp', display = display.none)
+
+const string g_Open = 'Opening Range Settings'
+i_OrRangeTransparency = input.int(defval = 95, title = 'Range Transparency',
+    group = g_Open, display = display.none, minval = 0, maxval = 100, step = 5)
+
+const string g_Globex = 'Globex - Opening Range "Futures Only"'
+i_OnOff_GlobexOpen = input.enum(defval = State.on, title = '',
+    group = g_Globex, inline = '1', display = display.none)
+i_GlobexOpenColorLine = input.color(defval = COLOR_GLOBEX, title = '',
+    group = g_Globex, inline = '1', display = display.none)
+i_GlobexOpenStart = input.string(defval = '1800', title = 'Start',
+    group = g_Globex, inline = '1', display = display.none)
+i_GlobexOpenRange = input.int(defval = 15, title = 'Range',
+    group = g_Globex, inline = '1', display = display.none,
+    minval = 5, maxval = 60, step = 5)
+
+const string g_OpenAsia = 'Asia - Opening Range "Futures Only"'
+i_OnOff_AsiaOpen = input.enum(defval = State.on, title = '',
+    group = g_OpenAsia, inline = '1', display = display.none)
+i_AsiaOpenColor = input.color(defval = COLOR_ASIA, title = '',
+    group = g_OpenAsia, inline = '1', display = display.none)
+i_AsiaOpenStart = input.string(defval = '2000', title = 'Start',
+    group = g_OpenAsia, inline = '1', display = display.none)
+i_AsiaOpenRange = input.int(defval = 15, title = 'Range',
+    group = g_OpenAsia, inline = '1', display = display.none,
+    minval = 5, maxval = 60, step = 5)
+
+const string g_OpenLondon = 'London - Opening Range "Futures Only"'
+i_OnOff_LondonOpen = input.enum(defval = State.on, title = '',
+    group = g_OpenLondon, inline = '1', display = display.none)
+i_LondonOpenColor = input.color(defval = COLOR_LONDON, title = '',
+    group = g_OpenLondon, inline = '1', display = display.none)
+i_LondonOpenStart = input.string(defval = '0300', title = 'Start',
+    group = g_OpenLondon, inline = '1', display = display.none)
+i_LondonOpenRange = input.int(defval = 15, title = 'Range',
+    group = g_OpenLondon, inline = '1', display = display.none,
+    minval = 5, maxval = 60, step = 5)
+
+const string g_OpenNewYork = 'New York - Opening Range'
+i_OnOff_NewYorkOpen = input.enum(defval = State.on, title = '',
+    group = g_OpenNewYork, inline = '1', display = display.none)
+i_NewYorkOpenColor = input.color(defval = COLOR_NEWYORK, title = '',
+    group = g_OpenNewYork, inline = '1', display = display.none)
+i_NewYorkOpenStart = input.string(defval = '0930', title = 'Start',
+    group = g_OpenNewYork, inline = '1', display = display.none)
+i_NewYorkOpenRange = input.int(defval = 15, title = 'Range',
+    group = g_OpenNewYork, inline = '1', display = display.none,
+    minval = 5, maxval = 60, step = 5)
+
+const string g_Ov = 'Over Night "Equity Only"'
+i_OvOnOff = input.enum(defval = State.on, title = '',
+    group = g_Ov, inline = '1', display = display.none)
+i_OvHiClr = input.color(defval = CLR_OV_HI, title = 'High',
+    group = g_Ov, inline = '1',display = display.none)
+i_OvLoClr = input.color(defval = CLR_OV_LO, title = 'Low',
+    group = g_Ov, inline = '1',display = display.none)
+
+const string g_Ah = 'After Hours "Equity Only"'
+i_AhOnOff = input.enum(defval = State.on, title = '',
+    group = g_Ah, inline = '1', display = display.none)
+i_AhHiClr = input.color(defval = CLR_AH_HI, title = 'High',
+    group = g_Ah, inline = '1',display = display.none)
+i_AhLoClr = input.color(defval = CLR_AH_LO, title = 'Low',
+    group = g_Ah, inline = '1',display = display.none)
+
+const string g_Yd = 'Yesterday'
+i_YdOnOff = input.enum(defval = State.on, title = '',
+    group = g_Yd, inline = 'YdHiLo', display = display.none)
+i_YdHiClr = input.color(defval = CLR_YD_HI, title = 'High',
+    group = g_Yd, inline = 'YdHiLo', display = display.none)
+i_YdLoClr = input.color(defval = CLR_YD_LO, title = 'Low',
+    group = g_Yd, inline = 'YdHiLo', display = display.none)
+
+i_YdOpOnOff = input.enum(defval = State.on, title = '',
+    group = g_Yd, inline = 'YdOp', display = display.none)
+i_YdOpClr = input.color(defval = CLR_YD_OP, title = 'Open',
+    group = g_Yd, inline = 'YdOp', display = display.none)
+
+i_YdClOnOff = input.enum(defval = State.on, title = '',
+    group = g_Yd, inline = 'YdCl', display = display.none)
+i_YdClsClr = input.color(defval = CLR_YD_CL, title = 'Close',
+    group = g_Yd, inline = 'YdCl', display = display.none)
+
+
+const string g_S = 'Style'
+// Label Settings
+i_TxtClr = input.color(CLR_NONE, 'Label Text', inline = 'lblFgClr', group = g_S, display = display.none)
+i_TxtClrMatch = input.bool(true, 'Match Line', inline = 'lblFgClr', group = g_S, display = display.none)
+
+i_LblClr = input.color(CLR_NONE, 'Label BG Color', inline = 'lblBgClr', group = g_S, display = display.none)
+i_LblClrMatch = input.bool(false, 'Match Line Color', inline = 'lblBgClr', group = g_S, display = display.none)
+
+i_ShowLabel = input.bool(true, 'Show Labels', group = g_S, display = display.none)
+i_Abbreviate = input.bool(false, 'Abbreviate label names', group = g_S, display = display.none)
+i_InclPrice = input.bool(true, 'Append price to label names', group = g_S, display = display.none)
+
+i_MergeLabels = input.bool(false, 'Merge labels within', inline = 'merge', group = g_S, display = display.none)
+i_MergeThreshold = input.float(5, '', 0.01, 1000, 1, inline = 'merge', group = g_S, display = display.none)
+
+const string g_L = 'Line'
+// Line Settings
+i_Lw = input.int(defval = 2, title = 'Width',
+          minval = 1, maxval = 10, step = 1, group = g_L, inline = 'LwLs', display = display.none)
+i_Ls = input.enum(defval = Ls.solid, title = 'Style', group = g_L, inline = 'LwLs', display = display.none)
+
+i_Forward = input.bool(true, 'Extend line right', inline = 'forwardBars', group = g_L, display = display.none)
+i_FwdBars = input.int(10, '', 0, inline = 'forwardBars', group = g_L, display = display.none)
+
+i_Truncate = input.bool(false, 'Max line length', inline = 'maxLineLength', group = g_L, display = display.none)
+i_TruncLen = input.int(15, '', 0, inline = 'maxLineLength', group = g_L, display = display.none)
+
+//----------------------------------------------------< Market Hours Settings
+const string g_MktHrs = 'Market Hours'
+
+i_Tz = input(
+      defval = 'America/New_York', title = 'Time Zone', group = g_MktHrs, inline = '1', display = display.none)
+
+i_MktHrs_Equity = input.session(
+      defval = '0930-1600', title = 'Equity Open/Close', group = g_MktHrs, inline = '2', display = display.none)
+
+i_MktHrs_Futures = input.session(
+      defval = '1800-1700', title = 'Futures Open/Close', group = g_MktHrs, inline = '3', display = display.none)
+
+//-------------------------------------------------------------------------------------------------< CALCULATIONS >---//
+
+bool useTd   = i_TdOnOff   == State.on ? true : false
+bool usePm   = i_PmOnOff   == State.on ? true : false
+bool useOv   = i_OvOnOff   == State.on ? true : false
+bool useAh   = i_AhOnOff   == State.on ? true : false
+bool useYd   = i_YdOnOff   == State.on ? true : false
+bool useTdOp = i_TdOpOnOff == State.on ? true : false
+bool useYdOp = i_YdOpOnOff == State.on ? true : false
+bool useYdCl = i_YdClOnOff == State.on ? true : false
+
+// Opening Range
+bool use_GlobexOpen     = i_OnOff_GlobexOpen    == State.on ? true : false
+bool use_NewYorkOpen    = i_OnOff_NewYorkOpen   == State.on ? true : false
+bool use_LondonOpen     = i_OnOff_LondonOpen    == State.on ? true : false
+bool use_AsiaOpen       = i_OnOff_AsiaOpen      == State.on ? true : false
+
+// Styles
+var string lineStyle = i_Ls == Ls.dotted ? line.style_dotted
+          : i_Ls == Ls.dashed ? line.style_dashed
+          : line.style_solid
+
+var box globexOrBox = na
+
+var int fwdLen = i_Forward ? i_FwdBars : 0
+var string timezone = i_Tz == 'syminfo.timezone' ? syminfo.timezone : i_Tz
+var string mktHrs = na
+
+colorIsNotTransparent(color clr) =>
+    color.t(clr) < 100
+
+if syminfo.type == 'futures'
+    mktHrs := i_MktHrs_Futures
+else
+    mktHrs := i_MktHrs_Equity
+
+
+// Store the number of milliseconds per bar
+var mspb = timeframe.multiplier * (timeframe.isseconds
+          ? 1000 : timeframe.isminutes
+          ? 60000 : timeframe.isdaily
+          ? 86400000 : timeframe.isweekly
+          ? 604800000 : timeframe.ismonthly
+          ? 2629800000 : 1)
+
+// @function Gets a standardized set of values from higher timeframes.
+// @returns  [open, open[1], high, high[1], low, low[1], close, close[1], time, time[1]]
+reqSec(string tf) =>
+    request.security(
+          symbol = ticker.modify(syminfo.tickerid, session.extended),
+          timeframe = tf,
+          expression = [open, open[1], high, high[1], low, low[1], close, close[1], time, time[1]],
+          lookahead = barmerge.lookahead_on)
+
+// @function Gets a standardized set of values from a one minute timeframe.
+// @returns  [open, high, low, close, time, session.ismarket]
+GetOneMinBarVals() =>
+    // security_lower_tf requires a timeframe strictly lower than the chart.
+    // On sub-minute charts (e.g. 15s) the chart IS finer than 1m, so wrap
+    // the current bar's values in single-element arrays instead.
+    if timeframe.isseconds
+        [array.from(open), array.from(high), array.from(low), array.from(close),
+              array.from(time), array.from(session.ismarket)]
+    else
+        request.security_lower_tf(
+              symbol = ticker.modify(syminfo.tickerid, session.extended),
+              timeframe = '1',
+              expression = [open, high, low, close, time, session.ismarket])
+
+// @type Object to store bar values.
+type barVals
+	array<float> Opens
+	array<float> Highs
+	array<float> Lows
+	array<float> Closes
+	array<int> Times
+	float Open
+	float High
+	float Low
+	float Close
+	int Index
+	bool isrealtime
+
+// Store 1m bar values alongside the charts timeframe bar values
+[mO, mH, mL, mC, mT, mM] = GetOneMinBarVals()
+bar = barVals.new(
+          mO, mH, mL, mC, mT,
+          open, high, low, close, time,
+          math.floor(time / mspb) == math.floor(timenow / mspb))
+field_0 = bar.Index
+BI1 = field_0[1]
+
+// Track when there's a new one minute bar
+varip bts = array.new_int(2, 0)
+bts.push(bar.Times.size())
+bts.shift()
+// On sub-minute charts every new bar is finer than 1m, so treat each new bar
+// as a "new one-minute bar" trigger so session/segment logic fires correctly.
+newOneMinuteBar = timeframe.isseconds
+          ? barstate.isnew
+          : bar.isrealtime
+          ? timeframe.multiplier == 1 and timeframe.isminutes
+          ? barstate.isnew : bts.range() > 0 and bar.Times.size() > 0 : true
+
+// Store 1D bar values
+[dO, dO1, dH, dH1, dL, dL1, dC, dC1, dT, dT1] = reqSec('D')
+dailyBar = barVals.new(
+          array.from(dO, dO1),
+          array.from(dH, dH1),
+          array.from(dL, dL1),
+          array.from(dC, dC1),
+          array.from(dT, dT1),
+          dO, dH, dL, dC, dT)
+
+// @type Object to track key levels.
+type level
+	bool InitState
+	bool Show
+	color Color
+	string Name
+	string ToolTip
+	float Level
+	float Price
+	int Index
+	int OldIndex
+	line Line
+	label Label
+	box Range
+
+// @variable An array of all key levels in this script.
+var keyLevels = array.new<level>()
+
+// Constants to make working with keyLevels more human friendly
+const int TD = 0
+const int TDH = 0
+const int TDL = 1
+
+const int OP = 2
+const int OPH = 2
+const int OPL = 3
+
+const int PM = 4
+const int PMH = 4
+const int PML = 5
+
+const int OV = 6
+const int OVH = 6
+const int OVL = 7
+
+const int AH = 8
+const int AHH = 8
+const int AHL = 9
+
+const int YD = 10
+const int YDH = 10
+const int YDL = 11
+
+const int TDO = 12
+const int TDC = 13
+const int YDO = 14
+const int YDC = 15
+
+
+// @function Checks if an integer is an even number.
+evenNum(int i) =>
+    i % 2 == 0
+
+// @function Transforms a label string into an acronym.
+acronym(string fullStr) =>
+    wordList = str.split(fullStr, ' ')
+    firstCharacters = ''
+    for word in wordList
+        firstCharacters := firstCharacters + str.match(word, '\\w')
+        firstCharacters
+    firstCharacters
+
+// @function Assembles the name and tooltip for labels.
+labelStrings(int i, string abrvStr, string fullStr) =>
+    ohlca = ''
+    possesive = ''
+    if i <= YDL
+        ohlca := evenNum(i) ? 'High' : 'Low'
+        ohlca
+    else
+        ohlca := switch (i - TDO) % 2
+            0 => 'Open'
+            1 => 'Close'
+        ohlca
+
+    if i <= TDL or YDH <= i
+        possesive := 's'
+        possesive
+
+    string customName = na
+    string customTip = na
+    switch i
+        TDH =>
+            customName := 'HoD'
+            customTip := 'High of Day'
+        TDL =>
+            customName := 'LoD'
+            customTip := 'Low of Day'
+        YDH =>
+            customName := 'yd HoD'
+            customTip := 'Yesterday High of Day'
+        YDL =>
+            customName := 'yd LoD'
+            customTip := 'Yesterday Low of Day'
+        OPH =>
+            customName := 'G op H'
+            customTip := 'Globex Open High'
+        OPL =>
+            customName := 'G op L'
+            customTip := 'Globex Open Low'
+        TDO =>
+            customName := 'Open'
+            customTip := 'Today Open'
+        YDO =>
+            customName := 'yd Open'
+            customTip := 'Yesterday Open'
+        YDC =>
+            customName := 'yd Close'
+            customTip := 'Yesterday Close'
+
+    name = i_Abbreviate
+              ? na(customName) ? ' ' + abrvStr + acronym(ohlca) + ' ' : ' ' + customName + ' '
+              : na(customName) ? ' ' + ohlca + ' • ' + fullStr + ' ' : ' ' + customTip + ' '
+
+    tooltip = na(customTip) ? ' ' + fullStr + possesive + ' ' + ohlca + ' ' : ' ' + customTip + ' '
+    [name, tooltip]
+
+// Initialize keyLevels array
+var Levels_Not_Initialized = true
+if Levels_Not_Initialized
+
+    // Create temporary arrays to help initialize the keyLevels object array
+    fullStr = array.from('Today', 'Open', 'Premarket', 'Overnight', 'After Hours', 'Yesterday')
+    abrvStr = array.from('TD', 'OR', 'PM', 'ON', 'AH', 'YD')
+    colors = array.from(
+              i_TdHiClr, i_TdLoClr,
+              i_GlobexOpenColorLine, i_GlobexOpenColorLine,
+              i_PmHiClr, i_PmLoClr,
+              i_OvHiClr, i_OvLoClr,
+              i_AhHiClr, i_AhLoClr,
+              i_YdHiClr, i_YdLoClr,
+              i_TdOpClr,
+              CLR_NONE,
+              i_YdOpClr,
+              i_YdClsClr)
+    lvlVis = array.from(
+              useTd, useTd,
+              use_GlobexOpen, use_GlobexOpen,
+              usePm, usePm,
+              useOv, useOv,
+              useAh, useAh,
+              useYd, useYd,
+              useTdOp,
+              false,
+              useYdOp,
+              useYdCl)
+
+    // Set visibility
+    for v in lvlVis
+        keyLevels.push(level.new(v, v))
+
+    // Set strings
+    for [i, kl] in keyLevels
+        if kl.Show
+            kl.Color := colors.get(i)
+
+            // All Open, High, Low, Close, & Average levels from Today through Last Year
+            j = switch true
+                i <= YDL => math.floor(i / 2)
+                (TDO <= i and i <= YDC) => (i <= TDC ? TD : YD) / 2
+            [name, tooltip] = labelStrings(i, abrvStr.get(j), fullStr.get(j))
+            kl.Name := name
+            kl.ToolTip := tooltip
+            kl.ToolTip
+
+    Levels_Not_Initialized := false
+    Levels_Not_Initialized
+
+// --------------------------------------------------- TIME LOGIC -------------------------------------------------- //
+
+// @function Converts a bar_index into a bar_time.
+numOfBars(int t) =>
+    t * mspb
+
+// @function Converts an integer into a 4 character time string.
+normalizeTime(float t) =>
+    s = str.tostring(int(t))
+    while str.length(s) < 4
+        s := '0' + s
+        s
+    s
+
+// @function Calculates the Near Open start time.
+setNearOpenStartTime(string mst) =>
+    t = str.tonumber(mst)
+    hr = math.floor(t / 100)
+    m = t % 100
+    m := m
+    if m < 0
+        while m < 0
+            hr := hr - 1
+            m := m + 60
+            m
+    normalizeTime(hr * 100 + m)
+
+// @function Adds minutes to a HHMM string.
+addMinutesToTime(string hhmm, int mins) =>
+    t = str.tonumber(hhmm)
+    hr = math.floor(t / 100)
+    m = t % 100 + mins
+    while m >= 60
+        hr := hr + 1
+        m := m - 60
+        m
+    while m < 0
+        hr := hr - 1
+        m := m + 60
+        m
+    normalizeTime(hr * 100 + m)
+
+// @function Returns the first 4 characters in a 9 character time range string. Ex: "0000" in "0000-2400".
+startTime(string t) =>
+    str.substring(t, 0, 4)
+
+// @function Returns the last 4 characters in a 9 character time range string. Ex: "2400" in "0000-2400".
+stopTime(string t) =>
+    str.substring(t, 5, 9)
+
+// Convert trader specified market time variables into strings
+var string mktStartTime = na
+var string mktEndTime = na
+var string marketHours = na
+var string openingStartTime = na
+var string sessionOpeningStartTime = na
+var string nyOpeningStartTime = na
+var string londonOpeningStartTime = na
+var string asiaOpeningStartTime = na
+var string preMktHours = na
+var string bfrMktHours = na
+var string noStartTime = na
+var string nearOpenMin = na
+var string openEndTime = na
+var string openingMins = na
+var string sessionOpenEndTime = na
+var string nyOpenEndTime = na
+var string londonOpenEndTime = na
+var string asiaOpenEndTime = na
+var string sessionOpeningMins = na
+var string nyOpeningMins = na
+var string londonOpeningMins = na
+var string asiaOpeningMins = na
+var string minutesInDay = na
+var string mktCloseToMidnight = na
+var Strings_Not_Initialized = true
+if Strings_Not_Initialized
+    mktStartTime := startTime(mktHrs)
+    mktEndTime := stopTime(mktHrs)
+    sessionOpeningStartTime := mktStartTime
+    nyOpeningStartTime := i_NewYorkOpenStart
+    londonOpeningStartTime := i_LondonOpenStart
+    asiaOpeningStartTime := i_AsiaOpenStart
+    sessionOpenEndTime := addMinutesToTime(sessionOpeningStartTime, i_GlobexOpenRange)
+    nyOpenEndTime := addMinutesToTime(nyOpeningStartTime, i_NewYorkOpenRange)
+    londonOpenEndTime := addMinutesToTime(londonOpeningStartTime, i_LondonOpenRange)
+    asiaOpenEndTime := addMinutesToTime(asiaOpeningStartTime, i_AsiaOpenRange)
+    sessionOpeningMins := sessionOpeningStartTime + '-' + sessionOpenEndTime
+    nyOpeningMins := nyOpeningStartTime + '-' + nyOpenEndTime
+    londonOpeningMins := londonOpeningStartTime + '-' + londonOpenEndTime
+    asiaOpeningMins := asiaOpeningStartTime + '-' + asiaOpenEndTime
+    openingStartTime := sessionOpeningStartTime
+    marketHours := mktHrs
+    preMktHours := '0000-' + mktStartTime
+    bfrMktHours := mktEndTime + '-' + mktStartTime
+    noStartTime := setNearOpenStartTime(mktStartTime)
+    nearOpenMin := noStartTime + '-' + mktStartTime
+    openEndTime := sessionOpenEndTime
+    openingMins := sessionOpeningMins
+    minutesInDay := '1440'
+    mktCloseToMidnight := mktEndTime + '-2400'
+    Strings_Not_Initialized := false
+    Strings_Not_Initialized
+
+// @function Converts UNIX time into a 4 character hour-minute string.
+Time(int t, string output = 'string') =>
+    h = str.tostring(hour(t, timezone))
+    h := str.length(h) < 2 ? '0' + h : h
+    m = str.tostring(minute(t, timezone))
+    m := str.length(m) < 2 ? '0' + m : m
+    str.format('{0}{1}', h, m)
+
+// @function Checks if a bar_time occurs within a time range.
+evalTime(string beg, int barTime, string end) =>
+    t = str.tonumber(Time(barTime))
+    str.tonumber(beg) <= t and t < str.tonumber(end)
+
+// @function Iterates through an array of 1m bars and checks if any of them occur within a segment.
+method isSegment(string segment = na) =>
+    result = false
+    beg = startTime(segment)
+    end = stopTime(segment)
+    pmh = str.tonumber(beg) > str.tonumber(end)
+    for barTime in bar.Times
+        if pmh ? evalTime(beg, barTime, '2400') or evalTime('0000', barTime, end) : evalTime(beg, barTime, end)
+            result := true
+            break
+    result
+
+// @function Iterates through an array of 1m bars and checks if any are session.ismarket.
+sessionIsMarket() =>
+    result = false
+    for [i, sessionIsMarket] in mM
+        if sessionIsMarket
+            result := true
+            break
+    result
+
+// Update segments only when there's a new one minute bar (rather than each chart update)
+var newSession = false
+var preSession = false
+var mktSession = false
+var premarket = false
+var market = false
+var marketOpen = false
+var afterHours = false
+var overnight = false
+var PMS1 = false
+var MKS1 = false
+var PM1 = false
+var NO1 = false
+var MK1 = false
+var AH1 = false
+var ON1 = false
+var OR1 = false
+var mctm = false
+var newSessionBeforeMidnight = false
+var newDailyBar = false
+var newWeek = false
+var newMonth = false
+var newQuarter = false
+var newYear = false
+var session = -1
+var firstMarketBar = false
+var firstOpenRangeBar = false
+// Multi-session OR visibility toggles.
+bool useGlobexOr = use_GlobexOpen
+bool useNyOr = use_NewYorkOpen
+bool useLondonOr = use_LondonOpen
+bool useAsiaOr = use_AsiaOpen
+
+// Globex OR (session start, usually 18:00 ET for futures).
+var float sessionOrHigh = na
+var float sessionOrLow = na
+var bool sessionOrActive = false
+var bool sessionOrWasActive = false
+var int sessionOrStartIndex = na
+var line sessionOrHighLine = na
+var line sessionOrLowLine = na
+var label sessionOrHighLabel = na
+var label sessionOrLowLabel = na
+
+// Additional OR tracks (New York, London, Asia).
+var float nyOrHigh = na
+var float nyOrLow = na
+var bool nyOrActive = false
+var bool nyOrWasActive = false
+var int nyOrStartIndex = na
+var line nyOrHighLine = na
+var line nyOrLowLine = na
+var label nyOrHighLabel = na
+var label nyOrLowLabel = na
+
+var float londonOrHigh = na
+var float londonOrLow = na
+var bool londonOrActive = false
+var bool londonOrWasActive = false
+var int londonOrStartIndex = na
+var line londonOrHighLine = na
+var line londonOrLowLine = na
+var label londonOrHighLabel = na
+var label londonOrLowLabel = na
+
+var float asiaOrHigh = na
+var float asiaOrLow = na
+var bool asiaOrActive = false
+var bool asiaOrWasActive = false
+var int asiaOrStartIndex = na
+var line asiaOrHighLine = na
+var line asiaOrLowLine = na
+var label asiaOrHighLabel = na
+var label asiaOrLowLabel = na
+
+// Opening Range fill boxes — one per session.
+var box nyOrBox = na
+var box londonOrBox = na
+var box asiaOrBox = na
+if newOneMinuteBar
+
+    // Common intraday segments
+    newSession := session.isfirstbar
+    preSession := session.ispremarket
+    PMS1 := preSession[1]
+    mktSession := sessionIsMarket()
+    MKS1 := mktSession[1]
+    premarket := isSegment(preMktHours)
+    PM1 := premarket[1]
+    market := isSegment(marketHours)
+    MK1 := market[1]
+    marketOpen := isSegment(openingMins)
+    OR1 := marketOpen[1]
+    firstOpenRangeBar := marketOpen and (not OR1 or newSession)
+
+    if useGlobexOr
+        sessionOrActive := isSegment(sessionOpeningMins)
+        sessionOrWasActive := sessionOrActive[1]
+        if sessionOrActive and (not sessionOrWasActive or newSession)
+            sessionOrHigh := na
+            sessionOrLow := na
+            sessionOrStartIndex := bar.Index
+
+        if sessionOrActive
+            for [i, t] in bar.Times
+                if evalTime(sessionOpeningStartTime, t, sessionOpenEndTime)
+                    h = bar.Highs.get(i)
+                    l = bar.Lows.get(i)
+                    sessionOrHigh := na(sessionOrHigh) ? h : math.max(sessionOrHigh, h)
+                    sessionOrLow := na(sessionOrLow) ? l : math.min(sessionOrLow, l)
+
+    if useNyOr
+        nyOrActive := isSegment(nyOpeningMins)
+        nyOrWasActive := nyOrActive[1]
+        if nyOrActive and (not nyOrWasActive or newSession)
+            nyOrHigh := na
+            nyOrLow := na
+            nyOrStartIndex := bar.Index
+
+        if nyOrActive
+            for [i, t] in bar.Times
+                if evalTime(nyOpeningStartTime, t, nyOpenEndTime)
+                    h = bar.Highs.get(i)
+                    l = bar.Lows.get(i)
+                    nyOrHigh := na(nyOrHigh) ? h : math.max(nyOrHigh, h)
+                    nyOrLow := na(nyOrLow) ? l : math.min(nyOrLow, l)
+
+    if useLondonOr
+        londonOrActive := isSegment(londonOpeningMins)
+        londonOrWasActive := londonOrActive[1]
+        if londonOrActive and (not londonOrWasActive or newSession)
+            londonOrHigh := na
+            londonOrLow := na
+            londonOrStartIndex := bar.Index
+
+        if londonOrActive
+            for [i, t] in bar.Times
+                if evalTime(londonOpeningStartTime, t, londonOpenEndTime)
+                    h = bar.Highs.get(i)
+                    l = bar.Lows.get(i)
+                    londonOrHigh := na(londonOrHigh) ? h : math.max(londonOrHigh, h)
+                    londonOrLow := na(londonOrLow) ? l : math.min(londonOrLow, l)
+
+    if useAsiaOr
+        asiaOrActive := isSegment(asiaOpeningMins)
+        asiaOrWasActive := asiaOrActive[1]
+        if asiaOrActive and (not asiaOrWasActive or newSession)
+            asiaOrHigh := na
+            asiaOrLow := na
+            asiaOrStartIndex := bar.Index
+
+        if asiaOrActive
+            for [i, t] in bar.Times
+                if evalTime(asiaOpeningStartTime, t, asiaOpenEndTime)
+                    h = bar.Highs.get(i)
+                    l = bar.Lows.get(i)
+                    asiaOrHigh := na(asiaOrHigh) ? h : math.max(asiaOrHigh, h)
+                    asiaOrLow := na(asiaOrLow) ? l : math.min(asiaOrLow, l)
+
+    // Less common intraday segments
+    mctm := isSegment(mktCloseToMidnight)
+    newSessionBeforeMidnight := newSession
+              ? hour(time, timezone) * 60 + minute(time, timezone) < 1440 : market
+              ? false : newSessionBeforeMidnight
+    afterHours := mctm and not newSessionBeforeMidnight
+    AH1 := afterHours[1]
+    overnight := mctm and newSessionBeforeMidnight
+    ON1 := overnight[1]
+
+    // Common annual segments
+    newDailyBar := mktSession and (not MKS1 or newSession)
+
+    // Increment the session count. Used to disregard incomplete data from the first session on the chart
+    session := session + (newSession and session < 1 ? 1 : 0)
+
+    // Track first market bar
+    firstMarketBar := market and (not MK1 or newSession)
+    firstMarketBar
+
+// @function Checks if any part of the current bar occurred within a given segment.
+segment(int i) =>
+    switch i
+        OP => openingMins
+        PM => useOv ? preMktHours : bfrMktHours
+        OV => mktCloseToMidnight
+        AH => mktCloseToMidnight
+        TD => marketHours
+        YD => marketHours
+        TDO => marketHours
+        YDO => marketHours
+
+// @function Checks if any part of the current bar occurred during the first minute of a given segment.
+isFirstMinOf(int i) =>
+    switch i
+        OP => firstOpenRangeBar
+        PM => useOv ? premarket and (not PM1 or newSession)
+                  : overnight and newSession or not ON1 and premarket and (not PM1 or newSession)
+        OV => overnight and newSession
+        AH => afterHours and not AH1
+        TD => firstMarketBar
+        YD => firstMarketBar
+        TDO => firstMarketBar
+        YDO => firstMarketBar
+        YDC => true ? MK1 and (not market or newSession) : MKS1 and (not mktSession or newSession)
+
+// ----------------------------------------------- RECENT LEVEL LOGIC ---------------------------------------------- //
+
+// @function Synthesizes standard bar values.
+method src(barVals b, string src, int n = na) =>
+    float o = na
+    float h = na
+    float l = na
+    float c = na
+    switch_var_7 = na(n)
+    switch switch_var_7
+        true =>
+    	    o := b.Open
+    	    h := b.High
+    	    l := b.Low
+    	    c := b.Close
+    	    c
+        false =>
+    	    o := b.Opens.get(n)
+    	    h := b.Highs.get(n)
+    	    l := b.Lows.get(n)
+    	    c := b.Closes.get(n)
+    	    c
+
+// @function Saves the old indices of key levels.
+saveOldIndices(int first, int last = na) =>
+    for i = first to na(last) ? first : last by 1
+        kl = keyLevels.get(i)
+        kl.OldIndex := kl.Index
+        kl.OldIndex
+
+// @function Sets the Level and Index fields of a level object.
+method set(int i, float lvl, int idx = na) =>
+    kl = keyLevels.get(i)
+    kl.Level := lvl
+    kl.Index := na(idx) ? bar.Index : idx
+    kl.Index
+
+// The syminfo.session variable is "us_regular" (rather than "regular") when using a RTH chart with Futures,
+// indicating the daily open, high, and low may have already occurred. Other tradables may have similar
+// conditions, thus str.contains(syminfo.session, "_") was used instead of syminfo.type == "futures".
+var irregularRTH = str.contains(syminfo.session, '_')
+
+// @function Sets the high and low levels of a segment.
+method set_high_low(int hi, bool True = true) =>
+    if True
+        lo = hi + 1
+        useDailyBar = switch hi
+            TD => not true
+            YD => not true
+            => false
+        if isFirstMinOf(hi)
+            saveOldIndices(hi, lo)
+            if useDailyBar and irregularRTH
+                hi.set(dailyBar.High)
+                lo.set(dailyBar.Low)
+            else
+                hi.set(bar.Open)
+                lo.set(bar.Open)
+        seg = segment(hi)
+        beg = startTime(seg)
+        end = stopTime(seg)
+        pmh = str.tonumber(beg) > str.tonumber(end)
+        for [i, t] in bar.Times
+            if pmh ? evalTime(beg, t, '2400') or evalTime('0000', t, end) : evalTime(beg, t, end)
+                if bar.Highs.get(i) >= keyLevels.get(hi).Level
+                    hi.set(bar.Highs.get(i))
+                if bar.Lows.get(i) <= keyLevels.get(lo).Level
+                    lo.set(bar.Lows.get(i))
+
+// @function Sets the daily opening value.
+method set_open(int o, bool True = true) =>
+    if True and bar.Times.size() > 0
+        int n = na
+        bool rth = false
+        string src = na
+        switch o
+            TDO =>
+        	    rth := true
+        	    src := O
+        	    src
+            YDO =>
+        	    rth := true
+        	    src := O
+        	    src
+        if rth
+            for [i, t] in bar.Times
+                if str.tonumber(Time(t)) == str.tonumber(startTime(marketHours))
+                    n := i
+                    break
+        else if not irregularRTH
+            for [i, sessionIsMarket] in mM
+                if sessionIsMarket and (not MKS1 or newSession)
+                    n := i
+                    break
+        v = not na(n) ? bar.src(src, n) : dailyBar.Open
+        o.set(v)
+
+// @function Sets the daily closing value.
+method set_close(int c, bool True = true) =>
+    if True and not na(bar[1])
+        int n = na
+        bool rth = false
+        barVals b = na
+        array<bool> m = na
+        switch c
+            TDC =>
+        	    b := bar
+        	    m := mM
+        	    rth := true
+        	    rth
+            YDC =>
+        	    b := bar[1]
+        	    m := mM[1]
+        	    rth := true
+        	    rth
+        if rth
+            pmh = str.tonumber(mktStartTime) > str.tonumber(mktEndTime)
+            for [i, t] in b.Times
+                if pmh ? evalTime(mktStartTime, t, '2400') or evalTime('0000', t, mktEndTime) : evalTime(mktStartTime, t, mktEndTime)
+                    n := i
+                    n
+        else if b.Closes.size() > 0
+            for [i, sessionIsMarket] in m
+                if sessionIsMarket
+                    n := i
+                    n
+        v = not na(n) ? b.src(C, n) : market ? keyLevels.get(TDC).Level : dailyBar.Close
+        c.set(v, b.Index)
+
+// @function Checks if a level should be set.
+ifOkayToSet(int i) =>
+    switch i
+        OP => use_GlobexOpen and marketOpen
+        PM => usePm and (overnight and not useOv or premarket)
+        OV => useOv and overnight
+        AH => useAh and afterHours
+        TD => useTd and not newSession and market
+        YD => useYd and not newSession and market
+        => false
+
+// Unchanging variables placed outside ifOkayToSet() to reduce computational overhead
+var ifOkayToSetTDO = useTdOp
+var ifOkayToSetYDC = useYdCl
+
+// Save specific bar indices that are necessary for showing old levels correctly, but may be overwritten
+if newSession
+    saveOldIndices(TDH, OVL)
+    saveOldIndices(TDO, TDC)
+
+// Track the recent highs & lows
+for i = TD to YD by 1
+    i.set_high_low(ifOkayToSet(i))
+
+// Track the todays open & yesterdays close
+TDO.set_open(ifOkayToSetTDO and isFirstMinOf(TDO))
+YDC.set_close(ifOkayToSetYDC and isFirstMinOf(YDC))
+
+// Set first market bar index
+var firstMarketBarIndex = time
+if isFirstMinOf(OP) and not newSession
+    firstMarketBarIndex := bar.Index
+    firstMarketBarIndex
+else if isFirstMinOf(OP)[1] and newSession[1]
+    field_1 = bar.Index
+    firstMarketBarIndex := field_1[1]
+    firstMarketBarIndex
+
+// Set last market bar index.
+var lastMarketBarIndex = time
+if MK1 and (not market or newSession)
+    field_2 = bar.Index
+    lastMarketBarIndex := field_2[1]
+    lastMarketBarIndex
+
+// -------------------------------------------- OBJECT UPDATE FUNCTIONS -------------------------------------------- //
+
+// @function Formats prices using the symbol mintick so trailing zeros are preserved.
+formatPrice(float price) =>
+    str.tostring(price, format.mintick)
+
+// @function Assembles the text and tooltip strings for a label.
+method new_label_string(level kl, string Type, array<string> strArr = na, array<float> fltArr = na) =>
+    price = formatPrice(kl.Price)
+    if Type == 'text'
+        if na(strArr)
+            (i_InclPrice ? ' ' + price + ' • ' : '') + str.trim(kl.Name) + ' '
+        else
+            priceRange = not na(fltArr) and fltArr.range() == 0
+                  ? price
+                  : formatPrice(fltArr.min()) + ' → ' + formatPrice(fltArr.max())
+            (i_InclPrice ? ' ' + priceRange + ' • ' : '') + str.trim(strArr.join(i_Abbreviate ? '/' : ' / ')) + ' '
+    else if not na(strArr) and not na(fltArr)
+        for [i, str] in strArr
+            strArr.set(i, str + '• ' + formatPrice(fltArr.get(i)))
+        strArr.join('\n')
+    else
+        kl.ToolTip + '• ' + price
+
+// @function Creates a new line for a level.
+method new_line(level kl, int x1) =>
+    kl.Line := line.new(x1, kl.Level, bar.Index + numOfBars(fwdLen), kl.Level,
+              xloc.bar_time, extend.none, kl.Color, lineStyle, i_Lw)
+    kl.Price := kl.Level
+    kl.Price
+
+// @function Creates a new label for a level.
+method new_label(level kl, array<string> nameArr = na, array<string> toolArr = na, array<float> priceArr = na) =>
+    if i_ShowLabel
+        x = bar.Index + numOfBars(fwdLen)
+        y = na(priceArr) ? kl.Price : math.avg(priceArr.min(), priceArr.max())
+        bgc = not na(nameArr) ? CLR_NONE : i_LblClrMatch ? kl.Color : i_LblClr
+        fgc = not na(nameArr)
+              ? colorIsNotTransparent(CLR_NONE)
+              ? CLR_NONE : color.new(chart.fg_color, 25) : i_TxtClrMatch
+              ? color.new(kl.Color, color.t(kl.Color) / 2) : colorIsNotTransparent(CLR_NONE)
+              ? i_TxtClr : color.new(chart.fg_color, 50)
+        Text = kl.new_label_string('text', nameArr, priceArr)
+        Tool = kl.new_label_string('tool', toolArr, priceArr)
+        kl.Label := label.new(x, y,
+              Text, xloc.bar_time, yloc.price, bgc, label.style_label_left, fgc, size.large, text.align_center, Tool)
+        kl.Label
+
+// @function Iterates through and displays a set of levels on their first bar.
+showFirstBarLevels(int first, int last) =>
+    for i = first to last by 1
+        kl = keyLevels.get(i)
+        if kl.Show
+            kl.new_line(kl.Index)
+            kl.new_label()
+
+// @function Updates the Y coordinate of a levels line and label.
+method update_y(level kl) =>
+    kl.Price := kl.Level
+    kl.Line.set_y1(kl.Level)
+    kl.Line.set_y2(kl.Level)
+    kl.Label.set_y(kl.Level)
+
+// @function Updates the label strings of a level.
+method update_label_strings(level kl) =>
+    if not na(kl.Label)
+        kl.Label.set_text(kl.new_label_string('text'))
+        kl.Label.set_tooltip(kl.new_label_string('tool'))
+
+// @function Updates how a level displays on the chart.
+method updateLevel(int i) =>
+    kl = keyLevels.get(i)
+    if kl.Show and kl.Price != kl.Level
+        kl.update_y()
+        kl.update_label_strings()
+        falseIf = array.from(OPH, OPL)
+        if not falseIf.includes(i)
+            kl.Line.set_x1(kl.Index)
+
+// @function Manages recent high and low levels.
+method manage_high_low(int hi, bool True = true) =>
+    if True
+        lo = hi < TDO ? hi + 1 : hi
+        if isFirstMinOf(hi)
+            showFirstBarLevels(hi, lo)
+        if isSegment(segment(hi))
+            hi.updateLevel()
+            lo.updateLevel()
+
+// @function Iterates through and hides a set of levels.
+hideLevel(int first, int last) =>
+    for i = first to last by 1
+        kl = keyLevels.get(i)
+        kl.Show := false
+        kl.Show
+
+
+// ----------------------------------------------- NEW SESSION LOGIC ----------------------------------------------- //
+
+// On the first bar of a new session with complete data…
+if newSession and session > 0
+
+    // Reset level visibility to their intial states
+    for kl in keyLevels
+        kl.Show := kl.InitState
+        kl.Show
+
+    // Disable levels that are not meaningful or measurable…
+    if timeframe.isdwm
+        // Disable intrabar levels
+        hideLevel(TDO, YDC)
+        hideLevel(TDH, YDL)
+    else
+        if market and MK1
+            // Disable all levels that are not part of market hours
+            hideLevel(PMH, AHL)
+        else
+            if not AH1
+                // Disable after hours levels
+                hideLevel(AHH, AHL)
+            if market
+                // Disable near open, premarket, and overnight levels
+                hideLevel(PMH, OVL)
+            else if premarket
+                // Disable overnight Levels
+                hideLevel(OVH, OVL)
+
+    // Delete the old stuff
+    if not na(nyOrHighLine)
+        nyOrHighLine.delete()
+        nyOrHighLine := na
+    if not na(nyOrLowLine)
+        nyOrLowLine.delete()
+        nyOrLowLine := na
+    if not na(nyOrHighLabel)
+        nyOrHighLabel.delete()
+        nyOrHighLabel := na
+    if not na(nyOrLowLabel)
+        nyOrLowLabel.delete()
+        nyOrLowLabel := na
+    nyOrHigh := na
+    nyOrLow := na
+    nyOrStartIndex := na
+
+    if not na(londonOrHighLine)
+        londonOrHighLine.delete()
+        londonOrHighLine := na
+    if not na(londonOrLowLine)
+        londonOrLowLine.delete()
+        londonOrLowLine := na
+    if not na(londonOrHighLabel)
+        londonOrHighLabel.delete()
+        londonOrHighLabel := na
+    if not na(londonOrLowLabel)
+        londonOrLowLabel.delete()
+        londonOrLowLabel := na
+    londonOrHigh := na
+    londonOrLow := na
+    londonOrStartIndex := na
+
+    if not na(asiaOrHighLine)
+        asiaOrHighLine.delete()
+        asiaOrHighLine := na
+    if not na(asiaOrLowLine)
+        asiaOrLowLine.delete()
+        asiaOrLowLine := na
+    if not na(asiaOrHighLabel)
+        asiaOrHighLabel.delete()
+        asiaOrHighLabel := na
+    if not na(asiaOrLowLabel)
+        asiaOrLowLabel.delete()
+        asiaOrLowLabel := na
+    asiaOrHigh := na
+    asiaOrLow := na
+    asiaOrStartIndex := na
+    if not na(nyOrBox)
+        nyOrBox.delete()
+        nyOrBox := na
+    if not na(londonOrBox)
+        londonOrBox.delete()
+        londonOrBox := na
+    if not na(asiaOrBox)
+        asiaOrBox.delete()
+        asiaOrBox := na
+    for kl in keyLevels
+        kl.Line.delete()
+        kl.Label.delete()
+
+    // Create new levels for the current session
+    for [i, kl] in keyLevels
+        if kl.Show
+            x1 = kl.Index
+            kl.new_line(x1)
+            kl.new_label()
+            if i < AHH or TDO <= i and i <= TDC
+                kl.Line.delete()
+                kl.Label.delete()
+
+    // Reset bar indices…
+    for [i, kl] in keyLevels
+        // If key level will extend into the next session…
+        if AHH <= i and i <= YDL or i == TDO or i == YDO or i == YDC
+            kl.OldIndex := kl.Index
+            kl.OldIndex
+        // If key level is recent…
+        else
+            kl.Index := bar.Index
+            kl.Index
+
+    // Reset daily levels
+    TD.set_high_low(useTd)
+    YD.set_high_low(useYd)
+
+// ----------------------------------------------- BAR BY BAR LOGIC ------------------------------------------------ //
+
+// @function Builds the display text for an opening range label (price • name).
+orLabelText(float price, string fullName, string abrvName) =>
+    priceStr = formatPrice(price)
+    i_Abbreviate
+          ? (i_InclPrice ? ' ' + priceStr + ' • ' : ' ') + abrvName + ' '
+          : (i_InclPrice ? ' ' + priceStr + ' • ' : ' ') + fullName + ' '
+
+// @function Checks if a recent level should be managed.
+manageCriteria(i) =>
+    switch i
+        OP => use_GlobexOpen and marketOpen
+        PM => usePm and (premarket or overnight and not useOv)
+        OV => useOv and overnight
+        TD => useTd and mktSession
+        TDO => useTdOp and isFirstMinOf(TDO)
+        YDO => useYdOp and isFirstMinOf(YDO)
+        => false
+
+// Update recent levels
+TDO.manage_high_low(manageCriteria(TDO))
+YDO.set_open(manageCriteria(YDO))
+for i = TD to OV by 1
+    i.manage_high_low(manageCriteria(i))
+
+// Keep Globex box, lines, and labels on one data source so they always stay in sync.
+globexHigh = na(sessionOrHigh) ? keyLevels.get(OPH).Level : sessionOrHigh
+globexLow = na(sessionOrLow) ? keyLevels.get(OPL).Level : sessionOrLow
+if useGlobexOr and not timeframe.isdwm and not na(globexHigh) and not na(globexLow)
+    x1SecondaryOr = na(sessionOrStartIndex) ? firstMarketBarIndex : sessionOrStartIndex
+    x2SecondaryOr = bar.Index + numOfBars(fwdLen)
+    secondaryOrColor = i_GlobexOpenColorLine
+
+    if na(globexOrBox)
+        globexOrBox := box.new(x1SecondaryOr, globexHigh, x2SecondaryOr, globexLow,
+              xloc = xloc.bar_time, border_width = 0, border_color = CLR_NONE,
+              bgcolor = color.new(secondaryOrColor, i_OrRangeTransparency))
+    else
+        globexOrBox.set_left(x1SecondaryOr)
+        globexOrBox.set_right(x2SecondaryOr)
+        globexOrBox.set_top(globexHigh)
+        globexOrBox.set_bottom(globexLow)
+        globexOrBox.set_bgcolor(color.new(secondaryOrColor, i_OrRangeTransparency))
+
+    if na(sessionOrHighLine)
+        sessionOrHighLine := line.new(x1SecondaryOr, globexHigh, x2SecondaryOr, globexHigh,
+              xloc.bar_time, extend.none, secondaryOrColor, lineStyle, i_Lw)
+        sessionOrLowLine := line.new(x1SecondaryOr, globexLow, x2SecondaryOr, globexLow,
+              xloc.bar_time, extend.none, secondaryOrColor, lineStyle, i_Lw)
+    else
+        sessionOrHighLine.set_x1(x1SecondaryOr)
+        sessionOrHighLine.set_x2(x2SecondaryOr)
+        sessionOrHighLine.set_y1(globexHigh)
+        sessionOrHighLine.set_y2(globexHigh)
+
+        sessionOrLowLine.set_x1(x1SecondaryOr)
+        sessionOrLowLine.set_x2(x2SecondaryOr)
+        sessionOrLowLine.set_y1(globexLow)
+        sessionOrLowLine.set_y2(globexLow)
+
+    if i_ShowLabel
+        if na(sessionOrHighLabel)
+            sessionOrHighLabel := label.new(x2SecondaryOr, globexHigh, orLabelText(globexHigh, 'Globex Open High', 'G op H'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, secondaryOrColor,
+                  size.large, text.align_center, 'Globex Open High')
+            sessionOrLowLabel := label.new(x2SecondaryOr, globexLow, orLabelText(globexLow, 'Globex Open Low', 'G op L'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, secondaryOrColor,
+                  size.large, text.align_center, 'Globex Open Low')
+        else
+            sessionOrHighLabel.set_x(x2SecondaryOr)
+            sessionOrHighLabel.set_y(globexHigh)
+            sessionOrHighLabel.set_text(orLabelText(globexHigh, 'Globex Open High', 'G op H'))
+            sessionOrLowLabel.set_x(x2SecondaryOr)
+            sessionOrLowLabel.set_y(globexLow)
+            sessionOrLowLabel.set_text(orLabelText(globexLow, 'Globex Open Low', 'G op L'))
+    else
+        if not na(sessionOrHighLabel)
+            sessionOrHighLabel.delete()
+            sessionOrHighLabel := na
+        if not na(sessionOrLowLabel)
+            sessionOrLowLabel.delete()
+            sessionOrLowLabel := na
+else
+    if not na(sessionOrHighLabel)
+        sessionOrHighLabel.delete()
+        sessionOrHighLabel := na
+    if not na(sessionOrLowLabel)
+        sessionOrLowLabel.delete()
+        sessionOrLowLabel := na
+    if not na(globexOrBox)
+        globexOrBox.delete()
+        globexOrBox := na
+    if not na(sessionOrHighLine)
+        sessionOrHighLine.delete()
+        sessionOrHighLine := na
+    if not na(sessionOrLowLine)
+        sessionOrLowLine.delete()
+        sessionOrLowLine := na
+
+if useNyOr and not timeframe.isdwm and not na(nyOrHigh) and not na(nyOrLow)
+    x1NyOr = na(nyOrStartIndex) ? bar.Index : nyOrStartIndex
+    x2NyOr = bar.Index + numOfBars(fwdLen)
+
+    if na(nyOrBox)
+        nyOrBox := box.new(x1NyOr, nyOrHigh, x2NyOr, nyOrLow,
+              xloc = xloc.bar_time, border_width = 0, border_color = CLR_NONE,
+              bgcolor = color.new(i_NewYorkOpenColor, i_OrRangeTransparency))
+    else
+        nyOrBox.set_left(x1NyOr)
+        nyOrBox.set_right(x2NyOr)
+        nyOrBox.set_top(nyOrHigh)
+        nyOrBox.set_bottom(nyOrLow)
+        nyOrBox.set_bgcolor(color.new(i_NewYorkOpenColor, i_OrRangeTransparency))
+
+    if na(nyOrHighLine)
+        nyOrHighLine := line.new(x1NyOr, nyOrHigh, x2NyOr, nyOrHigh,
+              xloc.bar_time, extend.none, i_NewYorkOpenColor, lineStyle, i_Lw)
+        nyOrLowLine := line.new(x1NyOr, nyOrLow, x2NyOr, nyOrLow,
+              xloc.bar_time, extend.none, i_NewYorkOpenColor, lineStyle, i_Lw)
+    else
+        nyOrHighLine.set_x1(x1NyOr)
+        nyOrHighLine.set_x2(x2NyOr)
+        nyOrHighLine.set_y1(nyOrHigh)
+        nyOrHighLine.set_y2(nyOrHigh)
+
+        nyOrLowLine.set_x1(x1NyOr)
+        nyOrLowLine.set_x2(x2NyOr)
+        nyOrLowLine.set_y1(nyOrLow)
+        nyOrLowLine.set_y2(nyOrLow)
+
+    if i_ShowLabel
+        if na(nyOrHighLabel)
+            nyOrHighLabel := label.new(x2NyOr, nyOrHigh, orLabelText(nyOrHigh, 'NY Open High', 'N op H'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_NewYorkOpenColor,
+                  size.large, text.align_center, 'New York Open High')
+            nyOrLowLabel := label.new(x2NyOr, nyOrLow, orLabelText(nyOrLow, 'NY Open Low', 'N op L'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_NewYorkOpenColor,
+                  size.large, text.align_center, 'New York Open Low')
+        else
+            nyOrHighLabel.set_x(x2NyOr)
+            nyOrHighLabel.set_y(nyOrHigh)
+            nyOrHighLabel.set_text(orLabelText(nyOrHigh, 'NY Open High', 'N op H'))
+            nyOrLowLabel.set_x(x2NyOr)
+            nyOrLowLabel.set_y(nyOrLow)
+            nyOrLowLabel.set_text(orLabelText(nyOrLow, 'NY Open Low', 'N op L'))
+    else
+        if not na(nyOrHighLabel)
+            nyOrHighLabel.delete()
+            nyOrHighLabel := na
+        if not na(nyOrLowLabel)
+            nyOrLowLabel.delete()
+            nyOrLowLabel := na
+else
+    if not na(nyOrHighLabel)
+        nyOrHighLabel.delete()
+        nyOrHighLabel := na
+    if not na(nyOrLowLabel)
+        nyOrLowLabel.delete()
+        nyOrLowLabel := na
+    if not na(nyOrBox)
+        nyOrBox.delete()
+        nyOrBox := na
+    if not na(nyOrHighLine)
+        nyOrHighLine.delete()
+        nyOrHighLine := na
+    if not na(nyOrLowLine)
+        nyOrLowLine.delete()
+        nyOrLowLine := na
+
+if useLondonOr and not timeframe.isdwm and not na(londonOrHigh) and not na(londonOrLow)
+    x1LondonOr = na(londonOrStartIndex) ? bar.Index : londonOrStartIndex
+    x2LondonOr = bar.Index + numOfBars(fwdLen)
+
+    if na(londonOrBox)
+        londonOrBox := box.new(x1LondonOr, londonOrHigh, x2LondonOr, londonOrLow,
+              xloc = xloc.bar_time, border_width = 0, border_color = CLR_NONE,
+              bgcolor = color.new(i_LondonOpenColor, i_OrRangeTransparency))
+    else
+        londonOrBox.set_left(x1LondonOr)
+        londonOrBox.set_right(x2LondonOr)
+        londonOrBox.set_top(londonOrHigh)
+        londonOrBox.set_bottom(londonOrLow)
+        londonOrBox.set_bgcolor(color.new(i_LondonOpenColor, i_OrRangeTransparency))
+
+    if na(londonOrHighLine)
+        londonOrHighLine := line.new(x1LondonOr, londonOrHigh, x2LondonOr, londonOrHigh,
+              xloc.bar_time, extend.none, i_LondonOpenColor, lineStyle, i_Lw)
+        londonOrLowLine := line.new(x1LondonOr, londonOrLow, x2LondonOr, londonOrLow,
+              xloc.bar_time, extend.none, i_LondonOpenColor, lineStyle, i_Lw)
+    else
+        londonOrHighLine.set_x1(x1LondonOr)
+        londonOrHighLine.set_x2(x2LondonOr)
+        londonOrHighLine.set_y1(londonOrHigh)
+        londonOrHighLine.set_y2(londonOrHigh)
+
+        londonOrLowLine.set_x1(x1LondonOr)
+        londonOrLowLine.set_x2(x2LondonOr)
+        londonOrLowLine.set_y1(londonOrLow)
+        londonOrLowLine.set_y2(londonOrLow)
+
+    if i_ShowLabel
+        if na(londonOrHighLabel)
+            londonOrHighLabel := label.new(x2LondonOr, londonOrHigh, orLabelText(londonOrHigh, 'London Open High', 'L op H'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_LondonOpenColor,
+                  size.large, text.align_center, 'London Open High')
+            londonOrLowLabel := label.new(x2LondonOr, londonOrLow, orLabelText(londonOrLow, 'London Open Low', 'L op L'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_LondonOpenColor,
+                  size.large, text.align_center, 'London Open Low')
+        else
+            londonOrHighLabel.set_x(x2LondonOr)
+            londonOrHighLabel.set_y(londonOrHigh)
+            londonOrHighLabel.set_text(orLabelText(londonOrHigh, 'London Open High', 'L op H'))
+            londonOrLowLabel.set_x(x2LondonOr)
+            londonOrLowLabel.set_y(londonOrLow)
+            londonOrLowLabel.set_text(orLabelText(londonOrLow, 'London Open Low', 'L op L'))
+    else
+        if not na(londonOrHighLabel)
+            londonOrHighLabel.delete()
+            londonOrHighLabel := na
+        if not na(londonOrLowLabel)
+            londonOrLowLabel.delete()
+            londonOrLowLabel := na
+else
+    if not na(londonOrHighLabel)
+        londonOrHighLabel.delete()
+        londonOrHighLabel := na
+    if not na(londonOrLowLabel)
+        londonOrLowLabel.delete()
+        londonOrLowLabel := na
+    if not na(londonOrBox)
+        londonOrBox.delete()
+        londonOrBox := na
+    if not na(londonOrHighLine)
+        londonOrHighLine.delete()
+        londonOrHighLine := na
+    if not na(londonOrLowLine)
+        londonOrLowLine.delete()
+        londonOrLowLine := na
+
+if useAsiaOr and not timeframe.isdwm and not na(asiaOrHigh) and not na(asiaOrLow)
+    x1AsiaOr = na(asiaOrStartIndex) ? bar.Index : asiaOrStartIndex
+    x2AsiaOr = bar.Index + numOfBars(fwdLen)
+
+    if na(asiaOrBox)
+        asiaOrBox := box.new(x1AsiaOr, asiaOrHigh, x2AsiaOr, asiaOrLow,
+              xloc = xloc.bar_time, border_width = 0, border_color = CLR_NONE,
+              bgcolor = color.new(i_AsiaOpenColor, i_OrRangeTransparency))
+    else
+        asiaOrBox.set_left(x1AsiaOr)
+        asiaOrBox.set_right(x2AsiaOr)
+        asiaOrBox.set_top(asiaOrHigh)
+        asiaOrBox.set_bottom(asiaOrLow)
+        asiaOrBox.set_bgcolor(color.new(i_AsiaOpenColor, i_OrRangeTransparency))
+
+    if na(asiaOrHighLine)
+        asiaOrHighLine := line.new(x1AsiaOr, asiaOrHigh, x2AsiaOr, asiaOrHigh,
+              xloc.bar_time, extend.none, i_AsiaOpenColor, lineStyle, i_Lw)
+        asiaOrLowLine := line.new(x1AsiaOr, asiaOrLow, x2AsiaOr, asiaOrLow,
+              xloc.bar_time, extend.none, i_AsiaOpenColor, lineStyle, i_Lw)
+    else
+        asiaOrHighLine.set_x1(x1AsiaOr)
+        asiaOrHighLine.set_x2(x2AsiaOr)
+        asiaOrHighLine.set_y1(asiaOrHigh)
+        asiaOrHighLine.set_y2(asiaOrHigh)
+
+        asiaOrLowLine.set_x1(x1AsiaOr)
+        asiaOrLowLine.set_x2(x2AsiaOr)
+        asiaOrLowLine.set_y1(asiaOrLow)
+        asiaOrLowLine.set_y2(asiaOrLow)
+
+    if i_ShowLabel
+        if na(asiaOrHighLabel)
+            asiaOrHighLabel := label.new(x2AsiaOr, asiaOrHigh, orLabelText(asiaOrHigh, 'Asia Open High', 'A op H'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_AsiaOpenColor,
+                  size.large, text.align_center, 'Asia Open High')
+            asiaOrLowLabel := label.new(x2AsiaOr, asiaOrLow, orLabelText(asiaOrLow, 'Asia Open Low', 'A op L'),
+                  xloc.bar_time, yloc.price, CLR_NONE, label.style_label_left, i_AsiaOpenColor,
+                  size.large, text.align_center, 'Asia Open Low')
+        else
+            asiaOrHighLabel.set_x(x2AsiaOr)
+            asiaOrHighLabel.set_y(asiaOrHigh)
+            asiaOrHighLabel.set_text(orLabelText(asiaOrHigh, 'Asia Open High', 'A op H'))
+            asiaOrLowLabel.set_x(x2AsiaOr)
+            asiaOrLowLabel.set_y(asiaOrLow)
+            asiaOrLowLabel.set_text(orLabelText(asiaOrLow, 'Asia Open Low', 'A op L'))
+    else
+        if not na(asiaOrHighLabel)
+            asiaOrHighLabel.delete()
+            asiaOrHighLabel := na
+        if not na(asiaOrLowLabel)
+            asiaOrLowLabel.delete()
+            asiaOrLowLabel := na
+else
+    if not na(asiaOrHighLabel)
+        asiaOrHighLabel.delete()
+        asiaOrHighLabel := na
+    if not na(asiaOrLowLabel)
+        asiaOrLowLabel.delete()
+        asiaOrLowLabel := na
+    if not na(asiaOrBox)
+        asiaOrBox.delete()
+        asiaOrBox := na
+    if not na(asiaOrHighLine)
+        asiaOrHighLine.delete()
+        asiaOrHighLine := na
+    if not na(asiaOrLowLine)
+        asiaOrLowLine.delete()
+        asiaOrLowLine := na
+
+// Adjust lines and labels
+overlapped = map.new<float, string>()
+x1Adj = bar.Index - numOfBars(i_TruncLen)
+x2Adj = bar.Index + numOfBars(fwdLen)
+var lastKeyLevelsIndex = keyLevels.size() - 1
+for [i, kl] in keyLevels
+    if kl.Show and not na(kl.Line)
+        kl.Line.set_x2(x2Adj)
+
+        if i_Truncate
+            kl.Line.set_x1(x1Adj)
+
+        if i_ShowLabel
+            if i_MergeLabels
+                price = math.round_to_mintick(math.round(kl.Price / i_MergeThreshold) * i_MergeThreshold)
+                overlapped.put(price, overlapped.get(price) + str.tostring(i) + ' ')
+            else
+                kl.Label.set_x(x2Adj)
+
+// Merge labels with identical levels
+if i_ShowLabel and i_MergeLabels
+    nameArr = array.new_string()
+    toolArr = array.new_string()
+    pricArr = array.new_float()
+    for val in overlapped.values()
+        str = str.trim(val)
+        arr = str.split(str, ' ')
+        i = int(str.tonumber(arr.get(0)))
+        kl = keyLevels.get(i)
+
+        // When more than one level has an identical rounded value…
+        if arr.size() > 1
+
+            // Get the names of each key level and delete its label
+            for idx in arr
+                lvl = keyLevels.get(int(str.tonumber(idx)))
+                nameArr.push(lvl.Name)
+                toolArr.push(lvl.ToolTip)
+                pricArr.push(math.round_to_mintick(lvl.Price))
+                lvl.Label.delete()
+
+            // Give one of the levels a new label with all the names
+            kl.new_label(nameArr, toolArr, pricArr)
+
+            // Clear arrays for next iteration
+            nameArr.clear()
+            toolArr.clear()
+            pricArr.clear()
+
+        // Otherwise give the unique value a new label when the line is displayed
+        else if not na(kl.Line)
+            kl.Label.delete()
+            kl.new_label()
+
+//----------------------------------------------------< END-CODE >----------------------------------------------------//

@@ -12,7 +12,7 @@ TradingView itself estimates that >95% of indicators repaint in *some* way and t
 
 | id | severity | what | source |
 |---|---|---|---|
-| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` with an expression not offset by `[1]` → future leak on historical bars. Warning when the expression is a wrapper-function parameter; not reported when every same-file call site passes a `[1]` (or other history) offset | [Future leak](https://www.tradingview.com/pine-script-docs/concepts/repainting/#future-leak-with-requestsecurity) |
+| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` with an expression not offset by `[1]` → future leak on historical bars. Not reported when the expression is built only from prior-bar values. Warning when the expression is a wrapper-function parameter; not reported when every same-file call site passes a `[1]` (or other history) offset | [Future leak](https://www.tradingview.com/pine-script-docs/concepts/repainting/#future-leak-with-requestsecurity) |
 | PRC002 | warning | `request.security()` on another timeframe without the `[1]` + `lookahead_on` pattern → unconfirmed realtime values | [Repainting request.security() calls](https://www.tradingview.com/pine-script-docs/concepts/repainting/#repainting-requestsecurity-calls) |
 | PRC003 | warning | `strategy(..., calc_on_every_tick = true)` | [Strategies](https://www.tradingview.com/pine-script-docs/concepts/repainting/#strategies) |
 | PRC004 | warning | `varip` | [varip](https://www.tradingview.com/pine-script-docs/concepts/repainting/#varip) |
@@ -64,7 +64,7 @@ Findings appear as PR annotations (`error` / `warning` / `notice`). The Action's
 
 ## Accuracy
 
-Measured on a corpus of 31 real permissively-licensed scripts plus 21 own fixtures; see [corpus/RESULTS.md](corpus/RESULTS.md) and [corpus/SOURCES.md](corpus/SOURCES.md). The real-world sample is small, and labels are hand-made by the author, so treat the numbers as a sanity check, not a benchmark.
+Measured on a corpus of 31 real permissively-licensed scripts plus 21 own fixtures; see [corpus/RESULTS.md](corpus/RESULTS.md) and [corpus/SOURCES.md](corpus/SOURCES.md). A separate false-positive sample of 200 public `.pine` files that contain `lookahead_on` is written up in [docs/false-positive-eval.md](docs/false-positive-eval.md). The hand labels are a review of hits, not an external benchmark.
 
 Known limitations: regex/bracket-based analysis, not a full parser; identifier resolution is one assignment deep within a file, except a `lookahead_on` wrapper parameter, which is checked at same-file call sites (including tuple returns of user functions); alerts inside user functions are flagged without checking call sites; libraries (`import`) are not followed.
 

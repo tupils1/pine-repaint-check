@@ -1,0 +1,380 @@
+//@version=6
+indicator('Market Tail Risk Detector (Quiet → Explosive)', overlay = false, max_bars_back = 600)
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET TAIL RISK DETECTOR - QUIET PERIODS → EXPLOSIVE MOVES
+// ═══════════════════════════════════════════════════════════════
+//
+// PURPOSE: Identify stocks likely to have BIGGER moves than most people expect
+// Detects tail risk building during quiet periods - when complacency is high
+// and the market is vulnerable to regime changes and outsized volatility.
+//
+// CORE CONCEPT - THE VOLATILITY PARADOX:
+// When volatility is low AND stable for extended periods:
+// - Market participants become complacent (VIX low, options cheap)
+// - Liquidity providers assume predictable ranges
+// - Position sizing increases (leverage builds)
+// - Hedges are removed (insurance seems unnecessary)
+// → This creates FRAGILITY: Small shocks cause disproportionate moves
+//
+// WHAT THIS INDICATOR DOES:
+// 🎯 PRIMARY SIGNALS (70% of score):
+// 1. Volatility of Volatility (VoV) - Detects stable/predictable volatility (complacency)
+// 2. Realized Volatility Percentile - Identifies extremely quiet periods
+// 3. Compression Duration - Tracks HOW LONG volatility has been suppressed
+// 4. Volume Decline - Detects liquidity drain (amplifies tail moves)
+//
+// 📊 SUPPORTING SIGNALS (30% of score):
+// 5. Technical compression (TTM Squeeze, Bollinger Bands, ATR)
+// 6. Classic breakout patterns (NR7, inside days)
+// 7. Momentum indicators (RSI, MACD, ADX flatness)
+//
+// WHAT THIS INDICATOR DOES NOT DO:
+// ❌ Predict direction of breakout (up or down)
+// ❌ Generate buy/sell signals
+// ❌ Identify trend direction
+// ❌ Work as a standalone trading system
+// ❌ Predict TIMING of the move (only that tail risk is elevated)
+//
+// USAGE (Tail Risk Score: 0-100):
+// - Low scores (0-40): Normal market, typical volatility expectations
+// - High scores (60+): Elevated tail risk, expect bigger moves than consensus
+// - Extreme scores (80+): Maximum tail risk, complacency extreme, regime change likely
+//
+// 💡 USE CASES:
+// 1. Position sizing: REDUCE size when tail risk is high (protect from gaps/shocks)
+// 2. Options strategy: Buy volatility (straddles/strangles) when VoV is low
+// 3. Risk management: Widen stops or use options hedges instead of tight stops
+// 4. Opportunity identification: Watch for catalysts when score is high (earnings, news)
+// 5. Avoid bad entries: Don't initiate new positions during extreme compression
+//
+// 🔬 KEY INSIGHT:
+// This isn't about predicting normal 2-3% moves. It's about identifying when
+// conditions are ripe for 5-10%+ moves that catch the market off-guard.
+// Think: Surprise earnings gaps, sudden sector rotations, flash crashes, etc.
+//
+// ═══════════════════════════════════════════════════════════════
+
+// INPUTS - Timeframe selection
+useCustomTimeframe = input.bool(false, 'Use Custom Timeframe', group = 'Timeframe')
+customTimeframe = input.timeframe('W', 'Timeframe', group = 'Timeframe')
+
+// INPUTS - Display settings
+tableTextSize = input.string('Small', 'Info Table Text Size', options = ['Auto', 'Tiny', 'Small', 'Normal', 'Large', 'Huge'], group = 'Display')
+verboseTable = input.bool(false, 'Verbose Table (Show All Metrics)', group = 'Display')
+
+// INPUTS - Focused on compression and volatility
+rvLen = input.int(20, 'Realized Vol Period', minval = 10, group = 'Volatility')
+atrLen = input.int(14, 'ATR Period', minval = 5, group = 'Volatility')
+compressionLen = input.int(30, 'Compression Detection Period', group = 'Compression')
+bbLen = input.int(20, 'Bollinger Band Length', group = 'Compression')
+kcLen = input.int(20, 'Keltner Channel Length', group = 'Compression')
+kcMult = input.float(1.5, 'Keltner Multiplier', group = 'Compression')
+
+// Select the appropriate timeframe
+selectedTimeframe = useCustomTimeframe ? customTimeframe : timeframe.period
+
+// Convert table text size string to size constant
+getTextSize(sizeStr) =>
+    sizeStr == 'Auto' ? size.auto : sizeStr == 'Tiny' ? size.tiny : sizeStr == 'Small' ? size.small : sizeStr == 'Normal' ? size.normal : sizeStr == 'Large' ? size.large : size.huge
+
+textSize = getTextSize(tableTextSize)
+
+// ═══════════════════════════════════════════════════════════════
+// CALCULATION FUNCTION - Called in selected timeframe context
+// ═══════════════════════════════════════════════════════════════
+
+calculateFragility() =>
+    // ═══════════════════════════════════════════════════════════════
+    // 📊 SECTION 1: REALIZED VOLATILITY - THE GROUND TRUTH
+    // ═══════════════════════════════════════════════════════════════
+    // 📐 Calculate actual market volatility using log returns (more accurate than simple returns)
+    // 📈 Annualize it to get a percentage comparable across timeframes
+    logReturns = math.log(close / close[1])
+    realizedVol = ta.stdev(logReturns, rvLen) * math.sqrt(252) * 100
+
+    // 📍 Where does current volatility rank in the past year? (252 trading days)
+    // ⚠️ RV Percentile below 20% = volatility in bottom quintile = tail risk!
+    lookback = 252
+    rvHigh = ta.highest(realizedVol, lookback)
+    rvLow = ta.lowest(realizedVol, lookback)
+    rvRange = math.max(rvHigh - rvLow, 1e-6)
+    rvPercentileRaw = (realizedVol - rvLow) / rvRange * 100
+    rvPercentile = math.max(math.min(rvPercentileRaw, 100), 0)
+
+    // 🎯 Volatility of volatility - the "second derivative of chaos"
+    // ⭐ MOST IMPORTANT: When vol is stable AND low, market is vulnerable to regime change
+    volOfVol = ta.stdev(realizedVol, 20)
+    vovHigh = ta.highest(volOfVol, lookback)
+    vovLow = ta.lowest(volOfVol, lookback)
+    vovRange = math.max(vovHigh - vovLow, 1e-6)
+    vovPercentileRaw = (volOfVol - vovLow) / vovRange * 100
+    vovPercentile = math.max(math.min(vovPercentileRaw, 100), 0)
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🗜️ SECTION 2: COMPRESSION METRICS - PRESSURE BUILDING
+    // ═══════════════════════════════════════════════════════════════
+    // ⚡ Pre-calculate common values to avoid redundant calculations
+    closeInv = 100.0 / close  // Inverse to convert divisions to multiplications
+
+    // 📏 ATR Compression: When daily range drops 30% below its 50-day average
+    // 💤 Markets can't stay "too quiet" indefinitely
+    atr = ta.atr(atrLen)
+    atrPercent = atr * closeInv
+    atrMA = ta.sma(atrPercent, 50)
+    atrCompression = atrPercent < atrMA * 0.7
+
+    // 📉 Bollinger Band Squeeze: Classic John Bollinger compression indicator
+    // 🎈 When BB width is less than half its historical average, expect expansion
+    basis = ta.sma(close, bbLen)
+    bbDev = ta.stdev(close, bbLen) * 2
+    bbUpper = basis + bbDev
+    bbLower = basis - bbDev
+    bbWidth = (bbUpper - bbLower) / basis * 100
+    bbHistoricalWidth = ta.sma(bbWidth, 100)
+    bbSqueeze = bbWidth < bbHistoricalWidth * 0.5
+
+    // 💎 TTM Squeeze: Most powerful compression signal
+    // 🔥 When Bollinger Bands squeeze inside Keltner Channels = extreme compression
+    kcBasis = ta.ema(close, kcLen)
+    // Reuse ATR if periods match, otherwise calculate
+    kcRange = (kcLen == atrLen ? atr : ta.atr(kcLen)) * kcMult
+    kcUpper = kcBasis + kcRange
+    kcLower = kcBasis - kcRange
+    ttmSqueeze = bbLower > kcLower and bbUpper < kcUpper
+
+    // Multi-timeframe range compression
+    // When ranges compress across multiple timeframes = systematic compression
+    rangeDaily = (high - low) * closeInv
+    highLow5 = ta.highest(high, 5) - ta.lowest(low, 5)
+    highLow20 = ta.highest(high, 20) - ta.lowest(low, 20)
+    range5Day = highLow5 * closeInv
+    range20Day = highLow20 * closeInv
+    rangeCompression = rangeDaily < ta.sma(rangeDaily, 30) * 0.6
+    multiCompression = range5Day < ta.sma(range5Day, 50) * 0.7 and range20Day < ta.sma(range20Day, 50) * 0.7
+
+    // ═══════════════════════════════════════════════════════════════
+    // 📐 SECTION 3: PATTERN RECOGNITION - SETUPS THAT EXPLODE
+    // ═══════════════════════════════════════════════════════════════
+    // 🕯️ Doji at trend extremes: Indecision after directional move = reversal or continuation setup
+    isDoji = math.abs(close - open) < (high - low) * 0.1
+    sma50 = ta.sma(close, 50)  // Cache SMA for reuse
+    trendUp = close > sma50 and close[1] > close[2]
+    trendDown = close < sma50 and close[1] < close[2]
+    dojiReversal = isDoji and (trendUp or trendDown)
+
+    // 📦 Inside days: Price action contained within previous bar = coiling
+    // 🔒 Multiple inside days = extreme coiling, big move coming
+    insideDay = high < high[1] and low > low[1]
+    multipleInsideDays = insideDay and insideDay[1]
+
+    // 📊 NR7/NR4: Narrowest Range patterns (Linda Raschke)
+    // 🎯 NR7 = current bar has smallest range in 7 bars = highest compression
+    // ⚡ NR4 = same but 4 bars = moderate compression
+    nr7 = rangeDaily == ta.lowest(rangeDaily, 7)
+    nr4 = rangeDaily == ta.lowest(rangeDaily, 4)
+
+    // ═══════════════════════════════════════════════════════════════
+    // 💤 SECTION 4: MOMENTUM DEATH - WHEN MOVEMENT STOPS
+    // ═══════════════════════════════════════════════════════════════
+    // 🎚️ RSI stuck in dead center (45-55) and not moving = no momentum
+    // 🚗 Like a car engine idling - eventually has to shift gears
+    rsi = ta.rsi(close, 14)
+    rsiCompressed = rsi > 45 and rsi < 55
+    rsiFlat = math.abs(rsi - rsi[5]) < 5
+
+    // 📉 MACD convergence: When MACD and signal line merge = momentum pause
+    // 🔄 Often precedes momentum resurrection in either direction
+    [macdLine, signalLine, _] = ta.macd(close, 12, 26, 9)
+    macdFlat = math.abs(macdLine - signalLine) < atr * 0.1
+
+    // 📊 ADX below 20 with balanced +DI/-DI = no trend, no momentum
+    // ⚖️ Market in equilibrium, coiling for next directional move
+    adxLen = 14
+    [diPlus, diMinus, adx] = ta.dmi(adxLen, adxLen)
+    noTrend = adx < 20 and math.abs(diPlus - diMinus) < 5
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🕐 SECTION 4B: DURATION OF COMPRESSION - TAIL RISK BUILDS OVER TIME
+    // ═══════════════════════════════════════════════════════════════
+    // 💡 Key insight: The LONGER volatility stays compressed, the MORE explosive the eventual move
+    // 🌀 A spring coiled for 3 weeks > a spring coiled for 2 days
+    // ⭐ This is the MISSING PIECE for true tail risk detection
+
+    // 🎯 Define what "compressed" means - we need multiple signals to align
+    isCompressed = (rvPercentile < 30 or atrCompression or bbSqueeze) and vovPercentile < 40
+
+    // 📊 Count consecutive compressed periods - critical for tail risk
+    // 🔄 Using a loop to count backwards until compression breaks
+    var int compressionDuration = 0
+    if isCompressed
+        // Check how many consecutive bars were compressed
+        // Must match isCompressed logic: (rvPercentile < 30 or atrCompression or bbSqueeze) and vovPercentile < 40
+        consecCompressed = 0
+        for i = 0 to 50
+            wasCompressed = (rvPercentile[i] < 30 or atrPercent[i] < atrMA[i] * 0.7 or bbWidth[i] < bbHistoricalWidth[i] * 0.5) and vovPercentile[i] < 40
+            if wasCompressed
+                consecCompressed += 1
+            else
+                break
+        compressionDuration := consecCompressed
+    else
+        compressionDuration := 0
+
+    // 🎚️ Duration scoring: Longer compression = higher tail risk
+    // 🔥 > 20 periods of quiet = maximum danger (spring maximally coiled)
+    // ⚠️ > 10 periods = high danger
+    // 💡 > 5 periods = moderate danger
+    durationScore = compressionDuration > 20 ? 31 : compressionDuration > 10 ? 20 : compressionDuration > 5 ? 10 : 0
+
+    // ═══════════════════════════════════════════════════════════════
+    // 💧 SECTION 4C: VOLUME DECLINE - LIQUIDITY DRAIN AMPLIFIES TAIL RISK
+    // ═══════════════════════════════════════════════════════════════
+    // 🌊 When volume declines during quiet periods:
+    // 👥 - Fewer participants = less liquidity
+    // 💥 - Less liquidity = bigger price impact when catalyst hits
+    // 🚨 - Classic setup for outsized moves (tail events)
+
+    volumeMA50 = ta.sma(volume, 50)
+    volumeMA10 = ta.sma(volume, 10)
+
+    // 📉 Volume declining significantly (20%+ below 50-day average)
+    volumeDeclining = volumeMA10 < volumeMA50 * 0.8
+
+    // 🎯 Extra points if volume is in bottom quartile of recent range
+    volumeLow = ta.lowest(volume, lookback)
+    volumeHigh = ta.highest(volume, lookback)
+    volumeRange = math.max(volumeHigh - volumeLow, 1)
+    volumePercentile = (volume - volumeLow) / volumeRange * 100
+    volumeVeryLow = volumePercentile < 25
+
+    // 💰 Volume score: Low + declining volume = liquidity drain = tail risk
+    volumeScore = (volumeDeclining ? 15 : 0) + (volumeVeryLow ? 6 : 0)
+
+    // ═══════════════════════════════════════════════════════════════
+    // SECTION 5: TAIL RISK SCORE - OPTIMIZED FOR QUIET → EXPLOSIVE DETECTION
+    // ═══════════════════════════════════════════════════════════════
+    // This score predicts: "Stocks likely to have bigger moves than most people expect"
+    // Focus: TAIL RISK from quiet periods, not just technical breakouts
+    //
+    // NEW WEIGHTING (optimized for tail risk):
+    // 1. Volatility Regime: 30% (was 17%) - MOST IMPORTANT for complacency detection
+    // 2. Compression: 28% (was 33%) - Still important but not #1
+    // 3. Duration: 15% (NEW) - How long has it been quiet?
+    // 4. Volume Decline: 10% (NEW) - Liquidity drain amplifies moves
+    // 5. Patterns: 12% (was 24%) - Less relevant for tail risk
+    // 6. Momentum: 10% (was 17%) - Less relevant for tail risk
+    // 7. Bonus: 5% (was 9%) - Multi-signal alignment
+
+    // VOLATILITY REGIME SCORE (max 63 points = 30% of total)
+    // This is now the PRIMARY signal - when vol is low AND stable = maximum complacency
+    // VoV (Volatility of Volatility) is the STAR - 38 points (18% of total score)
+    volScore = (rvPercentile < 20 ? 25 : rvPercentile < 40 ? 13 : 0) + (vovPercentile < 20 ? 38 : 0)
+
+    // COMPRESSION SCORE (max 59 points = 28% of total)
+    // TTM Squeeze elevated to 25 points as it's the best compression metric
+    // Other compression metrics reduced since they overlap with vol regime
+    compressionScore = (ttmSqueeze ? 25 : 0) + (bbSqueeze ? 13 : 0) + (atrCompression ? 8 : 0) + (rangeCompression ? 8 : 0) + (multiCompression ? 5 : 0)
+
+    // PATTERN RECOGNITION SCORE (max 25 points = 12% of total)
+    // Reduced weight - patterns are nice but don't specifically predict tail risk
+    // Removed triangle pattern - too noisy for tail risk detection
+    patternScore = (nr7 ? 10 : nr4 ? 6 : 0) + (multipleInsideDays ? 10 : insideDay ? 5 : 0) + (dojiReversal ? 5 : 0)
+
+    // MOMENTUM DEATH SCORE (max 21 points = 10% of total)
+    // Reduced weight - flat momentum doesn't necessarily mean tail risk
+    momentumScore = (rsiCompressed and rsiFlat ? 10 : 0) + (macdFlat ? 6 : 0) + (noTrend ? 5 : 0)
+
+    // CALCULATE MASTER TAIL RISK SCORE (raw max = 230 points)
+    // Multi-signal bonus: When multiple HIGH-IMPORTANCE categories align = extreme tail risk
+    // Bonus reduced from 20 to 10 points (5% vs 9%)
+    multiSignal = volScore > 30 and compressionScore > 20 and durationScore > 10
+    rawScore = volScore + compressionScore + patternScore + momentumScore + durationScore + volumeScore + (multiSignal ? 10 : 0)
+
+    // Normalize to 0-100 scale for easier interpretation
+    fragScore = rawScore / 230 * 100
+
+    // Return all values needed for visualization and table display
+    [fragScore, rvPercentile, vovPercentile, atrPercent, bbWidth, ttmSqueeze, nr7, nr4, multipleInsideDays, insideDay, dojiReversal, atrCompression, bbSqueeze, compressionDuration, volumeDeclining]
+
+// Get all calculated values from the selected timeframe
+// Using lookahead_on to ensure we only use completed period data, eliminating false compression signals
+// from incomplete periods (e.g., early in the week on weekly charts)
+[fragScore, rvPercentile, vovPercentile, atrPercent, bbWidth, ttmSqueeze, nr7, nr4, multipleInsideDays, insideDay, dojiReversal, atrCompression, bbSqueeze, compressionDuration, volumeDeclining] = request.security(syminfo.tickerid, selectedTimeframe, calculateFragility(), lookahead = barmerge.lookahead_on)
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 6: VISUALIZATION - SEE THE TAIL RISK
+// ═══════════════════════════════════════════════════════════════
+
+// Dynamic color based on tail risk score
+// Color coding: Red (80+) = Extreme, Orange (60+) = High, Yellow (40+) = Moderate, Green (20+) = Low
+scoreColor = fragScore > 80 ? color.rgb(255, 0, 0) : fragScore > 60 ? color.rgb(255, 128, 0) : fragScore > 40 ? color.rgb(255, 255, 0) : fragScore > 20 ? color.rgb(128, 255, 128) : color.gray
+
+// Plot the master tail risk score as columns (cleaner than lines)
+plot(fragScore, 'Tail Risk Score', color = scoreColor, style = plot.style_columns)
+
+// Key indicators (drawn in order of importance - last is on top)
+plotshape(multipleInsideDays, 'Multiple Inside Days', shape.square, location.bottom, color = color.orange, size = size.tiny)
+plotshape(nr7, 'NR7 (Narrowest Range 7 Bars)', shape.triangleup, location.bottom, color = color.blue, size = size.tiny)
+plotshape(ttmSqueeze, 'TTM Squeeze', shape.diamond, location.bottom, color = color.purple, size = size.tiny)
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 7: ALERTS - NOTIFY WHEN TAIL RISK PEAKS
+// ═══════════════════════════════════════════════════════════════
+
+alertcondition(fragScore > 80, 'EXTREME TAIL RISK', '🚨 EXTREME tail risk on {{ticker}}! Expect bigger moves than consensus. Score: {{plot_0}}')
+alertcondition(fragScore > 60 and fragScore[1] <= 60, 'HIGH TAIL RISK TRIGGERED', '⚠️ HIGH tail risk on {{ticker}}! Complacency detected. Score: {{plot_0}}')
+alertcondition(ttmSqueeze and not ttmSqueeze[1], 'TTM SQUEEZE FIRED', 'TTM Squeeze started on {{ticker}} - compression building!')
+alertcondition(compressionDuration > 20, 'EXTENDED QUIET PERIOD', '🕐 {{ticker}} has been quiet for 20+ periods - tail risk building!')
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 8: INFO TABLE - TAIL RISK METRICS
+// ═══════════════════════════════════════════════════════════════
+
+// Dynamic table size based on verbose mode
+tableRows = verboseTable ? 11 : 2
+var table infoTable = table.new(position.top_right, 2, tableRows, bgcolor = color.black, border_color = color.white, border_width = 1)
+
+if barstate.islast
+    // Row 0: Total Score (always visible)
+    table.cell(infoTable, 0, 0, 'Tail Risk Score', text_color = color.white, text_size = textSize)
+    table.cell(infoTable, 1, 0, str.tostring(fragScore, '##.#'), text_color = scoreColor, text_size = textSize)
+
+    // Row 1: Signal (always visible)
+    signalText = fragScore > 80 ? '🚨 EXTREME!' : fragScore > 60 ? '⚠️ HIGH' : fragScore > 40 ? 'MODERATE' : fragScore > 20 ? 'Low' : 'Wait'
+    table.cell(infoTable, 0, 1, 'Signal', text_color = color.white, text_size = textSize)
+    table.cell(infoTable, 1, 1, signalText, text_color = fragScore > 60 ? color.red : color.white, text_size = textSize)
+
+    // Additional rows (only in verbose mode) - Ordered by importance for tail risk
+    if verboseTable
+        // Row 2: VoV Percentile ⭐ MOST IMPORTANT - complacency indicator
+        table.cell(infoTable, 0, 2, 'VoV Percentile', text_color = color.white, text_size = textSize)
+        table.cell(infoTable, 1, 2, str.tostring(vovPercentile, '##') + '%', text_color = vovPercentile < 20 ? color.rgb(255, 100, 0) : color.white, text_size = textSize)
+        // Row 3: Compression Duration 🕐 NEW - how long quiet?
+        table.cell(infoTable, 0, 3, 'Quiet Duration', text_color = color.white, text_size = textSize)
+        durationText = compressionDuration > 20 ? str.tostring(compressionDuration) + ' 🔥' : str.tostring(compressionDuration)
+        table.cell(infoTable, 1, 3, durationText, text_color = compressionDuration > 20 ? color.red : compressionDuration > 10 ? color.orange : color.white, text_size = textSize)
+        // Row 4: Volume Status 💧 NEW - liquidity drain
+        table.cell(infoTable, 0, 4, 'Volume', text_color = color.white, text_size = textSize)
+        volumeText = volumeDeclining ? '⬇️ Declining' : 'Normal'
+        table.cell(infoTable, 1, 4, volumeText, text_color = volumeDeclining ? color.yellow : color.white, text_size = textSize)
+        // Row 5: RV Percentile
+        table.cell(infoTable, 0, 5, 'RV Percentile', text_color = color.white, text_size = textSize)
+        table.cell(infoTable, 1, 5, str.tostring(rvPercentile, '##') + '%', text_color = rvPercentile < 20 ? color.green : color.white, text_size = textSize)
+        // Row 6: TTM Squeeze
+        table.cell(infoTable, 0, 6, 'TTM Squeeze', text_color = color.white, text_size = textSize)
+        table.cell(infoTable, 1, 6, ttmSqueeze ? '🔥 ACTIVE' : 'No', text_color = ttmSqueeze ? color.red : color.gray, text_size = textSize)
+        // Row 7: ATR %
+        table.cell(infoTable, 0, 7, 'ATR %', text_color = color.white, text_size = textSize)
+        table.cell(infoTable, 1, 7, str.tostring(atrPercent, '#.##') + '%', text_color = atrCompression ? color.yellow : color.white, text_size = textSize)
+        // Row 8: BB Width
+        table.cell(infoTable, 0, 8, 'BB Width', text_color = color.white, text_size = textSize)
+        table.cell(infoTable, 1, 8, str.tostring(bbWidth, '#.#') + '%', text_color = bbSqueeze ? color.orange : color.white, text_size = textSize)
+        // Row 9: Range Status
+        table.cell(infoTable, 0, 9, 'Range Status', text_color = color.white, text_size = textSize)
+        rangeStatus = nr7 ? 'NR7!' : nr4 ? 'NR4' : 'Normal'
+        table.cell(infoTable, 1, 9, rangeStatus, text_color = nr7 ? color.yellow : color.white, text_size = textSize)
+        // Row 10: Pattern
+        table.cell(infoTable, 0, 10, 'Pattern', text_color = color.white, text_size = textSize)
+        patternStatus = multipleInsideDays ? 'Multi-Inside' : insideDay ? 'Inside Day' : dojiReversal ? 'Doji' : 'None'
+        table.cell(infoTable, 1, 10, patternStatus, text_color = patternStatus != 'None' ? color.rgb(0, 255, 255) : color.gray, text_size = textSize)

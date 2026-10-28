@@ -1,0 +1,398 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Combined: SVP Asia/NY + 4H Body + Bollinger Bands
+//@version=6
+indicator("SVP亚纽 + 4H身体 + BB", shorttitle="SVP+4H+BB", overlay=true, max_boxes_count=500, max_lines_count=500, max_labels_count=500)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块A: SVP 亚洲/纽约时段 参数
+// ═══════════════════════════════════════════════════════════════════════════════
+grp_svp1 = "📊 [SVP] Profile 设置"
+svp_rows      = input.int(25, "行数", minval=5, maxval=256, group=grp_svp1)
+svp_width     = input.int(15, "剖面直方图宽度 (K线数)", minval=3, maxval=100, group=grp_svp1)
+svp_maxProf   = input.int(8, "最多保留剖面数", minval=1, maxval=50, group=grp_svp1)
+svp_showDev   = input.bool(false, "显示当前发展中剖面", group=grp_svp1)
+svp_show      = input.bool(true, "启用 SVP 模块", group=grp_svp1)
+
+grp_svp2 = "🕐 [SVP] 时段设置 (UTC+8)"
+svp_asiaStr = input.string("0800-2130", "亚洲时段", group=grp_svp2)
+svp_nyStr   = input.string("2130-0800", "纽约时段", group=grp_svp2)
+
+grp_svp3 = "🎯 [SVP] POC / VAH / VAL"
+svp_showPOC    = input.bool(true, "显示 POC 线", group=grp_svp3)
+svp_showVAHVAL = input.bool(true, "显示 VAH / VAL 线", group=grp_svp3)
+svp_showVA     = input.bool(true, "高亮价值区填充", group=grp_svp3)
+svp_vaPct      = input.float(70, "价值区百分比 %", minval=50, maxval=100, group=grp_svp3)
+svp_lineExt    = input.int(20, "POC/VAH/VAL 右侧延伸 (K线数)", minval=0, maxval=200, group=grp_svp3)
+
+grp_svp4 = "🎨 [SVP] 样式"
+svp_asiaProfCol = input.color(color.new(#2196F3, 65), "亚洲剖面条颜色", group=grp_svp4)
+svp_nyProfCol   = input.color(color.new(#FF9800, 65), "纽约剖面条颜色", group=grp_svp4)
+svp_asiaPocCol  = input.color(#2196F3, "亚洲 POC 颜色", group=grp_svp4)
+svp_nyPocCol    = input.color(#FF9800, "纽约 POC 颜色", group=grp_svp4)
+svp_asiaOpenCol = input.color(#00BCD4, "亚洲开盘价线颜色", group=grp_svp4)
+svp_nyOpenCol   = input.color(#FFEB3B, "纽约开盘价线颜色", group=grp_svp4)
+svp_upVolCol    = input.color(color.new(#26A69A, 50), "上涨成交量颜色", group=grp_svp4)
+svp_dnVolCol    = input.color(color.new(#EF5350, 50), "下跌成交量颜色", group=grp_svp4)
+svp_vahCol      = input.color(color.new(#FFD700, 0), "VAH 线颜色", group=grp_svp4)
+svp_valCol      = input.color(color.new(#FFD700, 0), "VAL 线颜色", group=grp_svp4)
+svp_vaCol       = input.color(color.new(color.gray, 85), "价值区填充色", group=grp_svp4)
+svp_profBorder  = input.color(color.new(color.gray, 60), "剖面边框色", group=grp_svp4)
+svp_showOpen    = input.bool(true, "显示时段开盘价线", group=grp_svp4)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块B: 4H 身体指标 参数
+// ═══════════════════════════════════════════════════════════════════════════════
+grp_4h_tf = "📐 [4H] 周期设定"
+h4_show       = input.bool(true, "启用 4H 身体模块", group=grp_4h_tf)
+h4_market_sel = input.string("加密貨幣", "商品類型", options=["加密貨幣", "黃金期貨"], group=grp_4h_tf)
+h4_tf_sel     = input.string("4小時", "選擇時區週期", options=["1小時", "2小時", "4小時"], group=grp_4h_tf)
+
+grp_4h_box = "📐 [4H] 實體方框設定"
+h4_c_up = input.color(color.new(color.green, 60), "實體顏色 (上漲)", group=grp_4h_box)
+h4_c_dn = input.color(color.new(color.red, 60), "實體顏色 (下跌)", group=grp_4h_box)
+
+grp_4h_hl = "📐 [4H] 橫向開盤線設定"
+h4_show_hl   = input.bool(true, "顯示開盤價線", group=grp_4h_hl)
+h4_c_hline   = input.color(color.new(#ff0000, 0), "橫向線顏色", group=grp_4h_hl)
+h4_c_htext   = input.color(color.new(#000000, 0), "橫向線文字顏色", group=grp_4h_hl)
+h4_c8_hline  = input.color(color.new(#000000, 0), "+8橫向線顏色", group=grp_4h_hl)
+h4_c8_htext  = input.color(color.new(#000000, 0), "+8橫向線文字顏色", group=grp_4h_hl)
+h4_w_hline   = input.int(1, "橫向線粗細", minval=1, maxval=5, group=grp_4h_hl)
+h4_s_hline   = input.string("Solid", "橫向線樣式", options=["Solid", "Dotted", "Dashed"], group=grp_4h_hl)
+
+grp_4h_vl = "📐 [4H] 垂直時間線設定 (UTC+8)"
+h4_show_vl     = input.bool(false, "顯示垂直線", group=grp_4h_vl)
+h4_c_vl_norm   = input.color(color.new(#000000, 50), "一般時間 線顏色", group=grp_4h_vl)
+h4_c_vl_08     = input.color(color.new(#ff0000, 20), "08:00 (日開盤) 線顏色", group=grp_4h_vl)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块C: BB 布林带 参数
+// ═══════════════════════════════════════════════════════════════════════════════
+grp_bb = "📈 [BB] 布林带設定"
+bb_show   = input.bool(true, "启用 BB 模块", group=grp_bb)
+bb_length = input.int(20, "Length", minval=1, group=grp_bb)
+bb_maType = input.string("SMA", "Basis MA Type", options=["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"], group=grp_bb)
+bb_src    = input(close, "Source", group=grp_bb)
+bb_mult   = input.float(2.0, "StdDev", minval=0.001, maxval=50, group=grp_bb)
+bb_offset = input.int(0, "Offset", minval=-500, maxval=500, group=grp_bb)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块A: SVP 计算与绘图
+// ═══════════════════════════════════════════════════════════════════════════════
+svp_inAsia = svp_show and not na(time(timeframe.period, svp_asiaStr, "Asia/Shanghai"))
+svp_inNY   = svp_show and not na(time(timeframe.period, svp_nyStr, "Asia/Shanghai"))
+svp_newAsia = svp_inAsia and not svp_inAsia[1]
+svp_newNY   = svp_inNY and not svp_inNY[1]
+
+var svp_aHigh   = array.new_float()
+var svp_aLow    = array.new_float()
+var svp_aVol    = array.new_float()
+var svp_aUpVol  = array.new_float()
+var svp_aDnVol  = array.new_float()
+var int svp_aStartIdx = na
+
+var svp_nHigh   = array.new_float()
+var svp_nLow    = array.new_float()
+var svp_nVol    = array.new_float()
+var svp_nUpVol  = array.new_float()
+var svp_nDnVol  = array.new_float()
+var int svp_nStartIdx = na
+
+var svp_allBoxes   = array.new_box()
+var svp_allPocs    = array.new_line()
+var svp_allVALines = array.new_line()
+var svp_allOpens   = array.new_line()
+var svp_devBoxes   = array.new_box()
+var svp_devPocs    = array.new_line()
+var svp_devVALines = array.new_line()
+
+f_svp_draw(srcHigh, srcLow, srcVol, srcUpVol, srcDnVol, startIdx, endIdx, profColor, pocColor, isDev) =>
+    n = array.size(srcHigh)
+    if n > 1
+        float sHigh = array.max(srcHigh)
+        float sLow  = array.min(srcLow)
+        float totalVol = array.sum(srcVol)
+        if sHigh > sLow and totalVol > 0
+            rowSize = (sHigh - sLow) / svp_rows
+            rowVol   = array.new_float(svp_rows, 0.0)
+            rowUpVol = array.new_float(svp_rows, 0.0)
+            rowDnVol = array.new_float(svp_rows, 0.0)
+            for i = 0 to n - 1
+                bH = array.get(srcHigh, i)
+                bL = array.get(srcLow, i)
+                bV = array.get(srcVol, i)
+                bUp = array.get(srcUpVol, i)
+                bDn = array.get(srcDnVol, i)
+                int topRow = int(math.min(svp_rows - 1, math.floor((bH - sLow) / rowSize)))
+                int botRow = int(math.max(0, math.floor((bL - sLow) / rowSize)))
+                span = topRow - botRow + 1
+                volPerRow = bV / span
+                upPerRow  = bUp / span
+                dnPerRow  = bDn / span
+                for r = botRow to topRow
+                    array.set(rowVol, r, array.get(rowVol, r) + volPerRow)
+                    array.set(rowUpVol, r, array.get(rowUpVol, r) + upPerRow)
+                    array.set(rowDnVol, r, array.get(rowDnVol, r) + dnPerRow)
+            pocRow = 0
+            maxVol = 0.0
+            for r = 0 to svp_rows - 1
+                v = array.get(rowVol, r)
+                if v > maxVol
+                    maxVol := v
+                    pocRow := r
+            vaTarget = totalVol * svp_vaPct / 100
+            vaSum = array.get(rowVol, pocRow)
+            vaLowRow = pocRow
+            vaHighRow = pocRow
+            while vaSum < vaTarget and (vaLowRow > 0 or vaHighRow < svp_rows - 1)
+                upV2 = vaHighRow < svp_rows - 1 ? array.get(rowVol, vaHighRow + 1) : 0.0
+                dnV2 = vaLowRow > 0 ? array.get(rowVol, vaLowRow - 1) : 0.0
+                if vaHighRow < svp_rows - 1 and (upV2 >= dnV2 or vaLowRow == 0)
+                    vaHighRow += 1
+                    vaSum += upV2
+                else if vaLowRow > 0
+                    vaLowRow -= 1
+                    vaSum += dnV2
+                else
+                    break
+            int lineEnd = math.max(endIdx, startIdx) + svp_lineExt
+            if isDev
+                for b in svp_devBoxes
+                    box.delete(b)
+                for l in svp_devPocs
+                    line.delete(l)
+                for vl in svp_devVALines
+                    line.delete(vl)
+                array.clear(svp_devBoxes)
+                array.clear(svp_devPocs)
+                array.clear(svp_devVALines)
+            tBoxes   = isDev ? svp_devBoxes : svp_allBoxes
+            tPocs    = isDev ? svp_devPocs : svp_allPocs
+            tVALines = isDev ? svp_devVALines : svp_allVALines
+            for r = 0 to svp_rows - 1
+                v = array.get(rowVol, r)
+                if v > 0
+                    upV = array.get(rowUpVol, r)
+                    dnV = array.get(rowDnVol, r)
+                    int upLen = int(math.max(0, math.round(svp_width * upV / maxVol)))
+                    int dnLen = int(math.max(0, math.round(svp_width * dnV / maxVol)))
+                    top = sLow + (r + 1) * rowSize
+                    bot = sLow + r * rowSize
+                    isInVA = svp_showVA and r >= vaLowRow and r <= vaHighRow
+                    if upLen > 0
+                        b1 = box.new(left=startIdx, top=top, right=startIdx + upLen, bottom=bot, bgcolor=svp_upVolCol, border_color=svp_profBorder, border_width=1)
+                        array.push(tBoxes, b1)
+                    if dnLen > 0
+                        b2 = box.new(left=startIdx + upLen, top=top, right=startIdx + upLen + dnLen, bottom=bot, bgcolor=svp_dnVolCol, border_color=svp_profBorder, border_width=1)
+                        array.push(tBoxes, b2)
+                    if upLen == 0 and dnLen == 0
+                        b3 = box.new(left=startIdx, top=top, right=startIdx + 1, bottom=bot, bgcolor=isInVA ? svp_vaCol : profColor, border_color=svp_profBorder, border_width=1)
+                        array.push(tBoxes, b3)
+            // POC 线 (width=2)
+            if svp_showPOC
+                pocPrice = sLow + (pocRow + 0.5) * rowSize
+                l = line.new(startIdx, pocPrice, lineEnd, pocPrice, color=pocColor, width=2)
+                array.push(tPocs, l)
+            // VAH / VAL 线 (width=2，与 POC 一致)
+            if svp_showVAHVAL
+                vahPrice = sLow + (vaHighRow + 1) * rowSize
+                valPrice = sLow + vaLowRow * rowSize
+                vl1 = line.new(startIdx, vahPrice, lineEnd, vahPrice, color=svp_vahCol, width=2, style=line.style_dashed)
+                vl2 = line.new(startIdx, valPrice, lineEnd, valPrice, color=svp_valCol, width=2, style=line.style_dashed)
+                array.push(tVALines, vl1)
+                array.push(tVALines, vl2)
+
+if svp_show
+    if svp_newAsia
+        if array.size(svp_nHigh) > 0
+            f_svp_draw(svp_nHigh, svp_nLow, svp_nVol, svp_nUpVol, svp_nDnVol, nz(svp_nStartIdx, bar_index), bar_index - 1, svp_nyProfCol, svp_nyPocCol, false)
+            array.clear(svp_nHigh), array.clear(svp_nLow), array.clear(svp_nVol), array.clear(svp_nUpVol), array.clear(svp_nDnVol)
+        svp_aStartIdx := bar_index
+        if svp_showOpen
+            ol = line.new(bar_index, open, bar_index + svp_width, open, color=svp_asiaOpenCol, style=line.style_dashed, width=1)
+            array.push(svp_allOpens, ol)
+    if svp_newNY
+        if array.size(svp_aHigh) > 0
+            f_svp_draw(svp_aHigh, svp_aLow, svp_aVol, svp_aUpVol, svp_aDnVol, nz(svp_aStartIdx, bar_index), bar_index - 1, svp_asiaProfCol, svp_asiaPocCol, false)
+            array.clear(svp_aHigh), array.clear(svp_aLow), array.clear(svp_aVol), array.clear(svp_aUpVol), array.clear(svp_aDnVol)
+        svp_nStartIdx := bar_index
+        if svp_showOpen
+            ol = line.new(bar_index, open, bar_index + svp_width, open, color=svp_nyOpenCol, style=line.style_dashed, width=1)
+            array.push(svp_allOpens, ol)
+    if svp_inAsia and na(svp_aStartIdx)
+        svp_aStartIdx := bar_index
+    if svp_inNY and na(svp_nStartIdx)
+        svp_nStartIdx := bar_index
+    svp_barUp = close >= open ? volume : 0.0
+    svp_barDn = close < open ? volume : 0.0
+    if svp_inAsia
+        array.push(svp_aHigh, high), array.push(svp_aLow, low), array.push(svp_aVol, volume)
+        array.push(svp_aUpVol, svp_barUp), array.push(svp_aDnVol, svp_barDn)
+    if svp_inNY
+        array.push(svp_nHigh, high), array.push(svp_nLow, low), array.push(svp_nVol, volume)
+        array.push(svp_nUpVol, svp_barUp), array.push(svp_nDnVol, svp_barDn)
+    if svp_showDev and barstate.islast
+        if svp_inAsia and array.size(svp_aHigh) > 1
+            f_svp_draw(svp_aHigh, svp_aLow, svp_aVol, svp_aUpVol, svp_aDnVol, nz(svp_aStartIdx, bar_index), bar_index, svp_asiaProfCol, svp_asiaPocCol, true)
+        if svp_inNY and array.size(svp_nHigh) > 1
+            f_svp_draw(svp_nHigh, svp_nLow, svp_nVol, svp_nUpVol, svp_nDnVol, nz(svp_nStartIdx, bar_index), bar_index, svp_nyProfCol, svp_nyPocCol, true)
+    while array.size(svp_allBoxes) > svp_maxProf * svp_rows * 2
+        box.delete(array.shift(svp_allBoxes))
+    while array.size(svp_allPocs) > svp_maxProf
+        line.delete(array.shift(svp_allPocs))
+    while array.size(svp_allVALines) > svp_maxProf * 2
+        line.delete(array.shift(svp_allVALines))
+    while array.size(svp_allOpens) > svp_maxProf
+        line.delete(array.shift(svp_allOpens))
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块B: 4H 身体指标 计算与绘图
+// ═══════════════════════════════════════════════════════════════════════════════
+h4_tf_req = switch h4_tf_sel
+    "1小時" => "60"
+    "2小時" => "120"
+    "4小時" => "240"
+    => "240"
+
+h4_tf_ms = switch h4_tf_sel
+    "1小時" => 3600000
+    "2小時" => 7200000
+    "4小時" => 14400000
+    => 14400000
+
+f_gold_aligned_ohlc(int bucket_hours) =>
+    string align_tz = "UTC+8"
+    int hh = hour(time, align_tz)
+    int yy = year(time, align_tz)
+    int mm = month(time, align_tz)
+    int dd = dayofmonth(time, align_tz)
+    int bucket_hour = int(math.floor(hh / bucket_hours)) * bucket_hours
+    int bucket_time = timestamp(align_tz, yy, mm, dd, bucket_hour, 0, 0)
+    bool bucket_new = na(bucket_time[1]) or bucket_time != bucket_time[1]
+    var float bucket_open = na
+    var float bucket_high = na
+    var float bucket_low = na
+    var float bucket_close = na
+    if bucket_new
+        bucket_open := open
+        bucket_high := high
+        bucket_low := low
+        bucket_close := close
+    else
+        bucket_high := na(bucket_high) ? high : math.max(bucket_high, high)
+        bucket_low := na(bucket_low) ? low : math.min(bucket_low, low)
+        bucket_close := close
+    [bucket_open, bucket_close, bucket_time, bucket_high, bucket_low]
+
+h4_tf_hours = switch h4_tf_sel
+    "1小時" => 1
+    "2小時" => 2
+    "4小時" => 4
+    => 4
+
+[h4_o_native, h4_c_native, h4_t_native, h4_h_native, h4_l_native] = request.security(
+     syminfo.tickerid, h4_tf_req, [open, close, time, high, low], lookahead=barmerge.lookahead_on)
+
+[h4_o_gold, h4_c_gold, h4_t_gold, h4_h_gold, h4_l_gold] = request.security(
+     syminfo.tickerid, "60", f_gold_aligned_ohlc(h4_tf_hours), gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+
+h4_use_gold = h4_market_sel == "黃金期貨"
+float h4_o = h4_use_gold ? h4_o_gold : h4_o_native
+float h4_c = h4_use_gold ? h4_c_gold : h4_c_native
+int   h4_t = h4_use_gold ? h4_t_gold : h4_t_native
+float h4_h = h4_use_gold ? h4_h_gold : h4_h_native
+float h4_l = h4_use_gold ? h4_l_gold : h4_l_native
+bool h4_new_bar = h4_show and not na(h4_t) and (na(h4_t[1]) or h4_t != h4_t[1])
+
+var box h4_current_box = na
+var line h4_current_0hline = na
+var line h4_current_4hline = na
+var line h4_current_8hline = na
+var line h4_current_12hline = na
+var line h4_current_16hline = na
+var line h4_current_20hline = na
+
+h4_is_0800(t) =>
+    h = hour(t, "UTC+8")
+    m = minute(t, "UTC+8")
+    (h == 8 and m == 0)
+
+h4_get_style(style_str) =>
+    switch style_str
+        "Solid" => line.style_solid
+        "Dotted" => line.style_dotted
+        "Dashed" => line.style_dashed
+        => line.style_solid
+
+if h4_new_bar
+    int h4_t_end = h4_t + h4_tf_ms
+    bool h4_is_start_08 = h4_is_0800(h4_t)
+    color h4_col_start = h4_is_start_08 ? h4_c_vl_08 : h4_c_vl_norm
+    int h4_w_start = h4_is_start_08 ? 2 : 1
+    if h4_show_vl
+        line.new(x1=h4_t, y1=h4_l, x2=h4_t, y2=h4_h, xloc=xloc.bar_time, extend=extend.both, color=h4_col_start, style=line.style_dotted, width=h4_w_start)
+    color h4_bg = h4_c >= h4_o ? h4_c_up : h4_c_dn
+    h4_current_box := box.new(left=h4_t, top=math.max(h4_o, h4_c), right=h4_t_end, bottom=math.min(h4_o, h4_c), xloc=xloc.bar_time, border_width=0, bgcolor=h4_bg)
+    string h4_tz = "UTC+0"
+    bool h4_is_today = year(time, h4_tz) == year(timenow, h4_tz) and month(time, h4_tz) == month(timenow, h4_tz) and dayofmonth(time, h4_tz) == dayofmonth(timenow, h4_tz)
+    if h4_is_today and h4_show_hl
+        int h4_y = year(timenow, h4_tz)
+        int h4_m = month(timenow, h4_tz)
+        int h4_d = dayofmonth(timenow, h4_tz)
+        int h4_target_0  = timestamp(h4_tz, h4_y, h4_m, h4_d, 00, 00, 00)
+        int h4_target_4  = timestamp(h4_tz, h4_y, h4_m, h4_d, 04, 00, 00)
+        int h4_target_8  = timestamp(h4_tz, h4_y, h4_m, h4_d, 08, 00, 00)
+        int h4_target_12 = timestamp(h4_tz, h4_y, h4_m, h4_d, 12, 00, 00)
+        int h4_target_16 = timestamp(h4_tz, h4_y, h4_m, h4_d, 16, 00, 00)
+        int h4_target_20 = timestamp(h4_tz, h4_y, h4_m, h4_d, 20, 00, 00)
+        int h4_t0_end  = h4_t + 86400000
+        int h4_t4_end  = h4_t + 72000000
+        int h4_t8_end  = h4_t + 57600000
+        int h4_t12_end = h4_t + 43200000
+        int h4_t16_end = h4_t + 28800000
+        int h4_t20_end = h4_t + 14400000
+        if h4_t == h4_target_0
+            label.new(x=h4_t0_end, y=h4_o, text="08", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c8_htext, size=size.normal, textalign=text.align_left)
+            h4_current_0hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t0_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c8_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+        if h4_t == h4_target_4
+            label.new(x=h4_t4_end, y=h4_o, text="12", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c_htext, size=size.normal, textalign=text.align_left)
+            h4_current_4hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t4_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+        if h4_t == h4_target_8
+            label.new(x=h4_t8_end, y=h4_o, text="16", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c_htext, size=size.normal, textalign=text.align_left)
+            h4_current_8hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t8_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+        if h4_t == h4_target_12
+            label.new(x=h4_t12_end, y=h4_o, text="20", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c_htext, size=size.normal, textalign=text.align_left)
+            h4_current_12hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t12_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+        if h4_t == h4_target_16
+            label.new(x=h4_t16_end, y=h4_o, text="00", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c_htext, size=size.normal, textalign=text.align_left)
+            h4_current_16hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t16_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+        if h4_t == h4_target_20
+            label.new(x=h4_t20_end, y=h4_o, text="04", xloc=xloc.bar_time, style=label.style_none, textcolor=h4_c_htext, size=size.normal, textalign=text.align_left)
+            h4_current_20hline := line.new(x1=h4_t, y1=h4_o, x2=h4_t20_end, y2=h4_o, xloc=xloc.bar_time, color=h4_c_hline, width=h4_w_hline, style=h4_get_style(h4_s_hline))
+
+if h4_show and not na(h4_current_box)
+    color h4_bg_upd = h4_c >= h4_o ? h4_c_up : h4_c_dn
+    box.set_bgcolor(h4_current_box, h4_bg_upd)
+    box.set_top(h4_current_box, math.max(h4_o, h4_c))
+    box.set_bottom(h4_current_box, math.min(h4_o, h4_c))
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ██████ 模块C: BB 布林带 计算与绘图
+// ═══════════════════════════════════════════════════════════════════════════════
+f_bb_ma(source, length, _type) =>
+    switch _type
+        "SMA" => ta.sma(source, length)
+        "EMA" => ta.ema(source, length)
+        "SMMA (RMA)" => ta.rma(source, length)
+        "WMA" => ta.wma(source, length)
+        "VWMA" => ta.vwma(source, length)
+
+bb_basis = f_bb_ma(bb_src, bb_length, bb_maType)
+bb_dev = bb_mult * ta.stdev(bb_src, bb_length)
+bb_upper = bb_basis + bb_dev
+bb_lower = bb_basis - bb_dev
+
+plot(bb_show ? bb_basis : na, "BB Basis", color=#2962FF, offset=bb_offset)
+bb_p1 = plot(bb_show ? bb_upper : na, "BB Upper", color=#F23645, offset=bb_offset)
+bb_p2 = plot(bb_show ? bb_lower : na, "BB Lower", color=#089981, offset=bb_offset)
+fill(bb_p1, bb_p2, title="BB Background", color=bb_show ? color.rgb(33, 150, 243, 95) : na)

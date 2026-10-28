@@ -5,7 +5,7 @@ const DOCS = 'https://www.tradingview.com/pine-script-docs/concepts/repainting/'
 exports.RULES = {
     PRC001: {
         id: 'PRC001', name: 'security-lookahead-future-leak', severity: 'error',
-        summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars. A wrapper-function parameter is a warning, and is not reported when every same-file call site passes a [1] (or other history) offset.',
+        summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars. A value built only from prior-bar references (including arithmetic or a ternary of those) is not reported. A wrapper-function parameter is a warning, and is not reported when every same-file call site passes a [1] (or other history) offset.',
         docs: DOCS + '#future-leak-with-requestsecurity',
     },
     PRC002: {
