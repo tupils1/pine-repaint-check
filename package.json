@@ -9,7 +9,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/",
+    "test": "npm run build && node --test test/*.js",
     "eval": "npm run build && node scripts/eval-corpus.mjs"
   },
   "devDependencies": { "typescript": "^5.6.3", "@types/node": "^20.16.0" }

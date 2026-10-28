@@ -27,6 +27,58 @@ test('PRC001 wrapper parameter is downgraded to warning', () => {
   assert.strictEqual(f.length, 1); assert.strictEqual(f[0].severity, 'warning');
 });
 
+test('PRC001 wrapper is silent when every same-file call passes an offset', () => {
+  const ok = hdr + [
+    'f(tf, p) =>',
+    '    request.security(syminfo.tickerid, tf, p, lookahead = barmerge.lookahead_on)',
+    'a = f("D", high[1])',
+    'b = f("D", close[2])',
+    'c = close[1]',
+    'd = f("W", c)',
+  ].join('\n');
+  assert.deepStrictEqual(ids(ok), []);
+  const dyn = hdr + [
+    'f(tf, p) =>',
+    '    request.security(syminfo.tickerid, tf, p, lookahead = barmerge.lookahead_on)',
+    'n = 1',
+    'a = f("D", close[n])',
+    'b = f("D", close[barstate.isrealtime ? 1 : 0])',
+  ].join('\n');
+  assert.deepStrictEqual(ids(dyn), ['PRC006@7']);
+  const bad = hdr + [
+    'f(tf, p) =>',
+    '    request.security(syminfo.tickerid, tf, p, lookahead = barmerge.lookahead_on)',
+    'a = f("D", high[1])',
+    'b = f("D", close)',
+  ].join('\n');
+  const f = analyze(bad);
+  assert.strictEqual(f.length, 1);
+  assert.strictEqual(f[0].ruleId, 'PRC001');
+  assert.strictEqual(f[0].severity, 'warning');
+});
+
+test('PRC001 wrapper call sites that pass a [1]-derived series are not reported', () => {
+  const src = hdr + [
+    'zones(float multiplier) =>',
+    '    prev = high[1] - low[1]',
+    '    r = hl2[1] + multiplier * prev',
+    '    s = hl2[1] - multiplier * prev',
+    '    [r, s]',
+    '[r1, s1] = zones(0.236)',
+    'data(timeframe, price) =>',
+    '    request.security(syminfo.tickerid, timeframe, price, lookahead = barmerge.lookahead_on)',
+    'a = data("D", high[1])',
+    'b = data("D", r1)',
+    'c = data("D", s1)',
+  ].join('\n');
+  assert.deepStrictEqual(ids(src), []);
+  assert.deepStrictEqual(ids(src.replace(/\n/g, '\r\n')), []);
+  const leak = src + '\nd = data("D", close)\n';
+  const f = analyze(leak);
+  assert.strictEqual(f.length, 1);
+  assert.strictEqual(f[0].severity, 'warning');
+});
+
 test('PRC002 only for other timeframes', () => {
   assert.deepStrictEqual(ids(hdr + 'a = request.security(syminfo.tickerid, "240", close)\nb = request.security("X", timeframe.period, close)\nc = request.security("X", "", close)'), ['PRC002@3']);
   assert.deepStrictEqual(ids(hdr + 'a = request.security_lower_tf(syminfo.tickerid, "1", close)'), []);
@@ -36,6 +88,30 @@ test('PRC003-PRC006 keywords', () => {
   assert.deepStrictEqual(ids('//@version=6\nstrategy("s", calc_on_every_tick = true)'), ['PRC003@2']);
   assert.deepStrictEqual(ids('//@version=6\nstrategy("s", calc_on_every_tick = false)'), []);
   assert.deepStrictEqual(ids(hdr + 'varip int n = 0\nx = timenow\nif barstate.isnew\n    n := 0\ny = barstate.isconfirmed'), ['PRC004@3', 'PRC005@4', 'PRC006@5']);
+});
+
+test('PRC006 ignores barstate.islast that only draws or notifies', () => {
+  const table = hdr + 'if barstate.islast and show\n    table.cell(tbl, 0, 0, "x")\n    table.cell(tbl, 1, 0, "y")\n';
+  assert.deepStrictEqual(ids(table), []);
+  const label = hdr + 'if barstate.islast\n    label.new(bar_index, high, "last")\n';
+  assert.deepStrictEqual(ids(label), []);
+  const notice = hdr + 'if barstate.islast and ta.cum(volume) == 0\n    runtime.error("No volume is provided by the data vendor.")\n';
+  assert.deepStrictEqual(ids(notice), []);
+  const dash = hdr + [
+    'if barstate.islast and show',
+    '    string title = "ROW"',
+    '    var table dash = table.new(position.top_right, 2, 2)',
+    '    int r = 0',
+    '    table.cell(dash, 0, r, title)',
+    '    r += 1',
+    '    table.cell(dash, 0, r, syminfo.ticker)',
+  ].join('\n');
+  assert.deepStrictEqual(ids(dash), []);
+  assert.deepStrictEqual(ids(hdr + 'v = barstate.islast ? close : na\n'), ['PRC006@3']);
+  const repaint = hdr + 'float y = na\nif barstate.islast\n    y := close\n    line.new(bar_index, y, bar_index[1], y[1])\n';
+  assert.deepStrictEqual(ids(repaint), ['PRC006@4', 'PRC008@6']);
+  const leaked = hdr + 'if barstate.islast\n    x = 1\nplot(x)\n';
+  assert.ok(ids(leaked).includes('PRC006@3'));
 });
 
 test('PRC007 alert gating', () => {
@@ -117,4 +193,15 @@ test('Action entrypoint reads INPUT_* env', () => {
   const r = spawnSync(process.execPath, [action], { env: { ...process.env, INPUT_PATHS: path.join(__dirname, '..', 'corpus', 'fixtures', 'leak_basic.pine'), 'INPUT_FAIL-ON': 'error' } });
   assert.strictEqual(r.status, 1);
   assert.match(r.stdout.toString(), /::error file=.*leak_basic\.pine,line=3/);
+});
+
+test('Action default min-severity is warning', () => {
+  const action = path.join(__dirname, '..', 'dist', 'action.js');
+  const infoOnly = path.join(__dirname, '..', 'corpus', 'fixtures', 'varip_counter.pine');
+  const hidden = spawnSync(process.execPath, [action], { env: { ...process.env, INPUT_PATHS: infoOnly, 'INPUT_FAIL-ON': 'none' } });
+  assert.strictEqual(hidden.status, 0);
+  assert.doesNotMatch(hidden.stdout.toString(), /PRC006/);
+  assert.match(hidden.stdout.toString(), /PRC004/);
+  const shown = spawnSync(process.execPath, [action], { env: { ...process.env, INPUT_PATHS: infoOnly, 'INPUT_FAIL-ON': 'none', 'INPUT_MIN-SEVERITY': 'info' } });
+  assert.match(shown.stdout.toString(), /PRC006/);
 });
