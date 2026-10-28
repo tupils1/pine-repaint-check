@@ -44,7 +44,7 @@ x = time > timenow - 86400000      // pine-repaint-check: ignore PRC005
 ## GitHub Action
 
 ```yaml
-- uses: tupils1/pine-repaint-check@v0   # 尚未发布
+- uses: OWNER/pine-repaint-check@v0   # 尚未发布
   with:
     paths: scripts/
     fail-on: error

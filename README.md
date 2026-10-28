@@ -49,7 +49,7 @@ Without rule ids, `ignore` / `ignore-next-line` / `disable-file` silence all rul
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: tupils1/pine-repaint-check@v0   # not published yet
+- uses: OWNER/pine-repaint-check@v0   # not published yet
   with:
     paths: scripts/
     fail-on: error          # error | warning | info | none
