@@ -1,0 +1,4 @@
+//@version=5
+indicator("Future leak positional", overlay = true)
+d = request.security(syminfo.tickerid, "D", close, barmerge.gaps_off, barmerge.lookahead_on) // expect: PRC001
+plot(d)

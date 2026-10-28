@@ -1,0 +1,8 @@
+//@version=6
+indicator("Cross alerts", overlay = true)
+ma = ta.ema(close, 5)
+xUp = ta.crossover(close, ma)
+xDn = ta.crossunder(close, ma)
+alertcondition(xUp, "Up", "close crossed above EMA") // expect: PRC007
+if xDn
+    alert("close crossed below EMA", alert.freq_once_per_bar) // expect: PRC007

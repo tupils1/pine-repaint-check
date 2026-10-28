@@ -1,0 +1,8 @@
+//@version=6
+indicator("Multiline call", overlay = true)
+float x = request.security( // expect: PRC001
+     syminfo.tickerid,
+     "1D",
+     ta.ema(close, 10),
+     lookahead = barmerge.lookahead_on)
+plot(x)

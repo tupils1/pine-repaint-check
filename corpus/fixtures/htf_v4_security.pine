@@ -1,0 +1,5 @@
+//@version=4
+study("v4 security", overlay = true)
+d = security(syminfo.tickerid, "D", close, lookahead = barmerge.lookahead_on) // expect: PRC001
+w = security(syminfo.tickerid, "W", close) // expect: PRC002
+plot(d)

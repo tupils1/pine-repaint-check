@@ -1,0 +1,13 @@
+//@version=6
+indicator("Confirmed alerts", overlay = true)
+ma = ta.ema(close, 5)
+xUp = ta.crossover(close, ma) and barstate.isconfirmed
+xDn = ta.crossunder(close, ma)[1]
+upSignal = xUp
+alertcondition(upSignal, "Up", "confirmed")
+alertcondition(xDn, "Down", "previous bar cross")
+if ta.crossover(close, ma)
+    alert("cross (bar close)", alert.freq_once_per_bar_close)
+if barstate.isconfirmed
+    if ta.crossunder(close, ma)
+        alert("cross down confirmed")

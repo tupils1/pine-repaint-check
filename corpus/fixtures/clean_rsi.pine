@@ -1,0 +1,7 @@
+//@version=6
+indicator("Plain RSI")
+len = input.int(14, "Length")
+r = ta.rsi(close, len)
+plot(r)
+hline(70)
+hline(30)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Leak through variable", overlay = true)
+src = ta.sma(close, 20)
+htf = request.security(syminfo.tickerid, "240", src, lookahead = barmerge.lookahead_on) // expect: PRC001
+plot(htf)

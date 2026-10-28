@@ -1,0 +1,4 @@
+//@version=6
+strategy("Every tick", overlay = true, calc_on_every_tick = true) // expect: PRC003
+if ta.crossover(close, ta.sma(close, 10))
+    strategy.entry("L", strategy.long)

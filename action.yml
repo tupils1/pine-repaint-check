@@ -1,0 +1,13 @@
+name: 'Pine Repaint Check'
+description: 'Static repaint-risk checks for TradingView Pine Script v5/v6. Annotations + SARIF. Detection only.'
+author: 'tupils1'
+branding: { icon: 'alert-triangle', color: 'orange' }
+inputs:
+  paths: { description: 'Files/dirs to scan (comma or newline separated)', default: '.' }
+  fail-on: { description: 'error | warning | info | none', default: 'error' }
+  min-severity: { description: 'Hide findings below: info | warning | error', default: 'info' }
+  sarif-output: { description: 'Write SARIF to this path (for github/codeql-action/upload-sarif)', default: '' }
+  disable: { description: 'Comma-separated rule ids to disable', default: '' }
+runs:
+  using: 'node24'
+  main: 'dist/action.js'

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Non-repainting HTF", overlay = true)
+string tf = input.timeframe("1D")
+float nonRepaintingClose = request.security(syminfo.tickerid, tf, close[1], lookahead = barmerge.lookahead_on)
+[o, h, l] = request.security(syminfo.tickerid, tf, [open, high[1], low[1]], lookahead = barmerge.lookahead_on)
+// request.security(syminfo.tickerid, tf, close, lookahead = barmerge.lookahead_on)  <- commented out, must not fire
+string note = "request.security(x, tf, close, lookahead = barmerge.lookahead_on)"
+plot(nonRepaintingClose)

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Plotting in the past", "", true)
+pHi = ta.pivothigh(5, 5)
+if not na(pHi)
+    label.new(bar_index[5], na, str.tostring(pHi, format.mintick), yloc = yloc.abovebar) // expect: PRC008
+plotshape(not na(pHi), "pivot", shape.triangledown, location.abovebar, offset = -5) // expect: PRC008
+line.new(bar_index - 5, pHi, bar_index, pHi) // expect: PRC008
+label.new(bar_index, high, "now")

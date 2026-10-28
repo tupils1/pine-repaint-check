@@ -1,0 +1,16 @@
+{
+  "name": "pine-repaint-check",
+  "version": "0.1.0",
+  "description": "Static repaint-risk checker for TradingView Pine Script v5/v6 (CLI + GitHub Action). Detection only.",
+  "license": "MIT",
+  "bin": { "pine-repaint-check": "dist/cli.js" },
+  "main": "dist/index.js",
+  "files": ["dist", "README.md", "README.zh-CN.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/",
+    "eval": "npm run build && node scripts/eval-corpus.mjs"
+  },
+  "devDependencies": { "typescript": "^5.6.3", "@types/node": "^20.16.0" }
+}

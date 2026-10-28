@@ -1,0 +1,4 @@
+//@version=6
+indicator("Future leak basic", overlay = true)
+futureHigh = request.security(syminfo.tickerid, "1D", high, lookahead = barmerge.lookahead_on) // expect: PRC001
+plot(futureHigh)

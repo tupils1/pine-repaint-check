@@ -1,0 +1,12 @@
+//@version=6
+indicator("UDT and methods", overlay = true)
+type Zone
+    float top
+    float bottom
+method width(Zone z) => z.top - z.bottom
+var Zone z = Zone.new(high, low)
+if barstate.isconfirmed
+    z.top := math.max(z.top, high)
+plot(z.width())
+float ltf = array.avg(request.security_lower_tf(syminfo.tickerid, "1", close))
+plot(ltf)

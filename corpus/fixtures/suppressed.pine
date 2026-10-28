@@ -1,0 +1,9 @@
+//@version=6
+indicator("Suppressions", overlay = true)
+// pine-repaint-check: disable-file PRC006
+isRecent = time > timenow - 86400000 // pine-repaint-check: ignore PRC005
+// pine-repaint-check: ignore-next-line PRC001
+d = request.security(syminfo.tickerid, "D", high, lookahead = barmerge.lookahead_on)
+w = request.security(syminfo.tickerid, "W", high, lookahead = barmerge.lookahead_on) // pine-repaint-check: ignore PRC004 // expect: PRC001
+if barstate.islast
+    label.new(bar_index, high, "last")

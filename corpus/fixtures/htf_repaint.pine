@@ -1,0 +1,8 @@
+//@version=6
+indicator("HTF repainting close", overlay = true)
+string higherTimeframe = input.timeframe("30", "Timeframe")
+float repaintingClose = request.security(syminfo.tickerid, higherTimeframe, close) // expect: PRC002
+float sameTf = request.security("NASDAQ:AAPL", timeframe.period, close)
+float chartTf = request.security("NASDAQ:AAPL", "", close)
+float lagged = request.security(syminfo.tickerid, "1D", close[1])
+plot(repaintingClose)

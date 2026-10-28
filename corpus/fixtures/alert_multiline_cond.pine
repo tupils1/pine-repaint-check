@@ -1,0 +1,10 @@
+//@version=6
+indicator("Multiline condition")
+rsi = ta.rsi(close, 14)
+bull = ta.crossover(rsi, 30) and
+     volume > ta.sma(volume, 20) and
+     barstate.isconfirmed
+bear = ta.crossunder(rsi, 70) and
+     volume > ta.sma(volume, 20)
+alertcondition(bull, "Bull", "RSI bull")
+alertcondition(bear, "Bear", "RSI bear") // expect: PRC007

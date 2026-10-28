@@ -1,0 +1,6 @@
+//@version=6
+strategy("Confirmed strategy", overlay = true, calc_on_every_tick = false, process_orders_on_close = true)
+bool longSignal = ta.crossover(close, ta.sma(close, 10)) and barstate.isconfirmed
+if longSignal
+    strategy.entry("L", strategy.long)
+alertcondition(longSignal, "Long", "Long signal")

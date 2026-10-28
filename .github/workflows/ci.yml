@@ -1,0 +1,26 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions: { contents: read }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy: { matrix: { node: [20, 24] } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ matrix.node }}', cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run eval
+      - name: dist is up to date
+        run: git diff --exit-code -- dist/
+  self-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the action on the fixtures (findings expected, so fail-on none)
+        uses: ./
+        with: { paths: corpus/fixtures, fail-on: none, sarif-output: results.sarif }
+      - run: test -s results.sarif

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Tick counter")
+varip int ticks = 0 // expect: PRC004
+if barstate.isnew // expect: PRC006
+    ticks := 0
+ticks += 1
+plot(ticks)

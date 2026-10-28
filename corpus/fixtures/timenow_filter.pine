@@ -1,0 +1,6 @@
+//@version=6
+indicator("Recent bars only", overlay = true)
+lookbackMs = 3 * 24 * 60 * 60 * 1000
+isRecent = time > timenow - lookbackMs // expect: PRC005
+bgcolor(isRecent ? color.new(color.blue, 90) : na)
+string s = "timenow in a string is ignored"

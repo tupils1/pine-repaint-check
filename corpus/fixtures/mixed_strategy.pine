@@ -1,0 +1,12 @@
+//@version=5
+strategy("Mixed risks", overlay = true, calc_on_every_tick=true) // expect: PRC003
+dailyClose = request.security(syminfo.tickerid, "D", close, lookahead = barmerge.lookahead_on) // expect: PRC001
+weeklyHigh = request.security(syminfo.tickerid, "W", high) // expect: PRC002
+varip float lastPrice = na // expect: PRC004
+lastPrice := close
+longCond = close > dailyClose
+if longCond
+    strategy.entry("L", strategy.long)
+    alert("long", alert.freq_all) // expect: PRC007
+if barstate.isrealtime // expect: PRC006
+    label.new(bar_index, high, str.tostring(timenow)) // expect: PRC005

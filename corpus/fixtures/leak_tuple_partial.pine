@@ -1,0 +1,5 @@
+//@version=6
+indicator("Tuple partially offset", overlay = true)
+[h, l] = request.security(syminfo.tickerid, "W", [high[1], low], lookahead = barmerge.lookahead_on) // expect: PRC001
+plot(h)
+plot(l)

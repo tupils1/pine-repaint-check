@@ -1,0 +1,5 @@
+//@version=6
+indicator("noRepaintSecurity wrapper", overlay = true)
+noRepaintSecurity(symbol, timeframe, expression) =>
+    request.security(symbol, timeframe, expression[1], lookahead = barmerge.lookahead_on)
+plot(noRepaintSecurity(syminfo.tickerid, "1D", close))

@@ -1,0 +1,19 @@
+{
+  "_comment": "Hand labels for corpus/real (third-party files). Each entry = a location a reviewer should be warned about. Files not listed have no expected findings. Fixtures in corpus/fixtures carry inline '// expect: PRCxxx' markers instead. Labelled by reading every line matching a broad superset grep (lookahead|security|calc_on_every_tick|varip|timenow|barstate.*|alert*|offset=-|label/line/box.new with past x) before comparing with tool output.",
+  "real/arun_liquidity_void_mtf.pine": [{"rule": "PRC001", "line": 42, "note": "HTF high/low/close/atr with lookahead_on, no [1]: genuine future leak"}],
+  "real/arun_magnetic_zones_mtf.pine": [
+    {"rule": "PRC002", "line": 634, "note": "HTF MA without [1]+lookahead_on"},
+    {"rule": "PRC006", "line": 637, "note": "barstate.islast changes returned value on last bar"}
+  ],
+  "real/arun_equal_highs_lows.pine": [{"rule": "PRC008", "line": 103}, {"rule": "PRC008", "line": 104}],
+  "real/arun_trend_following.pine": [{"rule": "PRC008", "line": 330}, {"rule": "PRC008", "line": 331}],
+  "real/geraked_3MAF.pine": [{"rule": "PRC008", "line": 82}, {"rule": "PRC008", "line": 83}],
+  "real/geraked_DHLAOS.pine": [{"rule": "PRC006", "line": 40}, {"rule": "PRC006", "line": 41}],
+  "real/geraked_NWERSIASF.pine": [{"rule": "PRC006", "line": 62, "note": "author's explicit repaint mode"}],
+  "_not_risks": {
+    "real/arun_magnetic_zones_mtf.pine:194": "wrapper data(tf, price) with lookahead_on; all call sites pass [1]-offset values -> tool warning is a false positive",
+    "real/arun_magnetic_zones_mtf.pine:651": "barstate.islast only gates a 'no volume' warning label",
+    "real/arun_trend_following.pine:354": "barstate.islast only draws an info table",
+    "real/geraked_DHLAOS.pine:42-43": "dynamic [indexHighTF] offset is the PineCoders non-repainting idiom -> correctly not flagged"
+  }
+}
