@@ -6,7 +6,8 @@ exports.colOf = colOf;
 exports.matchBracket = matchBracket;
 exports.splitTop = splitTop;
 function lex(src) {
-    src = src.replace(/^\uFEFF/, '');
+    // `$`-anchored line matches treat `\r` as a non-dot character, so normalize newlines first.
+    src = src.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const code = src.split('');
     const masked = src.split('');
     const comments = new Map();

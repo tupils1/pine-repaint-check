@@ -5,7 +5,7 @@ const DOCS = 'https://www.tradingview.com/pine-script-docs/concepts/repainting/'
 exports.RULES = {
     PRC001: {
         id: 'PRC001', name: 'security-lookahead-future-leak', severity: 'error',
-        summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars.',
+        summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars. A wrapper-function parameter is a warning, and is not reported when every same-file call site passes a [1] (or other history) offset.',
         docs: DOCS + '#future-leak-with-requestsecurity',
     },
     PRC002: {
@@ -30,7 +30,7 @@ exports.RULES = {
     },
     PRC006: {
         id: 'PRC006', name: 'barstate-realtime-dependent', severity: 'info',
-        summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars.',
+        summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars. barstate.islast is not reported when it only gates last-bar drawing (table/label/line/box) or a runtime notice.',
         docs: DOCS + '#bar-state-built-ins',
     },
     PRC007: {

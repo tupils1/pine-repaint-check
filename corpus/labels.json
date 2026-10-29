@@ -1,19 +1,529 @@
 {
-  "_comment": "Hand labels for corpus/real (third-party files). Each entry = a location a reviewer should be warned about. Files not listed have no expected findings. Fixtures in corpus/fixtures carry inline '// expect: PRCxxx' markers instead. Labelled by reading every line matching a broad superset grep (lookahead|security|calc_on_every_tick|varip|timenow|barstate.*|alert*|offset=-|label/line/box.new with past x) before comparing with tool output.",
-  "real/arun_liquidity_void_mtf.pine": [{"rule": "PRC001", "line": 42, "note": "HTF high/low/close/atr with lookahead_on, no [1]: genuine future leak"}],
-  "real/arun_magnetic_zones_mtf.pine": [
-    {"rule": "PRC002", "line": 634, "note": "HTF MA without [1]+lookahead_on"},
-    {"rule": "PRC006", "line": 637, "note": "barstate.islast changes returned value on last bar"}
+  "_comment": "Hand labels for corpus/real (third-party files). Each entry = a location a reviewer should be warned about. Files not listed have no expected findings. Fixtures in corpus/fixtures carry inline '// expect: PRCxxx' markers instead. Labelled by reading every line matching a broad superset grep (lookahead|security|calc_on_every_tick|varip|timenow|barstate.*|alert*|offset=-|label/line/box.new with past x) before comparing with tool output. Re-labelled 2026-10-28 after the wrapper call-site and harmless-islast changes, including the newly added real scripts.",
+  "real/arun_equal_highs_lows.pine": [
+    {
+      "rule": "PRC008",
+      "line": 103
+    },
+    {
+      "rule": "PRC008",
+      "line": 104
+    }
   ],
-  "real/arun_equal_highs_lows.pine": [{"rule": "PRC008", "line": 103}, {"rule": "PRC008", "line": 104}],
-  "real/arun_trend_following.pine": [{"rule": "PRC008", "line": 330}, {"rule": "PRC008", "line": 331}],
-  "real/geraked_3MAF.pine": [{"rule": "PRC008", "line": 82}, {"rule": "PRC008", "line": 83}],
-  "real/geraked_DHLAOS.pine": [{"rule": "PRC006", "line": 40}, {"rule": "PRC006", "line": 41}],
-  "real/geraked_NWERSIASF.pine": [{"rule": "PRC006", "line": 62, "note": "author's explicit repaint mode"}],
+  "real/arun_liquidity_void_mtf.pine": [
+    {
+      "rule": "PRC001",
+      "line": 42,
+      "note": "HTF high/low/close/atr with lookahead_on, no [1]: genuine future leak"
+    }
+  ],
+  "real/arun_magnetic_zones_mtf.pine": [
+    {
+      "rule": "PRC002",
+      "line": 634,
+      "note": "HTF MA without [1]+lookahead_on"
+    },
+    {
+      "rule": "PRC006",
+      "line": 637,
+      "note": "barstate.islast changes returned value on last bar"
+    }
+  ],
+  "real/arun_trend_following.pine": [
+    {
+      "rule": "PRC008",
+      "line": 330
+    },
+    {
+      "rule": "PRC008",
+      "line": 331
+    }
+  ],
+  "real/casoon_wavetrend_v4.pine": [
+    {
+      "rule": "PRC002",
+      "line": 712,
+      "note": "request.security of HTF wt1 uses lookahead_off and no [1], and the value gates entries"
+    },
+    {
+      "rule": "PRC004",
+      "line": 756,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 757,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 758,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 759,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 761,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 762,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 763,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 764,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 767,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 768,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 770,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 771,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 773,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 793,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 794,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 795,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 796,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 797,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 798,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC004",
+      "line": 1146,
+      "note": "varip keeps stop, target, and intrabar trade locks that history cannot replay"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1217,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1218,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1219,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1220,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1221,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1222,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1223,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1224,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1225,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 1226,
+      "note": "offset=-divLbR draws the divergence mark back on the pivot bar"
+    }
+  ],
+  "real/geraked_3MAF.pine": [
+    {
+      "rule": "PRC008",
+      "line": 82
+    },
+    {
+      "rule": "PRC008",
+      "line": 83
+    }
+  ],
+  "real/geraked_DHLAOS.pine": [
+    {
+      "rule": "PRC006",
+      "line": 40
+    },
+    {
+      "rule": "PRC006",
+      "line": 41
+    }
+  ],
+  "real/geraked_NWERSIASF.pine": [
+    {
+      "rule": "PRC006",
+      "line": 62,
+      "note": "author's explicit repaint mode"
+    }
+  ],
+  "real/joel_time_and_schedule.pine": [
+    {
+      "rule": "PRC003",
+      "line": 9,
+      "note": "strategy() sets calc_on_every_tick = true; realtime fills will not match the backtest"
+    }
+  ],
+  "real/krosenfeld_ema_crosses.pine": [
+    {
+      "rule": "PRC002",
+      "line": 23,
+      "note": "security() on input timeframe resolution (default D) of ema/tr with lookahead_off and no [1]"
+    },
+    {
+      "rule": "PRC002",
+      "line": 24,
+      "note": "security() on input timeframe resolution (default D) of ema/tr with lookahead_off and no [1]"
+    },
+    {
+      "rule": "PRC002",
+      "line": 25,
+      "note": "security() on input timeframe resolution (default D) of ema/tr with lookahead_off and no [1]"
+    },
+    {
+      "rule": "PRC002",
+      "line": 26,
+      "note": "security() on input timeframe resolution (default D) of ema/tr with lookahead_off and no [1]"
+    },
+    {
+      "rule": "PRC008",
+      "line": 40,
+      "note": "plotshape offset=-1 draws the cross marker on the previous bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 41,
+      "note": "plotshape offset=-1 draws the cross marker on the previous bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 42,
+      "note": "plotshape offset=-1 draws the cross marker on the previous bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 43,
+      "note": "plotshape offset=-1 draws the cross marker on the previous bar"
+    },
+    {
+      "rule": "PRC007",
+      "line": 46,
+      "note": "alertcondition on the crossover flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 47,
+      "note": "alertcondition on the crossover flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 48,
+      "note": "alertcondition on the crossover flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 49,
+      "note": "alertcondition on the crossover flag, not gated by barstate.isconfirmed"
+    }
+  ],
+  "real/krosenfeld_mtf_ema_macd_long.pine": [
+    {
+      "rule": "PRC006",
+      "line": 39,
+      "note": "barstate.isrealtime chooses the security() history offset, so historical and realtime reads differ"
+    },
+    {
+      "rule": "PRC006",
+      "line": 44,
+      "note": "barstate.isrealtime chooses the security() history offset, so historical and realtime reads differ"
+    },
+    {
+      "rule": "PRC004",
+      "line": 73,
+      "note": "varip cross-count gates strategy.entry and cannot be reproduced on historical bars"
+    },
+    {
+      "rule": "PRC004",
+      "line": 74,
+      "note": "varip cross-count gates strategy.entry and cannot be reproduced on historical bars"
+    }
+  ],
+  "real/mihakralj_aroon.pine": [
+    {
+      "rule": "PRC007",
+      "line": 37,
+      "note": "alertcondition on Aroon cross/level, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 38,
+      "note": "alertcondition on Aroon cross/level, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 39,
+      "note": "alertcondition on Aroon cross/level, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 40,
+      "note": "alertcondition on Aroon cross/level, not gated by barstate.isconfirmed"
+    }
+  ],
+  "real/mihakralj_aroonosc.pine": [
+    {
+      "rule": "PRC007",
+      "line": 40,
+      "note": "alertcondition on the oscillator, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 41,
+      "note": "alertcondition on the oscillator, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 42,
+      "note": "alertcondition on the oscillator, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 43,
+      "note": "alertcondition on the oscillator, not gated by barstate.isconfirmed"
+    }
+  ],
+  "real/plusgenie_webhook.pine": [
+    {
+      "rule": "PRC005",
+      "line": 63,
+      "note": "timenow is written into the webhook JSON timestamp"
+    }
+  ],
+  "real/sibvic_alerts.pine": [
+    {
+      "rule": "PRC006",
+      "line": 24,
+      "note": "barstate.isnew is part of the Buy/Sell/close series, not only a drawing gate"
+    },
+    {
+      "rule": "PRC006",
+      "line": 25,
+      "note": "barstate.isnew is part of the Buy/Sell/close series, not only a drawing gate"
+    },
+    {
+      "rule": "PRC006",
+      "line": 177,
+      "note": "barstate.isnew is part of the Buy/Sell/close series, not only a drawing gate"
+    },
+    {
+      "rule": "PRC006",
+      "line": 178,
+      "note": "barstate.isnew is part of the Buy/Sell/close series, not only a drawing gate"
+    },
+    {
+      "rule": "PRC007",
+      "line": 187,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 190,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 193,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 196,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 200,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 204,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 206,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 207,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 211,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 212,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 213,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 217,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 218,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    },
+    {
+      "rule": "PRC007",
+      "line": 219,
+      "note": "alertcondition is not gated by barstate.isconfirmed; barstate.isnew is not a bar-close confirmation"
+    }
+  ],
+  "real/sibvic_divergence.pine": [
+    {
+      "rule": "PRC008",
+      "line": 53,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 54,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 56,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 57,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 58,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 62,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 63,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC008",
+      "line": 64,
+      "note": "offset=-2 plots the divergence pivot on a past bar"
+    },
+    {
+      "rule": "PRC007",
+      "line": 59,
+      "note": "alertcondition on the divergence flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 60,
+      "note": "alertcondition on the divergence flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 65,
+      "note": "alertcondition on the divergence flag, not gated by barstate.isconfirmed"
+    },
+    {
+      "rule": "PRC007",
+      "line": 66,
+      "note": "alertcondition on the divergence flag, not gated by barstate.isconfirmed"
+    }
+  ],
   "_not_risks": {
-    "real/arun_magnetic_zones_mtf.pine:194": "wrapper data(tf, price) with lookahead_on; all call sites pass [1]-offset values -> tool warning is a false positive",
-    "real/arun_magnetic_zones_mtf.pine:651": "barstate.islast only gates a 'no volume' warning label",
-    "real/arun_trend_following.pine:354": "barstate.islast only draws an info table",
-    "real/geraked_DHLAOS.pine:42-43": "dynamic [indexHighTF] offset is the PineCoders non-repainting idiom -> correctly not flagged"
+    "real/arun_magnetic_zones_mtf.pine:194": "wrapper data(tf, price) with lookahead_on; every same-file call passes high/low/hl2[1] or r/s derived from high[1]/low[1]/hl2[1]. Not reported.",
+    "real/arun_magnetic_zones_mtf.pine:651": "barstate.islast only gates runtime.error for missing volume. Not reported.",
+    "real/arun_trend_following.pine:354": "barstate.islast only fills an info table. Not reported.",
+    "real/geraked_DHLAOS.pine:42-43": "dynamic [indexHighTF] offset is the PineCoders non-repainting idiom -> correctly not flagged",
+    "real/casoon_wavetrend_v4.pine:35": "barstate.islast only fills a chart-type warning table. Not reported."
   }
 }

@@ -5,7 +5,7 @@ const input = (n, d) => (process.env[`INPUT_${n.replace(/ /g, '_').toUpperCase()
 try {
     const paths = input('paths', '.').split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
     const code = (0, run_1.run)({
-        paths, format: 'github', failOn: input('fail-on', 'error'), minSeverity: input('min-severity', 'info'),
+        paths, format: 'github', failOn: input('fail-on', 'error'), minSeverity: input('min-severity', 'warning'),
         sarifOutput: input('sarif-output', '') || undefined, disable: input('disable', '').split(',').map((s) => s.trim()).filter(Boolean),
     }, (s) => process.stdout.write(s));
     process.exitCode = code;

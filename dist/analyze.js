@@ -81,19 +81,353 @@ function defOf(lx, ident, before) {
     }
     return undefined;
 }
-function enclosingParams(lx, offset) {
+function paramList(list) {
+    return list.split(',').map((p) => p.trim().split(/\s+/).pop().replace(/=.*/, '').trim()).filter(Boolean);
+}
+function enclosingFunction(lx, offset) {
     const line = (0, lexer_1.lineOf)(lx, offset);
     const lines = lx.masked.split('\n');
     for (let i = line - 1; i >= 0; i--) {
         const l = lines[i];
-        const fm = /^(?:method\s+)?[A-Za-z_]\w*\s*\(([^)]*)\)\s*=>/.exec(l);
-        if (fm) {
-            return fm[1].split(',').map((p) => p.trim().split(/\s+/).pop().replace(/=.*/, '').trim()).filter(Boolean);
-        }
+        const fm = /^(?:export\s+)?(?:method\s+)?([A-Za-z_]\w*)\s*\(([^)]*)\)\s*=>/.exec(l);
+        if (fm)
+            return { name: fm[1], params: paramList(fm[2]) };
         if (i < line - 1 && /^\S/.test(l) && l.trim() !== '')
             return undefined; // reached top-level statement
     }
     return undefined;
+}
+function findUserFn(lx, name) {
+    const lines = lx.masked.split('\n');
+    const codeLines = lx.code.split('\n');
+    const sig = new RegExp(`^(?:export\\s+)?(?:method\\s+)?${name}\\s*\\(([^)]*)\\)\\s*=>`);
+    for (let i = 0; i < lines.length; i++) {
+        const fm = sig.exec(lines[i]);
+        if (!fm)
+            continue;
+        const sigIndent = lines[i].length - lines[i].trimStart().length;
+        let last = i;
+        for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].trim() === '')
+                continue;
+            if (lines[j].length - lines[j].trimStart().length <= sigIndent)
+                break;
+            last = j;
+        }
+        const bodyIdx = [];
+        for (let j = i + 1; j <= last; j++)
+            if (codeLines[j].trim() !== '')
+                bodyIdx.push(j);
+        const minInd = bodyIdx.reduce((m, j) => Math.min(m, codeLines[j].length - codeLines[j].trimStart().length), Infinity);
+        const starts = bodyIdx.filter((j) => codeLines[j].length - codeLines[j].trimStart().length === minInd);
+        const retLine = starts.length ? starts[starts.length - 1] : last;
+        let ret = codeLines[retLine]?.trim() ?? '';
+        for (let j = retLine + 1; j <= last; j++) {
+            if (codeLines[j].trim() === '')
+                continue;
+            if (codeLines[j].length - codeLines[j].trimStart().length <= minInd)
+                break;
+            ret += ' ' + codeLines[j].trim();
+        }
+        const bodyEnd = last + 1 < lx.lineStarts.length ? lx.lineStarts[last + 1] : lx.code.length;
+        return { params: paramList(fm[1]), bodyEnd, returns: ret ? tupleElems(ret) : [] };
+    }
+    return undefined;
+}
+function parseTopCall(expr) {
+    const e = expr.trim();
+    const m = /^([A-Za-z_]\w*)\s*\(/.exec(e);
+    if (!m)
+        return undefined;
+    const open = m[0].length - 1;
+    if ((0, lexer_1.matchBracket)(e, open) !== e.length - 1)
+        return undefined;
+    const close = e.length - 1;
+    if (e.slice(open + 1, close).trim() === '')
+        return { name: m[1], args: [] };
+    return { name: m[1], args: (0, lexer_1.splitTop)(e, open + 1, close).map(([s, t]) => e.slice(s, t).trim()) };
+}
+function zipParams(params, args, at) {
+    const out = new Map();
+    const positional = [];
+    for (const a of args) {
+        const nm = /^([A-Za-z_]\w*)\s*=(?!=)\s*([\s\S]+)$/.exec(a.trim());
+        if (nm && params.includes(nm[1]))
+            out.set(nm[1], { expr: nm[2].trim(), at });
+        else
+            positional.push(a.trim());
+    }
+    let p = 0;
+    for (const name of params)
+        if (!out.has(name) && p < positional.length)
+            out.set(name, { expr: positional[p++], at });
+    return out;
+}
+function tupleAssign(lx, ident, before) {
+    const lines = lx.code.slice(0, before).split('\n');
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const m = /^\s*\[([^\]]*)\]\s*=(?!=)\s*(.*)$/.exec(lines[i]);
+        if (!m)
+            continue;
+        const names = m[1].split(',').map((s) => s.trim().split(/\s+/).pop().replace(/=.*/, ''));
+        const index = names.indexOf(ident);
+        if (index < 0)
+            continue;
+        let rhs = m[2].trim();
+        const indent = lines[i].length - lines[i].trimStart().length;
+        for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].trim() === '')
+                break;
+            if (lines[j].length - lines[j].trimStart().length <= indent)
+                break;
+            rhs += ' ' + lines[j].trim();
+        }
+        return { index, rhs, at: lx.lineStarts[i] ?? 0 };
+    }
+    return undefined;
+}
+const SKIP_WORDS = new Set(['and', 'or', 'not', 'true', 'false', 'na', 'if', 'else', 'for', 'to', 'by', 'switch']);
+const SAFE_NS = /^(syminfo|timeframe|color|size|position|shape|location|display|format|barmerge|chart|session|dayofweek|label|line|box|table|text|hline|font|xloc|yloc|extend)\./;
+function isScalarish(a) {
+    const e = norm(a);
+    return SAFE_ATOMS.test(e) || SAFE_NS.test(e);
+}
+/** Expression is anchored on a previous bar: [n>=1], a dynamic history offset, or built only from those. */
+function isPastExpr(lx, expr, scope, depth, stack) {
+    if (depth > 8)
+        return false;
+    const e = norm(expr);
+    if (!e)
+        return false;
+    if (SAFE_ATOMS.test(e) || hasOffset(e))
+        return true;
+    if (e.startsWith('[')) {
+        const end = (0, lexer_1.matchBracket)(e, 0);
+        if (end === e.length - 1) {
+            const elems = tupleElems(e);
+            return elems.length > 0 && elems.every((el) => isPastExpr(lx, el, scope, depth + 1, stack));
+        }
+    }
+    if (/^[A-Za-z_]\w*$/.test(e)) {
+        if (stack.includes(e))
+            return false;
+        const bound = scope.params.get(e);
+        if (bound)
+            return isPastExpr(lx, bound.expr, { at: bound.at, params: new Map() }, depth + 1, stack.concat(e));
+        const tup = tupleAssign(lx, e, scope.at);
+        if (tup) {
+            const call = parseTopCall(tup.rhs);
+            const fn = call && findUserFn(lx, call.name);
+            if (call && fn && tup.index < fn.returns.length) {
+                return isPastExpr(lx, fn.returns[tup.index], { at: fn.bodyEnd, params: zipParams(fn.params, call.args, tup.at) }, depth + 1, stack.concat(e));
+            }
+            const elems = tupleElems(tup.rhs);
+            if (tup.rhs.trim().startsWith('[') && tup.index < elems.length) {
+                return isPastExpr(lx, elems[tup.index], scope, depth + 1, stack.concat(e));
+            }
+        }
+        const d = defOf(lx, e, scope.at);
+        if (d)
+            return isPastExpr(lx, d, scope, depth + 1, stack.concat(e));
+        return false;
+    }
+    const call = parseTopCall(e);
+    if (call) {
+        const fn = findUserFn(lx, call.name);
+        if (fn) {
+            const params = zipParams(fn.params, call.args, scope.at);
+            const inner = { at: fn.bodyEnd, params };
+            return fn.returns.length > 0 && fn.returns.every((r) => isPastExpr(lx, r, inner, depth + 1, stack));
+        }
+        return call.args.every((a) => isScalarish(a) || isPastExpr(lx, a, scope, depth + 1, stack));
+    }
+    return compoundIsPast(lx, e, scope, depth, stack);
+}
+function compoundIsPast(lx, expr, scope, depth, stack) {
+    const e = norm(expr);
+    let i = 0;
+    while (i < e.length) {
+        if (!/[A-Za-z_]/.test(e[i])) {
+            i++;
+            continue;
+        }
+        const m = /^[A-Za-z_][\w.]*/.exec(e.slice(i));
+        const word = m[0];
+        let j = i + word.length;
+        if (SKIP_WORDS.has(word)) {
+            i = j;
+            continue;
+        }
+        const rest = e.slice(j);
+        const off = /^\s*(\[[^\]]*\])/.exec(rest);
+        if (off) {
+            if (!hasOffset(word + off[1].replace(/\s+/g, '')))
+                return false;
+            i = j + off[0].length;
+            continue;
+        }
+        if (/^\s*\(/.test(rest)) {
+            const open = j + rest.indexOf('(');
+            const close = (0, lexer_1.matchBracket)(e, open);
+            if (close < 0)
+                return false;
+            const args = (0, lexer_1.splitTop)(e, open + 1, close).map(([s, t]) => e.slice(s, t).trim()).filter(Boolean);
+            if (!args.every((a) => isScalarish(a) || isPastExpr(lx, a, scope, depth + 1, stack)))
+                return false;
+            i = close + 1;
+            continue;
+        }
+        if (word.includes('.') && SAFE_NS.test(word)) {
+            i = j;
+            continue;
+        }
+        if (SAFE_ATOMS.test(word)) {
+            i = j;
+            continue;
+        }
+        if (!isPastExpr(lx, word, scope, depth + 1, stack))
+            return false;
+        i = j;
+    }
+    return true;
+}
+function wrapperCallsArePast(lx, fnName, paramName, paramIndex) {
+    const calls = findCalls(lx, new RegExp(`(?<![\\w.])${fnName}\\s*\\(`, 'g'))
+        .filter((c) => !/^\s*=>/.test(lx.masked.slice(c.close + 1, c.close + 16)));
+    if (calls.length === 0)
+        return false;
+    return calls.every((c) => {
+        const a = arg(c, paramName, paramIndex);
+        return !!a && isPastExpr(lx, a.text, { at: c.start, params: new Map() }, 0, []);
+    });
+}
+const DRAW_NS = '(?:table|label|line|box|polyline|linefill)';
+const DRAW_START = new RegExp(`^${DRAW_NS}\\s*\\.\\s*[A-Za-z_]\\w*`);
+const LOG_START = /^(?:runtime\s*\.\s*(?:error|log)|log\s*\.\s*(?:info|warning|error))\b/;
+const ASSIGN_STMT = /^(?:(var|varip)\s+)?(?:(table|label|line|box|polyline|linefill|string|int|float|bool|color)\s+)?([A-Za-z_]\w*)\s*(\+=|-=|\*=|\/=|:=|=(?!=))\s*([\s\S]+)$/;
+function parenDelta(maskedLine) {
+    let d = 0;
+    for (const c of maskedLine) {
+        if (c === '(' || c === '[')
+            d++;
+        else if (c === ')' || c === ']')
+            d--;
+    }
+    return d;
+}
+function rhsSafe(rhs) {
+    const t = rhs.trim();
+    if (new RegExp(`^${DRAW_NS}\\s*\\.\\s*[A-Za-z_]`).test(t))
+        return true;
+    if (/\b(?:close|open|high|low|hl2|hlc3|ohlc4|hlcc4|volume|vwap)\b/.test(t))
+        return false;
+    if (/\b(?:ta|request|strategy)\s*\./.test(t))
+        return false;
+    if (/\b(?:alert|alertcondition|plot|plotshape|plotchar|plotarrow|plotcandle|plotbar|bgcolor|barcolor)\s*\(/.test(t))
+        return false;
+    return true;
+}
+function stmtOk(stmt, locals) {
+    const t = stmt.trim();
+    if (DRAW_START.test(t) || LOG_START.test(t))
+        return true;
+    const m = ASSIGN_STMT.exec(t);
+    if (!m)
+        return false;
+    const creates = m[4] === '=' || !!m[1];
+    if (!rhsSafe(m[5]))
+        return false;
+    if (!creates && !locals.has(m[3]))
+        return false;
+    if (creates)
+        locals.add(m[3]);
+    return true;
+}
+function blockOk(codeLines, maskLines, locals) {
+    const nonempty = codeLines.map((l, i) => i).filter((i) => codeLines[i].trim() !== '');
+    if (!nonempty.length)
+        return false;
+    const indOf = (s) => s.length - s.trimStart().length;
+    const base = Math.min(...nonempty.map((i) => indOf(codeLines[i])));
+    let i = 0;
+    while (i < codeLines.length) {
+        if (codeLines[i].trim() === '') {
+            i++;
+            continue;
+        }
+        const ind = indOf(codeLines[i]);
+        if (ind !== base)
+            return false;
+        let depth = parenDelta(maskLines[i]);
+        const parts = [codeLines[i].trim()];
+        let j = i + 1;
+        while (j < codeLines.length && depth > 0) {
+            if (codeLines[j].trim() !== '')
+                parts.push(codeLines[j].trim());
+            depth += parenDelta(maskLines[j]);
+            j++;
+        }
+        const head = parts.join(' ');
+        if (/^(?:else\s+)?if\b|^else\b|^for\b|^while\b|^switch\b/.test(head)) {
+            const nestedC = [];
+            const nestedM = [];
+            while (j < codeLines.length) {
+                if (codeLines[j].trim() === '') {
+                    j++;
+                    continue;
+                }
+                if (indOf(codeLines[j]) <= ind)
+                    break;
+                nestedC.push(codeLines[j]);
+                nestedM.push(maskLines[j]);
+                j++;
+            }
+            if (nestedC.length && !blockOk(nestedC, nestedM, locals))
+                return false;
+            i = j;
+            continue;
+        }
+        if (!stmtOk(head, locals))
+            return false;
+        i = j;
+    }
+    return true;
+}
+/** barstate.islast that only draws a table/label/line/box or raises a runtime notice on the last bar. */
+function isHarmlessIslast(lx, offset) {
+    const code = lx.code.split('\n');
+    const mask = lx.masked.split('\n');
+    const idx = (0, lexer_1.lineOf)(lx, offset) - 1;
+    const line = code[idx] ?? '';
+    if (!/^\s*if\b/.test(line) || /(?:=|:=)\s*if\b/.test(line) || !/\bbarstate\.islast\b/.test(line))
+        return false;
+    const ind = line.length - line.trimStart().length;
+    const bodyC = [];
+    const bodyM = [];
+    let end = idx + 1;
+    for (let i = idx + 1; i < code.length; i++) {
+        if (code[i].trim() === '') {
+            end = i + 1;
+            continue;
+        }
+        if (code[i].length - code[i].trimStart().length <= ind) {
+            end = i;
+            break;
+        }
+        bodyC.push(code[i]);
+        bodyM.push(mask[i]);
+        end = i + 1;
+    }
+    const locals = new Set();
+    if (!blockOk(bodyC, bodyM, locals))
+        return false;
+    const rest = code.slice(end);
+    for (const name of locals) {
+        const re = new RegExp(`(?<![\\w.])${name}(?![\\w])`);
+        if (rest.some((l) => re.test(l) && !DRAW_START.test(l.trim()) && !LOG_START.test(l.trim())))
+            return false;
+    }
+    return true;
 }
 function isConfirmedExpr(lx, expr, at, depth = 0) {
     if (/\bbarstate\.isconfirmed\b/.test(expr))
@@ -155,10 +489,15 @@ function analyze(src, file = '<input>') {
         if (lookOn) {
             if (unsafe.length === 0)
                 continue;
-            const params = enclosingParams(lx, c.start) ?? [];
-            const viaParam = unsafe.every((e) => params.includes(norm(e)));
-            if (viaParam) {
-                add('PRC001', c.start, `lookahead_on with expression parameter '${unsafe.join(', ')}' of a wrapper function: every call site must pass a [1]-offset series.`, 'warning');
+            const fn = enclosingFunction(lx, c.start);
+            const viaParam = !!fn && unsafe.every((e) => fn.params.includes(norm(e)));
+            if (viaParam && fn) {
+                const proven = unsafe.every((u) => {
+                    const name = norm(u);
+                    return wrapperCallsArePast(lx, fn.name, name, fn.params.indexOf(name));
+                });
+                if (!proven)
+                    add('PRC001', c.start, `lookahead_on with expression parameter '${unsafe.map(norm).join(', ')}' of a wrapper function: a same-file call site passes a series that is not offset by [1].`, 'warning');
             }
             else {
                 const resolved = unsafe.filter((e) => {
@@ -194,8 +533,11 @@ function analyze(src, file = '<input>') {
     ];
     for (const [id, re, msg] of kw) {
         let m;
-        while ((m = re.exec(lx.masked)))
+        while ((m = re.exec(lx.masked))) {
+            if (id === 'PRC006' && m[1] === 'islast' && isHarmlessIslast(lx, m.index))
+                continue;
             add(id, m.index, msg(m[0]));
+        }
     }
     // PRC007: alerts
     for (const c of findCalls(lx, /(?<![\w.])(alertcondition)\s*\(/g)) {
