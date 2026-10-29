@@ -1,0 +1,1239 @@
+// This Pine Script™ source code is subject to the terms of the Mozilla Public License 2.0
+// © ICT All-in-One Indicator
+
+//@version=6
+indicator("ICT All-in-One", overlay=true, max_labels_count=500, max_lines_count=500, max_boxes_count=500)
+
+// ─────────────────────────────────────────────
+// INPUTS
+// ─────────────────────────────────────────────
+
+// ── Swing Highs/Lows ──
+grpSwing     = "Swing Highs / Lows"
+showSwings   = input.bool(true, "Show Swing Points", group=grpSwing)
+swingLen     = input.int(5, "Swing Lookback", minval=1, maxval=50, group=grpSwing)
+colSwingHigh = input.color(color.red, "Swing High Color", group=grpSwing)
+colSwingLow  = input.color(color.green, "Swing Low Color", group=grpSwing)
+
+// ── Break of Structure ──
+grpBOS    = "Break of Structure"
+showBOS   = input.bool(true, "Show BOS / CHoCH", group=grpBOS)
+colBOSBull = input.color(color.green, "Bullish BOS Color", group=grpBOS)
+colBOSBear = input.color(color.red, "Bearish BOS Color", group=grpBOS)
+
+// ── Trend ──
+grpTrend   = "Trend"
+showTrend  = input.bool(true, "Show Trend Label", group=grpTrend)
+
+// ── Fair Value Gaps ──
+grpFVG     = "Fair Value Gaps"
+showFVG    = input.bool(true, "Show FVGs", group=grpFVG)
+colFVGBull = input.color(color.new(color.green, 85), "Bullish FVG", group=grpFVG)
+colFVGBear = input.color(color.new(color.red, 85), "Bearish FVG", group=grpFVG)
+fvgMitigate = input.bool(true, "Remove Mitigated FVGs", group=grpFVG)
+
+// ── Order Blocks ──
+grpOB      = "Order Blocks"
+showOB     = input.bool(true, "Show Order Blocks", group=grpOB)
+colOBBull  = input.color(color.new(color.green, 80), "Bullish OB", group=grpOB)
+colOBBear  = input.color(color.new(color.red, 80), "Bearish OB", group=grpOB)
+obMaxBoxes = input.int(10, "Max OB Boxes", minval=1, maxval=50, group=grpOB)
+
+// ── Breaker Blocks ──
+grpBB              = "═══ Breaker Blocks"
+showBB             = input.bool(true, "Show Breaker Blocks", group=grpBB)
+colBBBull          = input.color(color.new(color.teal, 75), "Bullish Breaker Color", group=grpBB)
+colBBBear          = input.color(color.new(color.maroon, 75), "Bearish Breaker Color", group=grpBB)
+colBBBullBorder    = input.color(color.teal, "Bullish Border Color", group=grpBB)
+colBBBearBorder    = input.color(color.maroon, "Bearish Border Color", group=grpBB)
+showBBLabels       = input.bool(true, "Show BB Labels", group=grpBB)
+showBBInvalidated  = input.bool(true, "Show Invalidated Blocks", group=grpBB, tooltip="When enabled, invalidated Breaker Blocks are shown in gray instead of being removed.")
+colBBInvalidated   = input.color(color.new(color.gray, 85), "Invalidated Color", group=grpBB)
+bbMaxBoxes         = input.int(20, "Max Breaker Blocks", minval=1, maxval=100, group=grpBB)
+
+// ── Sessions ──
+grpSess       = "Sessions"
+showSessions  = input.bool(true, "Show Sessions", group=grpSess)
+showTokyo     = input.bool(true, "Tokyo", group=grpSess)
+sessTokyoTime = input.session("0000-0900", "Tokyo Time (UTC)", group=grpSess)
+colTokyo      = input.color(color.new(color.purple, 92), "Tokyo Color", group=grpSess)
+showLondon    = input.bool(true, "London", group=grpSess)
+sessLondonTime = input.session("0700-1600", "London Time (UTC)", group=grpSess)
+colLondon     = input.color(color.new(color.blue, 92), "London Color", group=grpSess)
+showNY        = input.bool(true, "New York", group=grpSess)
+sessNYTime    = input.session("1300-2200", "New York Time (UTC)", group=grpSess)
+colNY         = input.color(color.new(color.orange, 92), "New York Color", group=grpSess)
+
+// ── SMT Divergence ──
+grpSMT       = "SMT Divergence"
+showSMT      = input.bool(true, "Show SMT Divergence", group=grpSMT)
+smtSym1      = input.symbol("PEPPERSTONE:NAS100", "Korreliertes Symbol A", group=grpSMT,
+                tooltip="Erstes Symbol für den Vergleich. Reihenfolge spielt keine Rolle – beide werden symmetrisch verglichen.")
+smtSym2      = input.symbol("PEPPERSTONE:SPX500", "Korreliertes Symbol B", group=grpSMT,
+                tooltip="Zweites Symbol für den Vergleich. Nutze zwei korrelierte Instrumente (z.B. NAS100 & SPX500, ES & NQ).")
+smtTimingTol = input.int(3, "Timing Tolerance (Bars)", minval=0, maxval=10, group=grpSMT,
+                tooltip="Max. Abstand in Bars zwischen den Pivots beider Symbole.")
+colSMTBull   = input.color(color.lime, "Bullish SMT", group=grpSMT)
+colSMTBear   = input.color(color.fuchsia, "Bearish SMT", group=grpSMT)
+
+// ── Liquidity Sweeps ──
+grpLiq      = "Liquidity Sweeps"
+showLiq     = input.bool(true, "Show Liquidity Sweeps", group=grpLiq)
+colLiqHigh  = input.color(color.red, "High Sweep Color", group=grpLiq)
+colLiqLow   = input.color(color.green, "Low Sweep Color", group=grpLiq)
+
+// ── Equilibrium Levels ──
+grpEQ         = "Equilibrium Levels"
+showEQ        = input.bool(true, "Show Equilibrium (50%)", group=grpEQ)
+showPremDisc  = input.bool(true, "Show Premium/Discount Zones", group=grpEQ)
+colEQLine     = input.color(color.gray, "Equilibrium Line Color", group=grpEQ)
+colPremium    = input.color(color.new(color.red, 92), "Premium Zone", group=grpEQ)
+colDiscount   = input.color(color.new(color.green, 92), "Discount Zone", group=grpEQ)
+
+// ── Context, Bias & Confluence ──
+grpConf        = "Context, Bias & Confluence"
+showContext    = input.bool(true, "Show Context/Bias Panel", group=grpConf)
+showConfluence = input.bool(true, "Show Confluence Zones", group=grpConf)
+confMinLayers  = input.int(2, "Min Layers for Confluence", minval=2, maxval=5, group=grpConf, tooltip="How many ICT concepts must overlap to mark a confluence zone")
+
+// ── Previous Day/Week/Month Highs & Lows ──
+grpPDWM       = "Previous D/W/M Levels"
+showPDHL      = input.bool(true, "Show Previous Day H/L", group=grpPDWM)
+showPWHL      = input.bool(true, "Show Previous Week H/L", group=grpPDWM)
+showPMHL      = input.bool(true, "Show Previous Month H/L", group=grpPDWM)
+colPDH        = input.color(color.new(color.orange, 20), "PDH Color", group=grpPDWM)
+colPDL        = input.color(color.new(color.orange, 20), "PDL Color", group=grpPDWM)
+colPWH        = input.color(color.new(color.blue, 20), "PWH Color", group=grpPDWM)
+colPWL        = input.color(color.new(color.blue, 20), "PWL Color", group=grpPDWM)
+colPMH        = input.color(color.new(color.purple, 20), "PMH Color", group=grpPDWM)
+colPML        = input.color(color.new(color.purple, 20), "PML Color", group=grpPDWM)
+
+// ── Killzones ──
+grpKZ          = "Killzones"
+showKZ         = input.bool(true, "Show Killzones", group=grpKZ)
+showAsianKZ    = input.bool(true, "Asian KZ", group=grpKZ)
+kzAsianTime    = input.session("2000-0000", "Asian KZ (UTC)", group=grpKZ, tooltip="Default: 20:00–00:00 UTC (= 15:00–19:00 EST)")
+colAsianKZ     = input.color(color.new(color.purple, 88), "Asian KZ Color", group=grpKZ)
+showLondonKZ   = input.bool(true, "London KZ", group=grpKZ)
+kzLondonTime   = input.session("0700-1000", "London KZ (UTC)", group=grpKZ, tooltip="Default: 07:00–10:00 UTC (= 02:00–05:00 EST)")
+colLondonKZ    = input.color(color.new(color.blue, 88), "London KZ Color", group=grpKZ)
+showNYKZ       = input.bool(true, "NY KZ", group=grpKZ)
+kzNYTime       = input.session("1200-1500", "NY KZ (UTC)", group=grpKZ, tooltip="Default: 12:00–15:00 UTC (= 07:00–10:00 EST)")
+colNYKZ        = input.color(color.new(color.orange, 88), "NY KZ Color", group=grpKZ)
+
+// ── Volume Imbalance ──
+grpVI          = "Volume Imbalance"
+showVI         = input.bool(true, "Show Volume Imbalances", group=grpVI)
+colVIBull      = input.color(color.new(color.green, 82), "Bullish VI", group=grpVI)
+colVIBear      = input.color(color.new(color.red, 82), "Bearish VI", group=grpVI)
+
+// ── Midnight Open / NY Open ──
+grpOpens       = "Key Opens"
+showMNO        = input.bool(true, "Show Midnight Open (NY)", group=grpOpens)
+colMNO         = input.color(color.new(color.white, 30), "Midnight Open Color", group=grpOpens)
+showNYO        = input.bool(true, "Show NY Open (9:30 EST)", group=grpOpens)
+colNYO         = input.color(color.new(color.yellow, 30), "NY Open Color", group=grpOpens)
+
+// ── Technical Confirmation ──
+grpTech        = "Technical Indicators"
+showRSI        = input.bool(true, "Show RSI Panel", group=grpTech)
+rsiLen         = input.int(14, "RSI Length", minval=2, maxval=50, group=grpTech)
+rsiOB          = input.int(70, "RSI Overbought", minval=50, maxval=95, group=grpTech)
+rsiOS          = input.int(30, "RSI Oversold", minval=5, maxval=50, group=grpTech)
+showEMAs       = input.bool(true, "Show EMA Ribbon (9/21)", group=grpTech)
+emaFastLen     = input.int(9, "Fast EMA", minval=2, maxval=50, group=grpTech)
+emaSlowLen     = input.int(21, "Slow EMA", minval=5, maxval=200, group=grpTech)
+colEMAFast     = input.color(color.new(color.aqua, 20), "Fast EMA Color", group=grpTech)
+colEMASlow     = input.color(color.new(color.orange, 20), "Slow EMA Color", group=grpTech)
+showVWAP       = input.bool(true, "Show VWAP", group=grpTech)
+colVWAP        = input.color(color.new(color.yellow, 20), "VWAP Color", group=grpTech)
+
+// ─────────────────────────────────────────────
+// DATA TYPES
+// ─────────────────────────────────────────────
+
+type BreakerBlock
+    box   drawBox
+    label drawLabel
+    int   dir      // +1 = bullish breaker, -1 = bearish breaker
+    float top
+    float bot
+    int   startBar
+    int   obBar
+    bool  active
+    bool  retested
+
+// ─────────────────────────────────────────────
+// SWING HIGHS / LOWS
+// ─────────────────────────────────────────────
+
+// Detect pivot points
+pivHigh = ta.pivothigh(high, swingLen, swingLen)
+pivLow  = ta.pivotlow(low, swingLen, swingLen)
+
+// Arrays to store swing point prices and bar indices
+var float[] swingHighPrices = array.new_float()
+var int[]   swingHighBars   = array.new_int()
+var float[] swingLowPrices  = array.new_float()
+var int[]   swingLowBars    = array.new_int()
+
+// Track latest swing values for quick access
+var float lastSwingHigh = na
+var int   lastSwingHighBar = na
+var float lastSwingLow  = na
+var int   lastSwingLowBar  = na
+var float prevSwingHigh = na
+var float prevSwingLow  = na
+
+if not na(pivHigh)
+    prevSwingHigh := lastSwingHigh
+    lastSwingHigh := pivHigh
+    lastSwingHighBar := bar_index - swingLen
+    array.push(swingHighPrices, pivHigh)
+    array.push(swingHighBars, bar_index - swingLen)
+    // Keep arrays manageable
+    if array.size(swingHighPrices) > 50
+        array.shift(swingHighPrices)
+        array.shift(swingHighBars)
+    if showSwings
+        label.new(bar_index - swingLen, pivHigh, "HH", style=label.style_label_down, color=color.new(color.white, 100), textcolor=colSwingHigh, size=size.tiny)
+
+if not na(pivLow)
+    prevSwingLow := lastSwingLow
+    lastSwingLow := pivLow
+    lastSwingLowBar := bar_index - swingLen
+    array.push(swingLowPrices, pivLow)
+    array.push(swingLowBars, bar_index - swingLen)
+    if array.size(swingLowPrices) > 50
+        array.shift(swingLowPrices)
+        array.shift(swingLowBars)
+    if showSwings
+        label.new(bar_index - swingLen, pivLow, "LL", style=label.style_label_up, color=color.new(color.white, 100), textcolor=colSwingLow, size=size.tiny)
+
+// ─────────────────────────────────────────────
+// BREAK OF STRUCTURE (BOS) / CHoCH + TREND
+// ─────────────────────────────────────────────
+
+var int trend = 0  // +1 = bullish, -1 = bearish
+var float bosLevel = na
+
+// BOS detection
+bullishBOS = not na(lastSwingHigh) and close > lastSwingHigh and close[1] <= lastSwingHigh
+bearishBOS = not na(lastSwingLow)  and close < lastSwingLow  and close[1] >= lastSwingLow
+
+if bullishBOS
+    isCHoCH = trend == -1
+    bosLabel = isCHoCH ? "CHoCH" : "BOS"
+    bosLevel := lastSwingHigh
+    trend := 1
+    if showBOS
+        line.new(math.max(lastSwingHighBar, bar_index - 4999), lastSwingHigh, bar_index, lastSwingHigh, color=colBOSBull, style=line.style_dashed, width=1)
+        label.new(bar_index, lastSwingHigh, bosLabel, style=label.style_label_down, color=color.new(color.white, 100), textcolor=colBOSBull, size=size.tiny)
+
+if bearishBOS
+    isCHoCH = trend == 1
+    bosLabel = isCHoCH ? "CHoCH" : "BOS"
+    bosLevel := lastSwingLow
+    trend := -1
+    if showBOS
+        line.new(math.max(lastSwingLowBar, bar_index - 4999), lastSwingLow, bar_index, lastSwingLow, color=colBOSBear, style=line.style_dashed, width=1)
+        label.new(bar_index, lastSwingLow, bosLabel, style=label.style_label_up, color=color.new(color.white, 100), textcolor=colBOSBear, size=size.tiny)
+
+// Trend label (top-right corner)
+var label trendLabel = na
+if showTrend and barstate.islast
+    label.delete(trendLabel)
+    trendText  = trend == 1 ? "▲ BULLISH" : trend == -1 ? "▼ BEARISH" : "— NEUTRAL"
+    trendCol   = trend == 1 ? color.green : trend == -1 ? color.red : color.gray
+    trendLabel := label.new(bar_index + 5, close, trendText, style=label.style_label_left, color=trendCol, textcolor=color.white, size=size.normal)
+
+// ─────────────────────────────────────────────
+// FAIR VALUE GAPS (FVGs)
+// ─────────────────────────────────────────────
+
+// Arrays for FVG box tracking (for mitigation)
+var box[]   fvgBoxes    = array.new_box()
+var int[]   fvgTypes    = array.new_int()    // +1 bullish, -1 bearish
+var float[] fvgTops     = array.new_float()
+var float[] fvgBots     = array.new_float()
+var int[]   fvgStartBar = array.new_int()    // bar_index when FVG was created
+var int[]   fvgMaxLife  = array.new_int()    // max bars this FVG should live
+
+// ATR for FVG lifetime scaling
+fvgAtr = ta.atr(14)
+
+// Calculate max lifetime in bars based on FVG size relative to ATR
+// Bigger FVG → longer lifetime. Base: 50 bars, scaled up to 500 for huge gaps.
+fvgLifetime(float gapSize, float atr) =>
+    if na(atr) or atr == 0
+        100
+    else
+        ratio = gapSize / atr
+        // ratio ~0.2 = small gap → ~50 bars
+        // ratio ~0.5 = medium gap → ~125 bars
+        // ratio ~1.0 = large gap → ~250 bars
+        // ratio ~2.0+ = huge gap → capped at 500 bars
+        math.min(500, math.max(50, math.round(250 * ratio)))
+
+if showFVG
+    // Bullish FVG: gap between candle[2] high and candle[0] low
+    bullFVG = low > high[2]
+    if bullFVG
+        fvgTop = low
+        fvgBot = high[2]
+        gapSize = fvgTop - fvgBot
+        life = fvgLifetime(gapSize, fvgAtr)
+        b = box.new(bar_index - 2, fvgTop, bar_index, fvgBot, border_color=color.new(color.green, 70), bgcolor=colFVGBull, extend=extend.none)
+        label.new(bar_index - 2, fvgBot, "FVG▲", style=label.style_label_up, color=color.new(color.white, 100), textcolor=color.new(color.green, 70), size=size.tiny)
+        array.push(fvgBoxes, b)
+        array.push(fvgTypes, 1)
+        array.push(fvgTops, fvgTop)
+        array.push(fvgBots, fvgBot)
+        array.push(fvgStartBar, bar_index)
+        array.push(fvgMaxLife, life)
+
+    // Bearish FVG: gap between candle[0] high and candle[2] low
+    bearFVG = high < low[2]
+    if bearFVG
+        fvgTop = low[2]
+        fvgBot = high
+        gapSize = fvgTop - fvgBot
+        life = fvgLifetime(gapSize, fvgAtr)
+        b = box.new(bar_index - 2, fvgTop, bar_index, fvgBot, border_color=color.new(color.red, 70), bgcolor=colFVGBear, extend=extend.none)
+        label.new(bar_index - 2, fvgTop, "FVG▼", style=label.style_label_down, color=color.new(color.white, 100), textcolor=color.new(color.red, 70), size=size.tiny)
+        array.push(fvgBoxes, b)
+        array.push(fvgTypes, -1)
+        array.push(fvgTops, fvgTop)
+        array.push(fvgBots, fvgBot)
+        array.push(fvgStartBar, bar_index)
+        array.push(fvgMaxLife, life)
+
+    // Extend active FVGs & check mitigation + expiry
+    if array.size(fvgBoxes) > 0
+        for i = array.size(fvgBoxes) - 1 to 0
+            fType  = array.get(fvgTypes, i)
+            fTop   = array.get(fvgTops, i)
+            fBot   = array.get(fvgBots, i)
+            fStart = array.get(fvgStartBar, i)
+            fLife  = array.get(fvgMaxLife, i)
+            age    = bar_index - fStart
+
+            shouldRemove = false
+
+            // Mitigation check
+            if fvgMitigate
+                if fType == 1 and low <= fBot
+                    shouldRemove := true
+                if fType == -1 and high >= fTop
+                    shouldRemove := true
+
+            // Expiry check: FVG lived past its max lifetime
+            if age > fLife
+                shouldRemove := true
+
+            if shouldRemove
+                box.delete(array.get(fvgBoxes, i))
+                array.remove(fvgBoxes, i)
+                array.remove(fvgTypes, i)
+                array.remove(fvgTops, i)
+                array.remove(fvgBots, i)
+                array.remove(fvgStartBar, i)
+                array.remove(fvgMaxLife, i)
+            else
+                // Extend the right edge of the FVG box to current bar
+                box.set_right(array.get(fvgBoxes, i), bar_index)
+
+// ─────────────────────────────────────────────
+// ORDER BLOCKS
+// ─────────────────────────────────────────────
+
+// OB storage arrays
+var box[]   obBoxes  = array.new_box()
+var int[]   obTypes  = array.new_int()    // +1 bullish, -1 bearish
+var float[] obTops   = array.new_float()
+var float[] obBots   = array.new_float()
+var int[]   obBars   = array.new_int()    // bar_index of OB candle
+
+if showOB
+    // Bullish OB: last bearish candle before a bullish BOS
+    if bullishBOS
+        // Look back for last bearish candle
+        for j = 1 to 10
+            if close[j] < open[j]
+                obTop = math.max(open[j], close[j])
+                obBot = math.min(open[j], close[j])
+                b = box.new(bar_index - j, obTop, bar_index + 20, obBot, border_color=color.green, bgcolor=colOBBull)
+                label.new(bar_index - j, obBot, "OB▲", style=label.style_label_up, color=color.new(color.white, 100), textcolor=color.green, size=size.tiny)
+                array.push(obBoxes, b)
+                array.push(obTypes, 1)
+                array.push(obTops, obTop)
+                array.push(obBots, obBot)
+                array.push(obBars, bar_index - j)
+                break
+
+    // Bearish OB: last bullish candle before a bearish BOS
+    if bearishBOS
+        for j = 1 to 10
+            if close[j] > open[j]
+                obTop = math.max(open[j], close[j])
+                obBot = math.min(open[j], close[j])
+                b = box.new(bar_index - j, obTop, bar_index + 20, obBot, border_color=color.red, bgcolor=colOBBear)
+                label.new(bar_index - j, obTop, "OB▼", style=label.style_label_down, color=color.new(color.white, 100), textcolor=color.red, size=size.tiny)
+                array.push(obBoxes, b)
+                array.push(obTypes, -1)
+                array.push(obTops, obTop)
+                array.push(obBots, obBot)
+                array.push(obBars, bar_index - j)
+                break
+
+    // Trim old OBs if too many
+    while array.size(obBoxes) > obMaxBoxes
+        box.delete(array.get(obBoxes, 0))
+        array.shift(obBoxes)
+        array.shift(obTypes)
+        array.shift(obTops)
+        array.shift(obBots)
+        array.shift(obBars)
+
+// ─────────────────────────────────────────────
+// BREAKER BLOCKS
+// ─────────────────────────────────────────────
+
+// Type-based storage (replaces parallel arrays)
+var BreakerBlock[] breakers = array.new<BreakerBlock>()
+
+// Compatibility arrays for confluence detection
+var float[] bbTops = array.new_float()
+var float[] bbBots = array.new_float()
+
+// Alert flags
+var bool newBullBB   = false
+var bool newBearBB   = false
+var bool retestBullBB = false
+var bool retestBearBB = false
+newBullBB   := false
+newBearBB   := false
+retestBullBB := false
+retestBearBB := false
+
+// ── Detect new Breaker Blocks from OB invalidation ──
+if showBB and array.size(obBoxes) > 0
+    for i = array.size(obBoxes) - 1 to 0
+        oType = array.get(obTypes, i)
+        oTop  = array.get(obTops, i)
+        oBot  = array.get(obBots, i)
+        oBar  = array.get(obBars, i)
+
+        // Bullish OB broken downward → BEARISH Breaker Block
+        if oType == 1 and close < oBot
+            int safeLeft = math.max(oBar, bar_index - 4999)
+            bearBox = box.new(safeLeft, oTop, bar_index + 5, oBot, border_color=colBBBearBorder, bgcolor=colBBBear)
+            label bearLbl = na
+            if showBBLabels
+                bearLbl := label.new(safeLeft, oTop, "BB▼", style=label.style_label_down, color=color.new(color.white, 100), textcolor=colBBBearBorder, size=size.tiny)
+            bb = BreakerBlock.new(drawBox=bearBox, drawLabel=bearLbl, dir=-1, top=oTop, bot=oBot, startBar=bar_index, obBar=oBar, active=true, retested=false)
+            array.push(breakers, bb)
+            newBearBB := true
+            box.delete(array.get(obBoxes, i))
+            array.remove(obBoxes, i)
+            array.remove(obTypes, i)
+            array.remove(obTops, i)
+            array.remove(obBots, i)
+            array.remove(obBars, i)
+            continue
+
+        // Bearish OB broken upward → BULLISH Breaker Block
+        if oType == -1 and close > oTop
+            int safeLeft = math.max(oBar, bar_index - 4999)
+            bullBox = box.new(safeLeft, oTop, bar_index + 5, oBot, border_color=colBBBullBorder, bgcolor=colBBBull)
+            label bullLbl = na
+            if showBBLabels
+                bullLbl := label.new(safeLeft, oBot, "BB▲", style=label.style_label_up, color=color.new(color.white, 100), textcolor=colBBBullBorder, size=size.tiny)
+            bb = BreakerBlock.new(drawBox=bullBox, drawLabel=bullLbl, dir=1, top=oTop, bot=oBot, startBar=bar_index, obBar=oBar, active=true, retested=false)
+            array.push(breakers, bb)
+            newBullBB := true
+            box.delete(array.get(obBoxes, i))
+            array.remove(obBoxes, i)
+            array.remove(obTypes, i)
+            array.remove(obTops, i)
+            array.remove(obBots, i)
+            array.remove(obBars, i)
+            continue
+
+// ── Breaker Block Management: invalidation, retest, extension ──
+
+// Rebuild compatibility arrays each bar
+array.clear(bbTops)
+array.clear(bbBots)
+
+if array.size(breakers) > 0
+    for i = array.size(breakers) - 1 to 0
+        bb = array.get(breakers, i)
+
+        if bb.active
+            // Extend active box to current bar + 5
+            box.set_right(bb.drawBox, bar_index + 5)
+
+            // ── Invalidation ──
+            // Bullish BB invalidated when price closes below its bot
+            if bb.dir == 1 and close < bb.bot
+                bb.active := false
+                if showBBInvalidated
+                    box.set_bgcolor(bb.drawBox, colBBInvalidated)
+                    box.set_border_color(bb.drawBox, color.gray)
+                    if not na(bb.drawLabel)
+                        label.set_textcolor(bb.drawLabel, color.gray)
+                        label.set_text(bb.drawLabel, "BB▲ !")
+                else
+                    box.delete(bb.drawBox)
+                    if not na(bb.drawLabel)
+                        label.delete(bb.drawLabel)
+                    array.remove(breakers, i)
+                    continue
+
+            // Bearish BB invalidated when price closes above its top
+            if bb.dir == -1 and close > bb.top
+                bb.active := false
+                if showBBInvalidated
+                    box.set_bgcolor(bb.drawBox, colBBInvalidated)
+                    box.set_border_color(bb.drawBox, color.gray)
+                    if not na(bb.drawLabel)
+                        label.set_textcolor(bb.drawLabel, color.gray)
+                        label.set_text(bb.drawLabel, "BB▼ !")
+                else
+                    box.delete(bb.drawBox)
+                    if not na(bb.drawLabel)
+                        label.delete(bb.drawLabel)
+                    array.remove(breakers, i)
+                    continue
+
+            // ── Retest Detection ──
+            if bb.dir == 1 and not bb.retested
+                if low <= bb.top and close > bb.bot
+                    bb.retested := true
+                    retestBullBB := true
+
+            if bb.dir == -1 and not bb.retested
+                if high >= bb.bot and close < bb.top
+                    bb.retested := true
+                    retestBearBB := true
+
+        // Populate compatibility arrays (for confluence detection)
+        array.push(bbTops, bb.top)
+        array.push(bbBots, bb.bot)
+
+// Trim to max displayed blocks (oldest first)
+while array.size(breakers) > bbMaxBoxes
+    oldest = array.get(breakers, 0)
+    box.delete(oldest.drawBox)
+    if not na(oldest.drawLabel)
+        label.delete(oldest.drawLabel)
+    array.shift(breakers)
+
+// ─────────────────────────────────────────────
+// SESSION TIMES
+// ─────────────────────────────────────────────
+
+// Helper: detect session start/end for background coloring
+tokyoActive  = showSessions and showTokyo  and not na(time(timeframe.period, sessTokyoTime, "UTC"))
+londonActive = showSessions and showLondon and not na(time(timeframe.period, sessLondonTime, "UTC"))
+nyActive     = showSessions and showNY     and not na(time(timeframe.period, sessNYTime, "UTC"))
+
+bgcolor(tokyoActive  ? colTokyo  : na, title="Tokyo Session")
+bgcolor(londonActive ? colLondon : na, title="London Session")
+bgcolor(nyActive     ? colNY     : na, title="New York Session")
+
+// Session start labels (only on first bar of each session)
+var bool wasTokyoActive  = false
+var bool wasLondonActive = false
+var bool wasNYActive     = false
+
+if showSessions
+    if tokyoActive and not wasTokyoActive and showTokyo
+        label.new(bar_index, high, "Tokyo", style=label.style_label_down, color=color.new(color.purple, 60), textcolor=color.white, size=size.tiny)
+    if londonActive and not wasLondonActive and showLondon
+        label.new(bar_index, high, "London", style=label.style_label_down, color=color.new(color.blue, 60), textcolor=color.white, size=size.tiny)
+    if nyActive and not wasNYActive and showNY
+        label.new(bar_index, high, "New York", style=label.style_label_down, color=color.new(color.orange, 60), textcolor=color.white, size=size.tiny)
+
+wasTokyoActive  := tokyoActive
+wasLondonActive := londonActive
+wasNYActive     := nyActive
+
+// ─────────────────────────────────────────────
+// SMT DIVERGENCE (Pivot-based Structure Comparison)
+// ─────────────────────────────────────────────
+//
+// Compares swing structure (HH/LH, LL/HL) between two correlated symbols.
+// Bearish SMT: one symbol makes Higher High, the other Lower High
+// Bullish SMT: one symbol makes Lower Low, the other Higher Low
+
+// Request high/low data from both comparison symbols
+sym1High = request.security(smtSym1, timeframe.period, high)
+sym1Low  = request.security(smtSym1, timeframe.period, low)
+sym2High = request.security(smtSym2, timeframe.period, high)
+sym2Low  = request.security(smtSym2, timeframe.period, low)
+
+// Detect pivots on both symbols using the same swingLen
+sym1PivH = ta.pivothigh(sym1High, swingLen, swingLen)
+sym1PivL = ta.pivotlow(sym1Low, swingLen, swingLen)
+sym2PivH = ta.pivothigh(sym2High, swingLen, swingLen)
+sym2PivL = ta.pivotlow(sym2Low, swingLen, swingLen)
+
+// Track last 2 pivot highs per symbol (price + bar index)
+var float sym1LastPH    = na
+var int   sym1LastPHBar = na
+var float sym1PrevPH    = na
+var int   sym1PrevPHBar = na
+
+var float sym2LastPH    = na
+var int   sym2LastPHBar = na
+var float sym2PrevPH    = na
+var int   sym2PrevPHBar = na
+
+// Track last 2 pivot lows per symbol (price + bar index)
+var float sym1LastPL    = na
+var int   sym1LastPLBar = na
+var float sym1PrevPL    = na
+var int   sym1PrevPLBar = na
+
+var float sym2LastPL    = na
+var int   sym2LastPLBar = na
+var float sym2PrevPL    = na
+var int   sym2PrevPLBar = na
+
+// Deduplication
+var int lastBearishSMTBar = na
+var int lastBullishSMTBar = na
+
+// Update pivot tracking
+if not na(sym1PivH)
+    sym1PrevPH    := sym1LastPH
+    sym1PrevPHBar := sym1LastPHBar
+    sym1LastPH    := sym1PivH
+    sym1LastPHBar := bar_index - swingLen
+
+if not na(sym2PivH)
+    sym2PrevPH    := sym2LastPH
+    sym2PrevPHBar := sym2LastPHBar
+    sym2LastPH    := sym2PivH
+    sym2LastPHBar := bar_index - swingLen
+
+if not na(sym1PivL)
+    sym1PrevPL    := sym1LastPL
+    sym1PrevPLBar := sym1LastPLBar
+    sym1LastPL    := sym1PivL
+    sym1LastPLBar := bar_index - swingLen
+
+if not na(sym2PivL)
+    sym2PrevPL    := sym2LastPL
+    sym2PrevPLBar := sym2LastPLBar
+    sym2LastPL    := sym2PivL
+    sym2LastPLBar := bar_index - swingLen
+
+// ── Bearish SMT: divergent highs (HH vs LH) ──
+bearishSMT = false
+if (not na(sym1PivH) or not na(sym2PivH))
+    if not na(sym1PrevPH) and not na(sym2PrevPH) and not na(sym1LastPHBar) and not na(sym2LastPHBar)
+        if math.abs(sym1LastPHBar - sym2LastPHBar) <= smtTimingTol
+            sym1HH = sym1LastPH > sym1PrevPH
+            sym2HH = sym2LastPH > sym2PrevPH
+            if sym1HH != sym2HH
+                pivotBar = math.max(sym1LastPHBar, sym2LastPHBar)
+                if na(lastBearishSMTBar) or pivotBar > lastBearishSMTBar
+                    bearishSMT := true
+                    lastBearishSMTBar := pivotBar
+
+// ── Bullish SMT: divergent lows (LL vs HL) ──
+bullishSMT = false
+if (not na(sym1PivL) or not na(sym2PivL))
+    if not na(sym1PrevPL) and not na(sym2PrevPL) and not na(sym1LastPLBar) and not na(sym2LastPLBar)
+        if math.abs(sym1LastPLBar - sym2LastPLBar) <= smtTimingTol
+            sym1LL = sym1LastPL < sym1PrevPL
+            sym2LL = sym2LastPL < sym2PrevPL
+            if sym1LL != sym2LL
+                pivotBar = math.max(sym1LastPLBar, sym2LastPLBar)
+                if na(lastBullishSMTBar) or pivotBar > lastBullishSMTBar
+                    bullishSMT := true
+                    lastBullishSMTBar := pivotBar
+
+// ── Draw SMT Divergences ──
+if showSMT
+    if bearishSMT
+        // Line 1 (sym1): previous pivot high → current pivot high (solid)
+        line.new(math.max(sym1PrevPHBar, bar_index - 4999), high[bar_index - sym1PrevPHBar],
+                 sym1LastPHBar, high[bar_index - sym1LastPHBar],
+                 color=colSMTBear, width=2, style=line.style_solid)
+        // Line 2 (sym2): previous pivot high → current pivot high (dashed, more transparent)
+        line.new(math.max(sym2PrevPHBar, bar_index - 4999), high[bar_index - sym2PrevPHBar],
+                 sym2LastPHBar, high[bar_index - sym2LastPHBar],
+                 color=color.new(colSMTBear, 40), width=2, style=line.style_dashed)
+        // Determine which symbol made HH and which LH for tooltip
+        sym1HHLabel = sym1LastPH > sym1PrevPH ? "HH" : "LH"
+        sym2HHLabel = sym2LastPH > sym2PrevPH ? "HH" : "LH"
+        label.new(math.max(sym1LastPHBar, sym2LastPHBar), high[bar_index - math.max(sym1LastPHBar, sym2LastPHBar)],
+                  "SMT ▼", style=label.style_label_down, color=colSMTBear, textcolor=color.white, size=size.small,
+                  tooltip=str.format("{0} {1}, {2} {3}", smtSym1, sym1HHLabel, smtSym2, sym2HHLabel))
+
+    if bullishSMT
+        // Line 1 (sym1): previous pivot low → current pivot low (solid)
+        line.new(math.max(sym1PrevPLBar, bar_index - 4999), low[bar_index - sym1PrevPLBar],
+                 sym1LastPLBar, low[bar_index - sym1LastPLBar],
+                 color=colSMTBull, width=2, style=line.style_solid)
+        // Line 2 (sym2): previous pivot low → current pivot low (dashed, more transparent)
+        line.new(math.max(sym2PrevPLBar, bar_index - 4999), low[bar_index - sym2PrevPLBar],
+                 sym2LastPLBar, low[bar_index - sym2LastPLBar],
+                 color=color.new(colSMTBull, 40), width=2, style=line.style_dashed)
+        // Determine which symbol made LL and which HL for tooltip
+        sym1LLLabel = sym1LastPL < sym1PrevPL ? "LL" : "HL"
+        sym2LLLabel = sym2LastPL < sym2PrevPL ? "LL" : "HL"
+        label.new(math.max(sym1LastPLBar, sym2LastPLBar), low[bar_index - math.max(sym1LastPLBar, sym2LastPLBar)],
+                  "SMT ▲", style=label.style_label_up, color=colSMTBull, textcolor=color.white, size=size.small,
+                  tooltip=str.format("{0} {1}, {2} {3}", smtSym1, sym1LLLabel, smtSym2, sym2LLLabel))
+
+// SMT Alerts
+alertcondition(bearishSMT, title="Bearish SMT Divergence", message="Bearish SMT Divergence detected! Correlated symbols showing divergent swing highs.")
+alertcondition(bullishSMT, title="Bullish SMT Divergence", message="Bullish SMT Divergence detected! Correlated symbols showing divergent swing lows.")
+
+// ─────────────────────────────────────────────
+// LIQUIDITY SWEEPS (Strict Detection)
+// ─────────────────────────────────────────────
+
+// ATR for relative thresholds
+atrVal = ta.atr(14)
+
+// Track already-swept levels so each level only triggers once
+var int[] sweptHighBars = array.new_int()
+var int[] sweptLowBars  = array.new_int()
+
+if showLiq and array.size(swingHighPrices) > 0 and not na(atrVal)
+    candleRange = high - low
+    upperWick   = high - math.max(open, close)
+
+    for i = array.size(swingHighPrices) - 1 to math.max(0, array.size(swingHighPrices) - 10)
+        swH    = array.get(swingHighPrices, i)
+        swHBar = array.get(swingHighBars, i)
+        if bar_index == swHBar
+            continue
+
+        // Skip if this level was already swept
+        alreadySwept = false
+        if array.size(sweptHighBars) > 0
+            for k = 0 to array.size(sweptHighBars) - 1
+                if array.get(sweptHighBars, k) == swHBar
+                    alreadySwept := true
+                    break
+        if alreadySwept
+            continue
+
+        // 1) Wick must exceed the swing high
+        penetration = high - swH
+        if penetration <= 0
+            continue
+
+        // 2) Close must be below the swing level (rejection)
+        if close >= swH
+            continue
+
+        // 3) Penetration must be meaningful (at least 10% of ATR)
+        if penetration < atrVal * 0.10
+            continue
+
+        // 4) Upper wick must be at least 40% of candle range (strong rejection)
+        if candleRange > 0 and upperWick / candleRange < 0.40
+            continue
+
+        // 5) Close must be in the lower half of the candle (not just barely below)
+        if candleRange > 0 and (close - low) / candleRange > 0.5
+            continue
+
+        // All conditions met — this is a real liquidity sweep
+        label.new(bar_index, high, "⟡ Sweep", style=label.style_label_down, color=color.new(color.white, 100), textcolor=colLiqHigh, size=size.tiny)
+        array.push(sweptHighBars, swHBar)
+        break
+
+if showLiq and array.size(swingLowPrices) > 0 and not na(atrVal)
+    candleRange = high - low
+    lowerWick   = math.min(open, close) - low
+
+    for i = array.size(swingLowPrices) - 1 to math.max(0, array.size(swingLowPrices) - 10)
+        swL    = array.get(swingLowPrices, i)
+        swLBar = array.get(swingLowBars, i)
+        if bar_index == swLBar
+            continue
+
+        alreadySwept = false
+        if array.size(sweptLowBars) > 0
+            for k = 0 to array.size(sweptLowBars) - 1
+                if array.get(sweptLowBars, k) == swLBar
+                    alreadySwept := true
+                    break
+        if alreadySwept
+            continue
+
+        // 1) Wick must go below the swing low
+        penetration = swL - low
+        if penetration <= 0
+            continue
+
+        // 2) Close must be above the swing level (rejection)
+        if close <= swL
+            continue
+
+        // 3) Penetration must be meaningful (at least 10% of ATR)
+        if penetration < atrVal * 0.10
+            continue
+
+        // 4) Lower wick must be at least 40% of candle range (strong rejection)
+        if candleRange > 0 and lowerWick / candleRange < 0.40
+            continue
+
+        // 5) Close must be in the upper half of the candle
+        if candleRange > 0 and (high - close) / candleRange > 0.5
+            continue
+
+        // All conditions met — this is a real liquidity sweep
+        label.new(bar_index, low, "⟡ Sweep", style=label.style_label_up, color=color.new(color.white, 100), textcolor=colLiqLow, size=size.tiny)
+        array.push(sweptLowBars, swLBar)
+        break
+
+// Keep swept-level arrays manageable
+if array.size(sweptHighBars) > 50
+    array.shift(sweptHighBars)
+if array.size(sweptLowBars) > 50
+    array.shift(sweptLowBars)
+
+// ─────────────────────────────────────────────
+// EQUILIBRIUM LEVELS + PREMIUM / DISCOUNT
+// ─────────────────────────────────────────────
+
+// Dealing range = last swing high to last swing low
+var float eqRangeHigh = na
+var float eqRangeLow  = na
+var float eqLevel     = na
+
+// Update dealing range when new swing points form
+if not na(lastSwingHigh) and not na(lastSwingLow)
+    eqRangeHigh := math.max(lastSwingHigh, nz(prevSwingHigh, lastSwingHigh))
+    eqRangeLow  := math.min(lastSwingLow, nz(prevSwingLow, lastSwingLow))
+    eqLevel     := (eqRangeHigh + eqRangeLow) / 2.0
+
+// Draw equilibrium line and premium/discount zones
+var line eqLine       = na
+var box  premiumBox   = na
+var box  discountBox  = na
+var label eqLbl       = na
+var label premLbl     = na
+var label discLbl     = na
+
+if barstate.islast and not na(eqLevel)
+    lookback = 50
+
+    // Equilibrium line
+    if showEQ
+        line.delete(eqLine)
+        label.delete(eqLbl)
+        eqLine := line.new(bar_index - lookback, eqLevel, bar_index + 10, eqLevel, color=colEQLine, style=line.style_dotted, width=2)
+        eqLbl  := label.new(bar_index + 11, eqLevel, "EQ 50%", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colEQLine, size=size.tiny)
+
+    // Premium zone (above EQ) and Discount zone (below EQ)
+    if showPremDisc and not na(eqRangeHigh) and not na(eqRangeLow)
+        box.delete(premiumBox)
+        box.delete(discountBox)
+        label.delete(premLbl)
+        label.delete(discLbl)
+        premiumBox  := box.new(bar_index - lookback, eqRangeHigh, bar_index + 10, eqLevel, border_color=color.new(color.red, 95), bgcolor=colPremium)
+        discountBox := box.new(bar_index - lookback, eqLevel, bar_index + 10, eqRangeLow, border_color=color.new(color.green, 95), bgcolor=colDiscount)
+        premLbl     := label.new(bar_index + 11, (eqRangeHigh + eqLevel) / 2, "PREMIUM", style=label.style_label_left, color=color.new(color.white, 100), textcolor=color.new(color.red, 40), size=size.tiny)
+        discLbl     := label.new(bar_index + 11, (eqLevel + eqRangeLow) / 2, "DISCOUNT", style=label.style_label_left, color=color.new(color.white, 100), textcolor=color.new(color.green, 40), size=size.tiny)
+
+// ─────────────────────────────────────────────
+// CONTEXT, BIAS & CONFLUENCE ZONES
+// ─────────────────────────────────────────────
+
+// ── Context & Bias Panel ──
+// Shows: current dealing range position (premium/discount), trend direction, session context
+var label contextLabel = na
+
+if showContext and barstate.islast
+    label.delete(contextLabel)
+
+    // Position in dealing range
+    posText = "—"
+    if not na(eqLevel)
+        if close > eqLevel
+            posText := "Premium"
+        else
+            posText := "Discount"
+
+    // Active session
+    sessText = "Off-Session"
+    if tokyoActive
+        sessText := "Tokyo"
+    if londonActive
+        sessText := sessText == "Off-Session" ? "London" : sessText + " + London"
+    if nyActive
+        sessText := sessText == "Off-Session" ? "New York" : sessText + " + NY"
+
+    // Bias: combines trend + position for actionable bias
+    biasText = "Neutral"
+    biasCol  = color.gray
+    if trend == 1 and posText == "Discount"
+        biasText := "Strong Buy"
+        biasCol  := color.green
+    else if trend == 1 and posText == "Premium"
+        biasText := "Buy (Caution)"
+        biasCol  := color.new(color.green, 40)
+    else if trend == -1 and posText == "Premium"
+        biasText := "Strong Sell"
+        biasCol  := color.red
+    else if trend == -1 and posText == "Discount"
+        biasText := "Sell (Caution)"
+        biasCol  := color.new(color.red, 40)
+
+    panelText = "Bias: " + biasText + "\nRange: " + posText + "\nSession: " + sessText
+    contextLabel := label.new(bar_index + 5, close * 1.001, panelText, style=label.style_label_left, color=biasCol, textcolor=color.white, size=size.small, textalign=text.align_left)
+
+// ── Volume Imbalance arrays (declared early for confluence detection) ──
+var box[]   viBoxes    = array.new_box()
+var int[]   viTypes    = array.new_int()
+var float[] viTops     = array.new_float()
+var float[] viBots     = array.new_float()
+var int[]   viStartBar = array.new_int()
+
+// ── Confluence Zone Detection ──
+// A confluence zone exists where multiple ICT concepts overlap at a price level.
+// We check active OBs, FVGs, and the EQ level for overlap.
+// Direction comes from the underlying OB: bullish OB = support, bearish OB = resistance.
+
+if showConfluence and barstate.islast
+    // Check each OB for confluence with other concepts
+    if array.size(obBoxes) > 0
+        for i = 0 to array.size(obBoxes) - 1
+            oType = array.get(obTypes, i)
+            oTop  = array.get(obTops, i)
+            oBot  = array.get(obBots, i)
+            layers = 1  // OB itself is layer 1
+
+            // Does an FVG overlap this OB?
+            if array.size(fvgBoxes) > 0
+                for j = 0 to array.size(fvgBoxes) - 1
+                    fTop = array.get(fvgTops, j)
+                    fBot = array.get(fvgBots, j)
+                    if fBot < oTop and fTop > oBot
+                        layers += 1
+                        break
+
+            // Does the EQ level sit inside this OB?
+            if not na(eqLevel) and eqLevel >= oBot and eqLevel <= oTop
+                layers += 1
+
+            // Does a Breaker Block overlap this OB?
+            if array.size(bbTops) > 0
+                for j = 0 to array.size(bbTops) - 1
+                    bTop = array.get(bbTops, j)
+                    bBot = array.get(bbBots, j)
+                    if bBot < oTop and bTop > oBot
+                        layers += 1
+                        break
+
+            // Does a Volume Imbalance overlap this OB?
+            if array.size(viBoxes) > 0
+                for j = 0 to array.size(viBoxes) - 1
+                    vTop = array.get(viTops, j)
+                    vBot = array.get(viBots, j)
+                    if vBot < oTop and vTop > oBot
+                        layers += 1
+                        break
+
+            // Mark as confluence if enough layers — color by OB direction
+            if layers >= confMinLayers
+                isBull    = oType == 1
+                confCol   = isBull ? color.new(color.green, 75) : color.new(color.red, 75)
+                borderCol = isBull ? color.green : color.red
+                dirArrow  = isBull ? "▲" : "▼"
+                dirText   = isBull ? "BUY " : "SELL "
+                textCol   = isBull ? color.green : color.red
+
+                box.new(bar_index - 20, oTop, bar_index + 10, oBot, border_color=borderCol, border_width=2, border_style=line.style_dotted, bgcolor=confCol)
+                label.new(bar_index + 11, (oTop + oBot) / 2, dirArrow + " " + dirText + str.tostring(layers) + "x", style=label.style_label_left, color=color.new(color.white, 100), textcolor=textCol, size=size.tiny)
+
+// ─────────────────────────────────────────────
+// PREVIOUS DAY / WEEK / MONTH HIGHS & LOWS
+// ─────────────────────────────────────────────
+
+// Use request.security to get previous period highs/lows
+// These are THE key liquidity levels for ICT trading.
+
+[pdHigh, pdLow] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead=barmerge.lookahead_on)
+[pwHigh, pwLow] = request.security(syminfo.tickerid, "W", [high[1], low[1]], lookahead=barmerge.lookahead_on)
+[pmHigh, pmLow] = request.security(syminfo.tickerid, "M", [high[1], low[1]], lookahead=barmerge.lookahead_on)
+
+// Draw as horizontal lines (updated on last bar for clean display)
+var line linePDH = na
+var line linePDL = na
+var line linePWH = na
+var line linePWL = na
+var line linePMH = na
+var line linePML = na
+var label lblPDH = na
+var label lblPDL = na
+var label lblPWH = na
+var label lblPWL = na
+var label lblPMH = na
+var label lblPML = na
+
+if barstate.islast
+    lookbackPDWM = 80
+
+    if showPDHL and not na(pdHigh)
+        line.delete(linePDH)
+        line.delete(linePDL)
+        label.delete(lblPDH)
+        label.delete(lblPDL)
+        linePDH := line.new(bar_index - lookbackPDWM, pdHigh, bar_index + 10, pdHigh, color=colPDH, style=line.style_dashed, width=1)
+        linePDL := line.new(bar_index - lookbackPDWM, pdLow,  bar_index + 10, pdLow,  color=colPDL, style=line.style_dashed, width=1)
+        lblPDH  := label.new(bar_index + 11, pdHigh, "PDH", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPDH, size=size.tiny)
+        lblPDL  := label.new(bar_index + 11, pdLow,  "PDL", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPDL, size=size.tiny)
+
+    if showPWHL and not na(pwHigh)
+        line.delete(linePWH)
+        line.delete(linePWL)
+        label.delete(lblPWH)
+        label.delete(lblPWL)
+        linePWH := line.new(bar_index - lookbackPDWM, pwHigh, bar_index + 10, pwHigh, color=colPWH, style=line.style_dashed, width=2)
+        linePWL := line.new(bar_index - lookbackPDWM, pwLow,  bar_index + 10, pwLow,  color=colPWL, style=line.style_dashed, width=2)
+        lblPWH  := label.new(bar_index + 11, pwHigh, "PWH", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPWH, size=size.tiny)
+        lblPWL  := label.new(bar_index + 11, pwLow,  "PWL", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPWL, size=size.tiny)
+
+    if showPMHL and not na(pmHigh)
+        line.delete(linePMH)
+        line.delete(linePML)
+        label.delete(lblPMH)
+        label.delete(lblPML)
+        linePMH := line.new(bar_index - lookbackPDWM, pmHigh, bar_index + 10, pmHigh, color=colPMH, style=line.style_dotted, width=2)
+        linePML := line.new(bar_index - lookbackPDWM, pmLow,  bar_index + 10, pmLow,  color=colPML, style=line.style_dotted, width=2)
+        lblPMH  := label.new(bar_index + 11, pmHigh, "PMH", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPMH, size=size.tiny)
+        lblPML  := label.new(bar_index + 11, pmLow,  "PML", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colPML, size=size.tiny)
+
+// ─────────────────────────────────────────────
+// KILLZONES
+// ─────────────────────────────────────────────
+// More precise than general sessions — these are the specific windows
+// where ICT setups have the highest probability.
+
+asianKZActive  = showKZ and showAsianKZ  and not na(time(timeframe.period, kzAsianTime, "UTC"))
+londonKZActive = showKZ and showLondonKZ and not na(time(timeframe.period, kzLondonTime, "UTC"))
+nyKZActive     = showKZ and showNYKZ     and not na(time(timeframe.period, kzNYTime, "UTC"))
+
+bgcolor(asianKZActive  ? colAsianKZ  : na, title="Asian Killzone")
+bgcolor(londonKZActive ? colLondonKZ : na, title="London Killzone")
+bgcolor(nyKZActive     ? colNYKZ     : na, title="NY Killzone")
+
+// Killzone start labels
+var bool wasAsianKZ  = false
+var bool wasLondonKZ = false
+var bool wasNYKZ     = false
+
+if showKZ
+    if asianKZActive and not wasAsianKZ and showAsianKZ
+        label.new(bar_index, low, "Asian KZ", style=label.style_label_up, color=color.new(color.purple, 50), textcolor=color.white, size=size.tiny)
+    if londonKZActive and not wasLondonKZ and showLondonKZ
+        label.new(bar_index, low, "London KZ", style=label.style_label_up, color=color.new(color.blue, 50), textcolor=color.white, size=size.tiny)
+    if nyKZActive and not wasNYKZ and showNYKZ
+        label.new(bar_index, low, "NY KZ", style=label.style_label_up, color=color.new(color.orange, 50), textcolor=color.white, size=size.tiny)
+
+wasAsianKZ  := asianKZActive
+wasLondonKZ := londonKZActive
+wasNYKZ     := nyKZActive
+
+// ─────────────────────────────────────────────
+// VOLUME IMBALANCE
+// ─────────────────────────────────────────────
+// Gap between BODIES (not wicks) of consecutive candles.
+// Like FVG but finer — shows institutional aggression.
+
+if showVI
+    // Current and previous candle body boundaries
+    body1Top = math.max(open[1], close[1])
+    body1Bot = math.min(open[1], close[1])
+    body0Top = math.max(open, close)
+    body0Bot = math.min(open, close)
+
+    // Bullish VI: gap up between bodies (prev body top < curr body bottom)
+    if body0Bot > body1Top
+        viTop = body0Bot
+        viBot = body1Top
+        b = box.new(bar_index - 1, viTop, bar_index, viBot, border_color=color.new(color.green, 60), bgcolor=colVIBull)
+        label.new(bar_index - 1, viBot, "VI▲", style=label.style_label_up, color=color.new(color.white, 100), textcolor=color.new(color.green, 60), size=size.tiny)
+        array.push(viBoxes, b)
+        array.push(viTypes, 1)
+        array.push(viTops, viTop)
+        array.push(viBots, viBot)
+        array.push(viStartBar, bar_index)
+
+    // Bearish VI: gap down between bodies (prev body bottom > curr body top)
+    if body0Top < body1Bot
+        viTop = body1Bot
+        viBot = body0Top
+        b = box.new(bar_index - 1, viTop, bar_index, viBot, border_color=color.new(color.red, 60), bgcolor=colVIBear)
+        label.new(bar_index - 1, viTop, "VI▼", style=label.style_label_down, color=color.new(color.white, 100), textcolor=color.new(color.red, 60), size=size.tiny)
+        array.push(viBoxes, b)
+        array.push(viTypes, -1)
+        array.push(viTops, viTop)
+        array.push(viBots, viBot)
+        array.push(viStartBar, bar_index)
+
+    // Extend active VIs + check mitigation (price fills the gap)
+    if array.size(viBoxes) > 0
+        for i = array.size(viBoxes) - 1 to 0
+            vType  = array.get(viTypes, i)
+            vTop   = array.get(viTops, i)
+            vBot   = array.get(viBots, i)
+            vStart = array.get(viStartBar, i)
+            age    = bar_index - vStart
+
+            shouldRemove = false
+
+            // Mitigation: price fills the imbalance
+            if vType == 1 and low <= vBot
+                shouldRemove := true
+            if vType == -1 and high >= vTop
+                shouldRemove := true
+
+            // Max age: 150 bars (VIs are smaller, don't live as long)
+            if age > 150
+                shouldRemove := true
+
+            if shouldRemove
+                box.delete(array.get(viBoxes, i))
+                array.remove(viBoxes, i)
+                array.remove(viTypes, i)
+                array.remove(viTops, i)
+                array.remove(viBots, i)
+                array.remove(viStartBar, i)
+            else
+                box.set_right(array.get(viBoxes, i), bar_index)
+
+// ─────────────────────────────────────────────
+// MIDNIGHT OPEN / NY OPEN
+// ─────────────────────────────────────────────
+// Midnight Open (00:00 NY time = 05:00 UTC) acts as a daily gravity line.
+// NY Open (09:30 EST = 14:30 UTC) marks the cash session start.
+
+// Detect midnight open (05:00 UTC)
+isMidnightBar = showMNO and hour(time, "UTC") == 5 and minute(time, "UTC") == 0
+var float midnightOpenPrice = na
+var int   midnightOpenBar   = na
+
+if isMidnightBar
+    midnightOpenPrice := open
+    midnightOpenBar   := bar_index
+
+var line mnoLine = na
+var label mnoLbl = na
+
+if showMNO and barstate.islast and not na(midnightOpenPrice) and not na(midnightOpenBar)
+    line.delete(mnoLine)
+    label.delete(mnoLbl)
+    mnoLine := line.new(midnightOpenBar, midnightOpenPrice, bar_index + 10, midnightOpenPrice, color=colMNO, style=line.style_dotted, width=1)
+    mnoLbl  := label.new(bar_index + 11, midnightOpenPrice, "MNO", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colMNO, size=size.tiny)
+
+// Detect NY Open (14:30 UTC = 09:30 EST)
+isNYOpenBar = showNYO and hour(time, "UTC") == 14 and minute(time, "UTC") == 30
+var float nyOpenPrice = na
+var int   nyOpenBar   = na
+
+if isNYOpenBar
+    nyOpenPrice := open
+    nyOpenBar   := bar_index
+
+var line nyoLine = na
+var label nyoLbl = na
+
+if showNYO and barstate.islast and not na(nyOpenPrice) and not na(nyOpenBar)
+    line.delete(nyoLine)
+    label.delete(nyoLbl)
+    nyoLine := line.new(nyOpenBar, nyOpenPrice, bar_index + 10, nyOpenPrice, color=colNYO, style=line.style_dotted, width=1)
+    nyoLbl  := label.new(bar_index + 11, nyOpenPrice, "NYO", style=label.style_label_left, color=color.new(color.white, 100), textcolor=colNYO, size=size.tiny)
+
+// ─────────────────────────────────────────────
+// TECHNICAL CONFIRMATION INDICATORS
+// ─────────────────────────────────────────────
+// RSI, EMA Ribbon, and VWAP to confirm ICT setups.
+
+// ── RSI ──
+rsiVal = ta.rsi(close, rsiLen)
+
+// RSI info panel (shown alongside other labels on the right side)
+var label rsiLabel = na
+
+if showRSI and barstate.islast
+    label.delete(rsiLabel)
+    rsiState = rsiVal >= rsiOB ? "OVERBOUGHT" : rsiVal <= rsiOS ? "OVERSOLD" : "Neutral"
+    rsiCol   = rsiVal >= rsiOB ? color.red : rsiVal <= rsiOS ? color.green : color.gray
+    rsiLabel := label.new(bar_index + 5, close * 0.999, "RSI(" + str.tostring(rsiLen) + "): " + str.tostring(math.round(rsiVal, 1)) + " — " + rsiState, style=label.style_label_left, color=rsiCol, textcolor=color.white, size=size.small)
+
+// RSI-based background highlighting for extreme conditions
+bgcolor(showRSI and rsiVal >= rsiOB ? color.new(color.red, 95) : na, title="RSI Overbought")
+bgcolor(showRSI and rsiVal <= rsiOS ? color.new(color.green, 95) : na, title="RSI Oversold")
+
+// RSI Divergence detection (bullish: price LL but RSI HL, bearish: price HH but RSI LH)
+var float rsiAtPrevSwingHigh = na
+var float rsiAtLastSwingHigh = na
+var float rsiAtPrevSwingLow  = na
+var float rsiAtLastSwingLow  = na
+
+if not na(pivHigh)
+    rsiAtPrevSwingHigh := rsiAtLastSwingHigh
+    rsiAtLastSwingHigh := rsiVal[swingLen]
+
+if not na(pivLow)
+    rsiAtPrevSwingLow := rsiAtLastSwingLow
+    rsiAtLastSwingLow := rsiVal[swingLen]
+
+// Bearish RSI divergence: price makes HH but RSI makes LH
+rsiBearDiv = showRSI and not na(pivHigh) and not na(rsiAtPrevSwingHigh) and not na(prevSwingHigh) and lastSwingHigh > prevSwingHigh and rsiAtLastSwingHigh < rsiAtPrevSwingHigh
+
+// Bullish RSI divergence: price makes LL but RSI makes HL
+rsiBullDiv = showRSI and not na(pivLow) and not na(rsiAtPrevSwingLow) and not na(prevSwingLow) and lastSwingLow < prevSwingLow and rsiAtLastSwingLow > rsiAtPrevSwingLow
+
+if rsiBearDiv
+    label.new(bar_index - swingLen, high[swingLen], "RSI ▼", style=label.style_label_down, color=color.new(color.red, 30), textcolor=color.white, size=size.tiny, tooltip="Bearish RSI Divergence: Price HH, RSI LH")
+
+if rsiBullDiv
+    label.new(bar_index - swingLen, low[swingLen], "RSI ▲", style=label.style_label_up, color=color.new(color.green, 30), textcolor=color.white, size=size.tiny, tooltip="Bullish RSI Divergence: Price LL, RSI HL")
+
+// ── EMA Ribbon (Fast/Slow) ──
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+
+plot(showEMAs ? emaFast : na, "Fast EMA", color=colEMAFast, linewidth=1)
+plot(showEMAs ? emaSlow : na, "Slow EMA", color=colEMASlow, linewidth=1)
+
+// EMA Cross alerts
+emaBullCross = ta.crossover(emaFast, emaSlow)
+emaBearCross = ta.crossunder(emaFast, emaSlow)
+
+if showEMAs and emaBullCross
+    label.new(bar_index, low, "EMA ▲", style=label.style_label_up, color=color.new(color.aqua, 40), textcolor=color.white, size=size.tiny, tooltip="Bullish EMA Cross: " + str.tostring(emaFastLen) + " crossed above " + str.tostring(emaSlowLen))
+
+if showEMAs and emaBearCross
+    label.new(bar_index, high, "EMA ▼", style=label.style_label_down, color=color.new(color.orange, 40), textcolor=color.white, size=size.tiny, tooltip="Bearish EMA Cross: " + str.tostring(emaFastLen) + " crossed below " + str.tostring(emaSlowLen))
+
+// ── VWAP (Volume Weighted Average Price) ──
+// Institutional reference level — price above VWAP = bullish bias, below = bearish
+vwapVal = ta.vwap(hlc3)
+plot(showVWAP ? vwapVal : na, "VWAP", color=colVWAP, linewidth=2, style=plot.style_line)
+
+// Additional alerts for technical confirmations
+alertcondition(rsiBearDiv, title="Bearish RSI Divergence", message="Bearish RSI Divergence: Price made Higher High but RSI made Lower High")
+alertcondition(rsiBullDiv, title="Bullish RSI Divergence", message="Bullish RSI Divergence: Price made Lower Low but RSI made Higher Low")
+alertcondition(emaBullCross, title="Bullish EMA Cross", message="Bullish EMA Cross: Fast EMA crossed above Slow EMA")
+alertcondition(emaBearCross, title="Bearish EMA Cross", message="Bearish EMA Cross: Fast EMA crossed below Slow EMA")
+
+// ── Breaker Block Alerts ──
+alertcondition(newBullBB, title="New Bullish Breaker Block", message="Bullish Breaker Block formed! A bearish OB was broken upward — zone now acts as support.")
+alertcondition(newBearBB, title="New Bearish Breaker Block", message="Bearish Breaker Block formed! A bullish OB was broken downward — zone now acts as resistance.")
+alertcondition(retestBullBB, title="Bullish Breaker Block Retest", message="Price is retesting a Bullish Breaker Block zone (potential support bounce).")
+alertcondition(retestBearBB, title="Bearish Breaker Block Retest", message="Price is retesting a Bearish Breaker Block zone (potential resistance rejection).")

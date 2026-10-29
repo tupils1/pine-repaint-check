@@ -12,12 +12,12 @@ TradingView 官方估计 95% 以上的指标都有某种形式的重绘，其中
 
 | 编号 | 级别 | 检查内容 |
 |---|---|---|
-| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` 而表达式没加 `[1]`：历史 K 线上泄漏未来数据。表达式是包装函数参数时降为 warning；同一文件里每个调用点都传入带 `[1]`（或其他历史偏移）的表达式时不报告 |
+| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` 而表达式没加 `[1]`：历史 K 线上泄漏未来数据。表达式只由更早 K 线的值组成时不报告。表达式是包装函数参数时降为 warning；同一文件里每个调用点都传入带 `[1]`（或其他历史偏移）的表达式时不报告 |
 | PRC002 | warning | 请求其他周期的 `request.security()` 没用 `[1]` + `lookahead_on`：实时 K 线返回未确认的值 |
 | PRC003 | warning | 策略使用 `calc_on_every_tick = true` |
 | PRC004 | warning | 使用 `varip` |
 | PRC005 | warning | 使用 `timenow` |
-| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`。`barstate.islast` 只用来在最后一根 K 线上画 table/label/line/box，或只弹出 runtime 提示时，不报告 |
+| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`。`barstate.islast` 的命中是 info，`min-severity: warning`（Action 默认）时不显示。`isnew` / `isrealtime` / `ishistory` / `islastconfirmedhistory` 保持本规则的 info。`barstate.islast` 只用来在最后一根 K 线上画 table/label/line/box，或只弹出 runtime 提示时，不报告 |
 | PRC007 | warning | `alertcondition()` / `alert()` 没有用 `barstate.isconfirmed`、`[1]` 偏移或 `alert.freq_once_per_bar_close` 把关 |
 | PRC008 | info | 负 `offset` 的绘图，或在 `bar_index[n]` / `bar_index - n` 处画 label/line/box（画到过去） |
 
@@ -53,11 +53,11 @@ x = time > timenow - 86400000      // pine-repaint-check: ignore PRC005
     min-severity: warning   # 默认值。info 级别（PRC006、PRC008）默认不显示
     sarif-output: pine.sarif
 ```
-结果会作为 PR 注释（annotation）显示，也可以把 SARIF 上传到 Code scanning。Action 的默认 `min-severity` 是 `warning`；命令行默认仍是 `info`。
+结果会作为 PR 注释（annotation）显示，也可以把 SARIF 上传到 Code scanning。Action 的默认 `min-severity` 是 `warning`，因此 info 不显示，包括全部 `barstate.islast`（PRC006）以及同样保持 info 的其它 `barstate` 命中和 PRC008。命令行默认仍是 `info`。
 
 ## 准确率
 
-在 31 个许可证明确的真实脚本和 21 个自写用例上实测，见 [corpus/RESULTS.md](corpus/RESULTS.md)。真实样本少、标注由作者人工完成，数字只能当作初步参考。
+在 31 个许可证明确的真实脚本和 21 个自写用例上实测，见 [corpus/RESULTS.md](corpus/RESULTS.md)。另有一份 200 个公开 `.pine` 文件的误报抽样，见 [docs/false-positive-eval.md](docs/false-positive-eval.md)。标注是对命中的人工复核，不是外部榜单。
 
 已知局限：基于正则和括号匹配，不是完整语法解析；标识符只在单文件内追一层赋值，但 `lookahead_on` 包装函数的参数会检查同文件调用点（含用户函数的元组返回值）；函数内的 alert 不分析调用处；不跟踪 `import` 的库。
 

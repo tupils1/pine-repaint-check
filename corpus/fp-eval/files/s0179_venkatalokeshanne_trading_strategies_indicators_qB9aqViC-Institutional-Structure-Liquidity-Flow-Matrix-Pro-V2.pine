@@ -1,0 +1,284 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ACE_Chart_Logic
+
+//@version=6
+// ==============================================================================================
+//  INSTITUTIONAL STRUCTURE & LIQUIDITY FLOW MATRIX [PRO V2]
+//  Optimized for Light/White Chart Backgrounds - Zero Compilation Errors
+// ==============================================================================================
+
+indicator("Institutional Structure & Liquidity Flow Matrix [Pro V2]", "ISL Flow Matrix PRO V2", overlay = true, max_lines_count = 500, max_boxes_count = 100, max_labels_count = 500)
+
+// ----------------------------------------------------------------------------------------------
+// 1. INPUTS & CONFIGURATION PANEL
+// ----------------------------------------------------------------------------------------------
+
+// Helper function for line styles
+get_line_style(string s) =>
+    s == "Solid" ? line.style_solid : s == "Dashed" ? line.style_dashed : line.style_dotted
+
+// A. Market Structure (BOS & CHoCH)
+g_smc            = "===== MARKET STRUCTURE (BOS & CHoCH) ====="
+show_smc         = input.bool(true, "Show BOS & CHoCH Shifts", group=g_smc)
+smc_sens         = input.int(5, "Pivot Lookback Sensitivity", minval=2, maxval=30, group=g_smc)
+c_bos            = input.color(#0052cc, "BOS Line Color", group=g_smc)
+c_choch          = input.color(#6b00b3, "CHoCH Line Color", group=g_smc)
+smc_style_str    = input.string("Dashed", "Line Style", options=["Solid", "Dashed", "Dotted"], group=g_smc)
+smc_line_w       = input.int(2, "Line Thickness (1-4)", minval=1, maxval=4, group=g_smc)
+
+// B. Smart Active Zones (Unmitigated Only)
+g_zones          = "===== UNMITIGATED INSTITUTIONAL ZONES ====="
+show_zones       = input.bool(true, "Show Active Support/Resistance Zones", group=g_zones)
+zone_len         = input.int(10, "Zone Pivot Lookback", minval=3, maxval=50, group=g_zones)
+c_sup_bg         = input.color(color.new(#00875a, 82), "Demand Zone Fill", group=g_zones)
+c_sup_border     = input.color(#00875a, "Demand Zone Border", group=g_zones)
+c_res_bg         = input.color(color.new(#de350b, 82), "Supply Zone Fill", group=g_zones)
+c_res_border     = input.color(#de350b, "Supply Zone Border", group=g_zones)
+
+// C. Major Swing High / Low Markers (ITH / ITL Badges)
+g_piv            = "===== MAJOR SWING HIGH / LOW MARKERS ====="
+show_pivots      = input.bool(true, "Show Swing High/Low Markers", group=g_piv)
+pivot_sens       = input.int(8, "Major Pivot Sensitivity", minval=3, maxval=50, group=g_piv)
+c_piv_high       = input.color(#de350b, "Swing High Marker Color", group=g_piv)
+c_piv_low        = input.color(#00875a, "Swing Low Marker Color", group=g_piv)
+
+// D. CISD Pattern Engine
+g_cisd           = "===== CHANGE IN STATE OF DELIVERY (CISD) ====="
+show_cisd        = input.bool(true, "Show High Probability CISD Levels", group=g_cisd)
+c_cisd_bull      = input.color(#00875a, "Bullish CISD Color", group=g_cisd)
+c_cisd_bear      = input.color(#de350b, "Bearish CISD Color", group=g_cisd)
+
+// E. Previous Day High & Low (PDH / PDL)
+g_pd             = "===== PREVIOUS DAY HIGH / LOW (PDH/PDL) ====="
+show_pdh_pdl     = input.bool(true, "Show Dynamic PDH / PDL", group=g_pd)
+c_pdh            = input.color(#de350b, "PDH Line Color", group=g_pd)
+c_pdl            = input.color(#00875a, "PDL Line Color", group=g_pd)
+pd_style_str     = input.string("Dashed", "PDH/PDL Line Style", options=["Solid", "Dashed", "Dotted"], group=g_pd)
+pd_line_w        = input.int(1, "PDH/PDL Line Thickness", minval=1, maxval=4, group=g_pd)
+
+// F. Equilibrium Range (50% Fib Zone)
+g_eq             = "===== EQUILIBRIUM RANGE (50% FIB) ====="
+show_eq          = input.bool(true, "Show 50% Equilibrium Zone", group=g_eq)
+eq_len           = input.int(20, "Equilibrium Lookback", minval=5, maxval=100, group=g_eq)
+c_eq_line        = input.color(#0052cc, "50% Line Color", group=g_eq)
+eq_style_str     = input.string("Dotted", "Equilibrium Line Style", options=["Solid", "Dashed", "Dotted"], group=g_eq)
+
+// G. Glowing Trend Wave & Dynamic Candle Colors
+g_visual         = "===== GLOWING CANDLES & TREND WAVE ====="
+paint_candles    = input.bool(true, "Enable Dynamic Glowing Candles", group=g_visual)
+show_wave        = input.bool(true, "Enable Wave Glow Line", group=g_visual)
+wave_len         = input.int(21, "Wave Horizon", minval=5, maxval=100, group=g_visual)
+c_bull_glow      = input.color(#00875a, "Bullish Glow / Candle Color", group=g_visual)
+c_bear_glow      = input.color(#de350b, "Bearish Glow / Candle Color", group=g_visual)
+fill_opacity     = input.int(92, "Background Fill Opacity", minval=70, maxval=98, group=g_visual)
+
+// Helper Variables
+atr_val = ta.atr(14)
+
+// ----------------------------------------------------------------------------------------------
+// 2. DYNAMIC CANDLE GLOW & TREND WAVE ENGINE
+// ----------------------------------------------------------------------------------------------
+float trend_wave = ta.alma(close, wave_len, 0.85, 6)
+bool is_uptrend = close >= trend_wave
+color active_glow_col = is_uptrend ? c_bull_glow : c_bear_glow
+
+// Dynamic Candle Coloring
+plotcandle(open, high, low, close, "Glowing Candles",
+     color = paint_candles ? active_glow_col : na,
+     wickcolor = paint_candles ? active_glow_col : na,
+     bordercolor = paint_candles ? active_glow_col : na,
+     display = paint_candles ? display.all : display.none)
+
+plot_w = plot(show_wave ? trend_wave : na, "Trend Wave", color=active_glow_col, linewidth=2)
+plot_p = plot(show_wave ? close : na, "Price Anchor", color=color.new(#ffffff, 100))
+
+fill(plot_w, plot_p, color=show_wave ? color.new(active_glow_col, fill_opacity) : na, title="Wave Soft Glow")
+
+// ----------------------------------------------------------------------------------------------
+// 3. ACCURATE SWING-TO-BREAK BOS & CHOCH ENGINE
+// ----------------------------------------------------------------------------------------------
+ph_smc = ta.pivothigh(high, smc_sens, smc_sens)
+pl_smc = ta.pivotlow(low, smc_sens, smc_sens)
+
+var float last_ph_val = na
+var int   last_ph_idx = na
+var float last_pl_val = na
+var int   last_pl_idx = na
+var int   trend_dir   = 0
+
+if not na(ph_smc)
+    last_ph_val := ph_smc
+    last_ph_idx := bar_index - smc_sens
+
+if not na(pl_smc)
+    last_pl_val := pl_smc
+    last_pl_idx := bar_index - smc_sens
+
+// Bullish Breakout Check
+if show_smc and not na(last_ph_val) and ta.crossover(close, last_ph_val)
+    string lbl_text = trend_dir == -1 ? "CHoCH" : "BOS"
+    color lbl_col = trend_dir == -1 ? c_choch : c_bos
+    
+    // Draw line strictly from swing high index to breaking bar index
+    line.new(last_ph_idx, last_ph_val, bar_index, last_ph_val, color=lbl_col, style=get_line_style(smc_style_str), width=smc_line_w)
+    
+    // Place Label Top Center
+    int mid_x = int(math.round((last_ph_idx + bar_index) / 2))
+    label.new(mid_x, last_ph_val, lbl_text, color=color.new(#ffffff, 100), textcolor=lbl_col, style=label.style_label_down, size=size.small)
+    
+    trend_dir := 1
+    last_ph_val := na
+
+// Bearish Breakout Check
+if show_smc and not na(last_pl_val) and ta.crossunder(close, last_pl_val)
+    string lbl_text = trend_dir == 1 ? "CHoCH" : "BOS"
+    color lbl_col = trend_dir == 1 ? c_choch : c_bos
+    
+    // Draw line strictly from swing low index to breaking bar index
+    line.new(last_pl_idx, last_pl_val, bar_index, last_pl_val, color=lbl_col, style=get_line_style(smc_style_str), width=smc_line_w)
+    
+    // Place Label Bottom Center
+    int mid_x = int(math.round((last_pl_idx + bar_index) / 2))
+    label.new(mid_x, last_pl_val, lbl_text, color=color.new(#ffffff, 100), textcolor=lbl_col, style=label.style_label_up, size=size.small)
+    
+    trend_dir := -1
+    last_pl_val := na
+
+// ----------------------------------------------------------------------------------------------
+// 4. UNMITIGATED ACTIVE ZONES WITH AUTO-CLEAR
+// ----------------------------------------------------------------------------------------------
+var box[] active_boxes = array.new<box>()
+var label[] active_box_lbls = array.new<label>()
+
+ph_z = ta.pivothigh(high, zone_len, zone_len)
+pl_z = ta.pivotlow(low, zone_len, zone_len)
+
+// Supply Zone Creation
+if show_zones and not na(ph_z)
+    float z_top = high[zone_len]
+    float z_bot = math.max(open[zone_len], close[zone_len])
+    int z_start = bar_index - zone_len
+    
+    box b = box.new(left=z_start, top=z_top, right=bar_index + 12, bottom=z_bot, bgcolor=c_res_bg, border_color=c_res_border, border_width=1)
+    label l = label.new(bar_index + 12, (z_top + z_bot) / 2, "Resistance Zone", color=color.new(#ffffff, 100), textcolor=c_res_border, style=label.style_label_left, size=size.tiny)
+    
+    array.push(active_boxes, b)
+    array.push(active_box_lbls, l)
+
+// Demand Zone Creation
+if show_zones and not na(pl_z)
+    float z_top = math.min(open[zone_len], close[zone_len])
+    float z_bot = low[zone_len]
+    int z_start = bar_index - zone_len
+    
+    box b = box.new(left=z_start, top=z_top, right=bar_index + 12, bottom=z_bot, bgcolor=c_sup_bg, border_color=c_sup_border, border_width=1)
+    label l = label.new(bar_index + 12, (z_top + z_bot) / 2, "Support Zone", color=color.new(#ffffff, 100), textcolor=c_sup_border, style=label.style_label_left, size=size.tiny)
+    
+    array.push(active_boxes, b)
+    array.push(active_box_lbls, l)
+
+// Zone Invalidation & Extension Engine
+if array.size(active_boxes) > 0
+    for i = array.size(active_boxes) - 1 to 0
+        box cur_b = array.get(active_boxes, i)
+        label cur_l = array.get(active_box_lbls, i)
+        float b_top = box.get_top(cur_b)
+        float b_bot = box.get_bottom(cur_b)
+        
+        // Invalidation Logic: Delete zone if price breaks through it
+        bool broken_up = close > b_top and high[1] > b_top
+        bool broken_dn = close < b_bot and low[1] < b_bot
+        
+        if broken_up or broken_dn
+            box.delete(cur_b)
+            label.delete(cur_l)
+            array.remove(active_boxes, i)
+            array.remove(active_box_lbls, i)
+        else
+            box.set_right(cur_b, bar_index + 8)
+            label.set_x(cur_l, bar_index + 8)
+
+// ----------------------------------------------------------------------------------------------
+// 5. MAJOR SWING MARKERS (ITH / ITL BADGES - NO TEXT)
+// ----------------------------------------------------------------------------------------------
+ph_piv = ta.pivothigh(high, pivot_sens, pivot_sens)
+pl_piv = ta.pivotlow(low, pivot_sens, pivot_sens)
+
+if show_pivots and not na(ph_piv)
+    int piv_idx = bar_index - pivot_sens
+    label.new(piv_idx, high[pivot_sens] + (atr_val * 0.2), "", color=c_piv_high, style=label.style_circle, size=size.tiny)
+
+if show_pivots and not na(pl_piv)
+    int piv_idx = bar_index - pivot_sens
+    label.new(piv_idx, low[pivot_sens] - (atr_val * 0.2), "", color=c_piv_low, style=label.style_circle, size=size.tiny)
+
+// ----------------------------------------------------------------------------------------------
+// 6. CISD (CHANGE IN STATE OF DELIVERY) ENGINE
+// ----------------------------------------------------------------------------------------------
+bool avg_body = (math.abs(close[1] - open[1])) > (ta.sma(math.abs(close - open), 10) * 1.2)
+bool bull_cisd = avg_body and low[1] < low[2] and close > high[1]
+bool bear_cisd = avg_body and high[1] > high[2] and close < low[1]
+
+if show_cisd and bull_cisd
+    line.new(bar_index - 1, high[1], bar_index + 5, high[1], color=c_cisd_bull, style=line.style_dashed, width=1)
+    label.new(bar_index + 5, high[1], "CISD", color=color.new(#ffffff, 100), textcolor=c_cisd_bull, style=label.style_label_left, size=size.tiny)
+
+if show_cisd and bear_cisd
+    line.new(bar_index - 1, low[1], bar_index + 5, low[1], color=c_cisd_bear, style=line.style_dashed, width=1)
+    label.new(bar_index + 5, low[1], "CISD", color=color.new(#ffffff, 100), textcolor=c_cisd_bear, style=label.style_label_left, size=size.tiny)
+
+// ----------------------------------------------------------------------------------------------
+// 7. PREVIOUS DAY HIGH / LOW (PDH / PDL FROM SWING POINT)
+// ----------------------------------------------------------------------------------------------
+[pdh_val, pdl_val] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead=barmerge.lookahead_on)
+
+var line line_pdh = na
+var line line_pdl = na
+var label lbl_pdh = na
+var label lbl_pdl = na
+
+var bool pdh_broken = false
+var bool pdl_broken = false
+
+bool is_new_day = not na(ta.change(time("D")))
+
+if is_new_day
+    pdh_broken := false
+    pdl_broken := false
+
+if show_pdh_pdl and barstate.islast
+    line.delete(line_pdh)
+    line.delete(line_pdl)
+    label.delete(lbl_pdh)
+    label.delete(lbl_pdl)
+
+    if high >= pdh_val
+        pdh_broken := true
+
+    if not pdh_broken
+        line_pdh := line.new(bar_index - 25, pdh_val, bar_index + 8, pdh_val, color=c_pdh, style=get_line_style(pd_style_str), width=pd_line_w)
+        lbl_pdh  := label.new(bar_index + 8, pdh_val, "PDH", color=color.new(#ffffff, 100), textcolor=c_pdh, style=label.style_label_left, size=size.small)
+
+    if low <= pdl_val
+        pdl_broken := true
+
+    if not pdl_broken
+        line_pdl := line.new(bar_index - 25, pdl_val, bar_index + 8, pdl_val, color=c_pdl, style=get_line_style(pd_style_str), width=pd_line_w)
+        lbl_pdl  := label.new(bar_index + 8, pdl_val, "PDL", color=color.new(#ffffff, 100), textcolor=c_pdl, style=label.style_label_left, size=size.small)
+
+// ----------------------------------------------------------------------------------------------
+// 8. EQUILIBRIUM RANGE (50% FIB LEVEL)
+// ----------------------------------------------------------------------------------------------
+float eq_high = ta.highest(high, eq_len)
+float eq_low  = ta.lowest(low, eq_len)
+float eq_50   = eq_low + ((eq_high - eq_low) * 0.50)
+
+var line line_eq = na
+var label lbl_eq = na
+
+if show_eq and barstate.islast
+    line.delete(line_eq)
+    label.delete(lbl_eq)
+
+    line_eq := line.new(bar_index - 20, eq_50, bar_index + 8, eq_50, color=c_eq_line, style=get_line_style(eq_style_str), width=1)
+    lbl_eq  := label.new(bar_index + 8, eq_50, "50% Equilibrium Zone", color=color.new(#ffffff, 100), textcolor=c_eq_line, style=label.style_label_left, size=size.small)

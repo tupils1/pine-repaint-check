@@ -13,7 +13,7 @@ const DOCS = 'https://www.tradingview.com/pine-script-docs/concepts/repainting/'
 export const RULES: Record<string, RuleMeta> = {
   PRC001: {
     id: 'PRC001', name: 'security-lookahead-future-leak', severity: 'error',
-    summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars. A wrapper-function parameter is a warning, and is not reported when every same-file call site passes a [1] (or other history) offset.',
+    summary: 'request.security() with lookahead=barmerge.lookahead_on and an expression not offset by [1] leaks future data into historical bars. A value built only from prior-bar references (including arithmetic or a ternary of those) is not reported. A wrapper-function parameter is a warning, and is not reported when every same-file call site passes a [1] (or other history) offset.',
     docs: DOCS + '#future-leak-with-requestsecurity',
   },
   PRC002: {
@@ -38,7 +38,7 @@ export const RULES: Record<string, RuleMeta> = {
   },
   PRC006: {
     id: 'PRC006', name: 'barstate-realtime-dependent', severity: 'info',
-    summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars. barstate.islast is not reported when it only gates last-bar drawing (table/label/line/box) or a runtime notice.',
+    summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars. barstate.islast findings are info, so they are hidden when min-severity is warning. The other barstate builtins stay at this rule\'s severity (info). barstate.islast is not reported when it only gates last-bar drawing (table/label/line/box) or a runtime notice.',
     docs: DOCS + '#bar-state-built-ins',
   },
   PRC007: {

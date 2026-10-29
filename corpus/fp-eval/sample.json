@@ -1,0 +1,1611 @@
+{
+  "seed": 20261028,
+  "n": 200,
+  "algorithm": "sort by repo+NUL+path, Fisher-Yates, mulberry32(seed), keep first n, re-sort",
+  "frameUnique": 2617,
+  "frameDeclared": 2562,
+  "retrievedAt": "2026-10-28T22:05:58.960Z",
+  "query": "lookahead_on extension:pine",
+  "files": [
+    {
+      "id": "s0000",
+      "repo": "0xpoot-poot/ml-trading",
+      "path": "indicators/tradingview_pinescript/visual_drawing_tools/seasonality.pine",
+      "ref": "ad12ead37ad037fa1d3f4bc080e3042d4a41859d",
+      "blobSha": "ad82cc9a483177dcd80db494c0593ee0b7028096",
+      "htmlUrl": "https://github.com/0xpoot-poot/ml-trading/blob/ad12ead37ad037fa1d3f4bc080e3042d4a41859d/indicators/tradingview_pinescript/visual_drawing_tools/seasonality.pine"
+    },
+    {
+      "id": "s0001",
+      "repo": "1124993/KECOEX",
+      "path": "KECOEX_TradingStrategy.pine",
+      "ref": "86a4981fc503739742f0c26bf5efa37a1e3d95f5",
+      "blobSha": "5b48757cf421e88963e0607663fa3c3943ee1731",
+      "htmlUrl": "https://github.com/1124993/KECOEX/blob/86a4981fc503739742f0c26bf5efa37a1e3d95f5/KECOEX_TradingStrategy.pine"
+    },
+    {
+      "id": "s0002",
+      "repo": "345-strategies/thestrat-suite",
+      "path": "diagnostics/HTF_Timestamp_Probe.pine",
+      "ref": "413e39466193917ccf83790862bd8add2003c011",
+      "blobSha": "213db226b336e7bc72d6d2e383178c74b62f8a56",
+      "htmlUrl": "https://github.com/345-strategies/thestrat-suite/blob/413e39466193917ccf83790862bd8add2003c011/diagnostics/HTF_Timestamp_Probe.pine"
+    },
+    {
+      "id": "s0003",
+      "repo": "adobrusky/pa-engine-alert-system",
+      "path": "indicator.pine",
+      "ref": "c4d6e9c580d2fa38c60289f609907e676ec618b6",
+      "blobSha": "ea9e2a4b18cadf11b04e80f5b0dd873310dad534",
+      "htmlUrl": "https://github.com/adobrusky/pa-engine-alert-system/blob/c4d6e9c580d2fa38c60289f609907e676ec618b6/indicator.pine"
+    },
+    {
+      "id": "s0004",
+      "repo": "akparhi/TVIndicators",
+      "path": "pure/100Seconds_B.pine",
+      "ref": "40d67d307be1bbe640e0ae3d0066f7465288c5cc",
+      "blobSha": "c33b97e1f95c4025fe7d4de3925570f67b5caead",
+      "htmlUrl": "https://github.com/akparhi/TVIndicators/blob/40d67d307be1bbe640e0ae3d0066f7465288c5cc/pure/100Seconds_B.pine"
+    },
+    {
+      "id": "s0005",
+      "repo": "alboogycOdR/dev-projects",
+      "path": "20250805 MQL5 FOLDER/[indicators]/2025_SMART_CRT/multisymbol-pine-scanner.pine",
+      "ref": "636afc7ee8c711d547d7df3088b0d2d8d337885e",
+      "blobSha": "ff7f14c92a55ed9d04778f0c874356eddb16d247",
+      "htmlUrl": "https://github.com/alboogycOdR/dev-projects/blob/636afc7ee8c711d547d7df3088b0d2d8d337885e/20250805 MQL5 FOLDER/[indicators]/2025_SMART_CRT/multisymbol-pine-scanner.pine"
+    },
+    {
+      "id": "s0006",
+      "repo": "alboogycOdR/dev-projects",
+      "path": "20250811 MQL5 FOLDER/Indicators/2025SMART/smc.pine",
+      "ref": "636afc7ee8c711d547d7df3088b0d2d8d337885e",
+      "blobSha": "2cb27110a17eec406d4fb9d427601ccd3d0f7c6e",
+      "htmlUrl": "https://github.com/alboogycOdR/dev-projects/blob/636afc7ee8c711d547d7df3088b0d2d8d337885e/20250811 MQL5 FOLDER/Indicators/2025SMART/smc.pine"
+    },
+    {
+      "id": "s0007",
+      "repo": "alboogycOdR/dev-projects",
+      "path": "tradingview/_pinescripts_/CODE_TRADINGVIEW/_archive_/lux.pine",
+      "ref": "636afc7ee8c711d547d7df3088b0d2d8d337885e",
+      "blobSha": "41a469382e4533ec8b460f13a3e750bbd0da40f1",
+      "htmlUrl": "https://github.com/alboogycOdR/dev-projects/blob/636afc7ee8c711d547d7df3088b0d2d8d337885e/tradingview/_pinescripts_/CODE_TRADINGVIEW/_archive_/lux.pine"
+    },
+    {
+      "id": "s0008",
+      "repo": "alboogycOdR/dev-projects",
+      "path": "tradingview/CRT/CRTFINDER/CRT-FINDERv4alpha.pine",
+      "ref": "636afc7ee8c711d547d7df3088b0d2d8d337885e",
+      "blobSha": "ae9be0f0834813da554f12a52ab9f62ee4ff9973",
+      "htmlUrl": "https://github.com/alboogycOdR/dev-projects/blob/636afc7ee8c711d547d7df3088b0d2d8d337885e/tradingview/CRT/CRTFINDER/CRT-FINDERv4alpha.pine"
+    },
+    {
+      "id": "s0009",
+      "repo": "alboogycOdR/dev-projects",
+      "path": "tradingview/WEDNESDAY_LEVELS/US30 WED LEVELS - TIKTOK/archive/0727DST.pine",
+      "ref": "636afc7ee8c711d547d7df3088b0d2d8d337885e",
+      "blobSha": "0a2c74b5ebe5201aacc62fc6fbbc5338dd9f02c2",
+      "htmlUrl": "https://github.com/alboogycOdR/dev-projects/blob/636afc7ee8c711d547d7df3088b0d2d8d337885e/tradingview/WEDNESDAY_LEVELS/US30 WED LEVELS - TIKTOK/archive/0727DST.pine"
+    },
+    {
+      "id": "s0010",
+      "repo": "ali-rajabpour/ARPS-Pivots",
+      "path": "ARPS Pivots.pine",
+      "ref": "da0d74a4c258f6c42d7edba78d215be0288753c2",
+      "blobSha": "f02bca4fc948313d79ce4801c8570a879ae383d1",
+      "htmlUrl": "https://github.com/ali-rajabpour/ARPS-Pivots/blob/da0d74a4c258f6c42d7edba78d215be0288753c2/ARPS Pivots.pine"
+    },
+    {
+      "id": "s0011",
+      "repo": "Anderson-ALGO/Anderson-ALGO.github.io",
+      "path": "Pine/PineScript/Minor-Analysis/GBP_CLUSTER.pine",
+      "ref": "3a08903c75716243b4170f0a9a807848a618fe9c",
+      "blobSha": "e54dfff27880b2e0cd03a2df91089e15b498f496",
+      "htmlUrl": "https://github.com/Anderson-ALGO/Anderson-ALGO.github.io/blob/3a08903c75716243b4170f0a9a807848a618fe9c/Pine/PineScript/Minor-Analysis/GBP_CLUSTER.pine"
+    },
+    {
+      "id": "s0012",
+      "repo": "Andre6321/AI-trading-bot",
+      "path": "outputs/nasdaq_strategy.pine",
+      "ref": "ac323114c94092b46dee7773bc73f583ee638802",
+      "blobSha": "41be006a46dd04af562f79de324faa550fdeb1e5",
+      "htmlUrl": "https://github.com/Andre6321/AI-trading-bot/blob/ac323114c94092b46dee7773bc73f583ee638802/outputs/nasdaq_strategy.pine"
+    },
+    {
+      "id": "s0013",
+      "repo": "anoobpaul/Algo",
+      "path": "cprandema.pine",
+      "ref": "e8c32f69e28427fda0aed94f5730afd60804e8a8",
+      "blobSha": "9efe098d50afb02d53e9e4082fb5bc006c3aba62",
+      "htmlUrl": "https://github.com/anoobpaul/Algo/blob/e8c32f69e28427fda0aed94f5730afd60804e8a8/cprandema.pine"
+    },
+    {
+      "id": "s0014",
+      "repo": "austench1-prog/openclaw-workspace",
+      "path": "camarilla-formula3-gc-v3.pine",
+      "ref": "f1551f3fa9f41948b35834908b9a9a486ceb0727",
+      "blobSha": "7dbb5ee4df0bc656ae173e8178ecf28e3b8de3ba",
+      "htmlUrl": "https://github.com/austench1-prog/openclaw-workspace/blob/f1551f3fa9f41948b35834908b9a9a486ceb0727/camarilla-formula3-gc-v3.pine"
+    },
+    {
+      "id": "s0015",
+      "repo": "austench1-prog/openclaw-workspace",
+      "path": "camarilla-nextday-th-tl-clean.pine",
+      "ref": "f1551f3fa9f41948b35834908b9a9a486ceb0727",
+      "blobSha": "fc6bd254d87177d4604f1c378089e4b79bea581e",
+      "htmlUrl": "https://github.com/austench1-prog/openclaw-workspace/blob/f1551f3fa9f41948b35834908b9a9a486ceb0727/camarilla-nextday-th-tl-clean.pine"
+    },
+    {
+      "id": "s0016",
+      "repo": "automatewithcharan/tr-assistant",
+      "path": "NG_Scalp_Alerts_v1_3_5_1_CLEAN_ACTION_ALERTS.pine",
+      "ref": "af111b5f130f1343028d899205dd113d63c00303",
+      "blobSha": "ce5efa5f4ae9d808d8905dccd9b99010f147c14d",
+      "htmlUrl": "https://github.com/automatewithcharan/tr-assistant/blob/af111b5f130f1343028d899205dd113d63c00303/NG_Scalp_Alerts_v1_3_5_1_CLEAN_ACTION_ALERTS.pine"
+    },
+    {
+      "id": "s0017",
+      "repo": "babydaemons/Logic46",
+      "path": "Harry/PineScipt/FlowVisualizer.pine",
+      "ref": "1f1273a69183781c1ba4bfc504e294112739c568",
+      "blobSha": "23975bfd6e501a0abb289980f7fa82b786945a70",
+      "htmlUrl": "https://github.com/babydaemons/Logic46/blob/1f1273a69183781c1ba4bfc504e294112739c568/Harry/PineScipt/FlowVisualizer.pine"
+    },
+    {
+      "id": "s0018",
+      "repo": "be-thomas/OpenPineScript",
+      "path": "examples/v5/tradingview-docs/v5-concepts-other-timeframes-and-data-14.pine",
+      "ref": "cbf7ce9183cf46221a76a7453cfa78542d220108",
+      "blobSha": "9ddbd72b655bb7133a9ab0cf0ed851288d5acc29",
+      "htmlUrl": "https://github.com/be-thomas/OpenPineScript/blob/cbf7ce9183cf46221a76a7453cfa78542d220108/examples/v5/tradingview-docs/v5-concepts-other-timeframes-and-data-14.pine"
+    },
+    {
+      "id": "s0019",
+      "repo": "be-thomas/OpenPineScript",
+      "path": "examples/v5/tradingview-docs/v5-concepts-repainting-05.pine",
+      "ref": "cbf7ce9183cf46221a76a7453cfa78542d220108",
+      "blobSha": "7c72ab94ca26371369d0c5059bd46bc5746dd048",
+      "htmlUrl": "https://github.com/be-thomas/OpenPineScript/blob/cbf7ce9183cf46221a76a7453cfa78542d220108/examples/v5/tradingview-docs/v5-concepts-repainting-05.pine"
+    },
+    {
+      "id": "s0020",
+      "repo": "bfoura/TradingView-Indicators",
+      "path": "strategies/v4/pivots_custom.pine",
+      "ref": "8f2e32b70c676f6c4cc91ad961f1cead4bc9c68e",
+      "blobSha": "1006ca826bfe38a97945bd14b38ff44124aca538",
+      "htmlUrl": "https://github.com/bfoura/TradingView-Indicators/blob/8f2e32b70c676f6c4cc91ad961f1cead4bc9c68e/strategies/v4/pivots_custom.pine"
+    },
+    {
+      "id": "s0021",
+      "repo": "btcjon/pine",
+      "path": "archive/docs_archive/code_examples/Short_Interest_Tracker_[SS].pine",
+      "ref": "256c5497a9a9a9dc5eecf58ed91b5f1c78edacd0",
+      "blobSha": "a80fe680a45905f9918a2f7fb671b96102510758",
+      "htmlUrl": "https://github.com/btcjon/pine/blob/256c5497a9a9a9dc5eecf58ed91b5f1c78edacd0/archive/docs_archive/code_examples/Short_Interest_Tracker_[SS].pine"
+    },
+    {
+      "id": "s0022",
+      "repo": "btcjon/pine",
+      "path": "TTB_ticker_corellation2.pine",
+      "ref": "256c5497a9a9a9dc5eecf58ed91b5f1c78edacd0",
+      "blobSha": "815d4e2a46311952e193dc1a09e0efda6898a222",
+      "htmlUrl": "https://github.com/btcjon/pine/blob/256c5497a9a9a9dc5eecf58ed91b5f1c78edacd0/TTB_ticker_corellation2.pine"
+    },
+    {
+      "id": "s0023",
+      "repo": "BunoHBDE/quant-tradingview-strategies",
+      "path": "Indicadores/VWAP Bands.pine",
+      "ref": "6840b4c9fd083650537355214914bbd225c5dd47",
+      "blobSha": "cf4517fbd6699178881f6df53a71a1e7eab27d74",
+      "htmlUrl": "https://github.com/BunoHBDE/quant-tradingview-strategies/blob/6840b4c9fd083650537355214914bbd225c5dd47/Indicadores/VWAP Bands.pine"
+    },
+    {
+      "id": "s0024",
+      "repo": "capissimo/Pinescript-Laboratory",
+      "path": "scripts/038-Normalized-Vector-Strategy-(v3).pine",
+      "ref": "3130853661f4a06b329937bbd6d777e2f30643e3",
+      "blobSha": "c970c1f68e1af04c60f05f94e61f4f4cca16b8e3",
+      "htmlUrl": "https://github.com/capissimo/Pinescript-Laboratory/blob/3130853661f4a06b329937bbd6d777e2f30643e3/scripts/038-Normalized-Vector-Strategy-(v3).pine"
+    },
+    {
+      "id": "s0025",
+      "repo": "capissimo/Pinescript-Laboratory",
+      "path": "scripts/071-MA-HMA-based-Scalper.pine",
+      "ref": "3130853661f4a06b329937bbd6d777e2f30643e3",
+      "blobSha": "de9b9458b241ee388a3a44444a5e6e736293bb01",
+      "htmlUrl": "https://github.com/capissimo/Pinescript-Laboratory/blob/3130853661f4a06b329937bbd6d777e2f30643e3/scripts/071-MA-HMA-based-Scalper.pine"
+    },
+    {
+      "id": "s0026",
+      "repo": "capissimo/Pinescript-Laboratory",
+      "path": "scripts/072-Mean-Reversion-Indicator.pine",
+      "ref": "3130853661f4a06b329937bbd6d777e2f30643e3",
+      "blobSha": "de997bc9406d7d7d82ebfcf0f8fdbd5851d67135",
+      "htmlUrl": "https://github.com/capissimo/Pinescript-Laboratory/blob/3130853661f4a06b329937bbd6d777e2f30643e3/scripts/072-Mean-Reversion-Indicator.pine"
+    },
+    {
+      "id": "s0027",
+      "repo": "casoon/pine-scripts",
+      "path": "archive/indicators/directional_probability_engine/directional_probability_engine_v1.pine",
+      "ref": "c7368182c246853f246911831171bc8258bc356a",
+      "blobSha": "b2a178b34fa8487a285850411d6986dfe6d4dd6f",
+      "htmlUrl": "https://github.com/casoon/pine-scripts/blob/c7368182c246853f246911831171bc8258bc356a/archive/indicators/directional_probability_engine/directional_probability_engine_v1.pine"
+    },
+    {
+      "id": "s0028",
+      "repo": "ceelikonur/trade-compass",
+      "path": "backtest-results/pine/02_asia_sweep_v2.pine",
+      "ref": "be4b2d485c06463dcbe1b8d4da3851d5e8b881fc",
+      "blobSha": "8c6f335fd8ab440a6f0a9048fc9d9a682904367f",
+      "htmlUrl": "https://github.com/ceelikonur/trade-compass/blob/be4b2d485c06463dcbe1b8d4da3851d5e8b881fc/backtest-results/pine/02_asia_sweep_v2.pine"
+    },
+    {
+      "id": "s0029",
+      "repo": "chris-c-thomas/chrd-tradingview-pine-scripts",
+      "path": "scripts/market-monitor/market-monitor-5min.pine",
+      "ref": "628b0c63bac1d7bf6119433a85ea93b3465f591d",
+      "blobSha": "b6fbc40129b2f47f57d78743b3823cc11655df43",
+      "htmlUrl": "https://github.com/chris-c-thomas/chrd-tradingview-pine-scripts/blob/628b0c63bac1d7bf6119433a85ea93b3465f591d/scripts/market-monitor/market-monitor-5min.pine"
+    },
+    {
+      "id": "s0030",
+      "repo": "chris-c-thomas/chrd-tradingview-pine-scripts",
+      "path": "scripts/trend-compass/trend-compass-15m.pine",
+      "ref": "628b0c63bac1d7bf6119433a85ea93b3465f591d",
+      "blobSha": "8ace73aec9616cf71c2dfc1c50c7f75dc9f29cf7",
+      "htmlUrl": "https://github.com/chris-c-thomas/chrd-tradingview-pine-scripts/blob/628b0c63bac1d7bf6119433a85ea93b3465f591d/scripts/trend-compass/trend-compass-15m.pine"
+    },
+    {
+      "id": "s0031",
+      "repo": "chris-c-thomas/chrd-tradingview-pine-scripts",
+      "path": "scripts/trend-compass/trend-compass-4h.pine",
+      "ref": "628b0c63bac1d7bf6119433a85ea93b3465f591d",
+      "blobSha": "454578952f866e53512db1e80366ad30745016f3",
+      "htmlUrl": "https://github.com/chris-c-thomas/chrd-tradingview-pine-scripts/blob/628b0c63bac1d7bf6119433a85ea93b3465f591d/scripts/trend-compass/trend-compass-4h.pine"
+    },
+    {
+      "id": "s0032",
+      "repo": "chris-c-thomas/chrd-tradingview-pine-scripts",
+      "path": "scripts/trend-compass/trend-compass-daily.pine",
+      "ref": "628b0c63bac1d7bf6119433a85ea93b3465f591d",
+      "blobSha": "ca83a24890fa47a020061d4a0fb06f721ffe5c40",
+      "htmlUrl": "https://github.com/chris-c-thomas/chrd-tradingview-pine-scripts/blob/628b0c63bac1d7bf6119433a85ea93b3465f591d/scripts/trend-compass/trend-compass-daily.pine"
+    },
+    {
+      "id": "s0033",
+      "repo": "darkforest-x/fable-trading",
+      "path": "output/pine/monday_range_v2_8_native_qa.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "05ad2de9b1952ad3b60b995a044b0c7902c1c5ee",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/output/pine/monday_range_v2_8_native_qa.pine"
+    },
+    {
+      "id": "s0034",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/imacd_dense_mtf_v2_1.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "b9f230e92cca1f2d37b203fa5b88854c60a526b0",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/imacd_dense_mtf_v2_1.pine"
+    },
+    {
+      "id": "s0035",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/imacd_dense_mtf_v2_4.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "5c4c28a71c7fa796f3b08ca12e864cc715bf1187",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/imacd_dense_mtf_v2_4.pine"
+    },
+    {
+      "id": "s0036",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/monday_range_v2_1.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "9e213e0460ca875b6578bc2f283bd9c8bc3a2f9b",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/monday_range_v2_1.pine"
+    },
+    {
+      "id": "s0037",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/monday_range_v2_18.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "29d804c7dccbd6b9798cf2f20d534d91581fc039",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/monday_range_v2_18.pine"
+    },
+    {
+      "id": "s0038",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/monday_range_v2_23.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "235362a886bc987116e3dd9d2fd5f2daecf6b7f0",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/monday_range_v2_23.pine"
+    },
+    {
+      "id": "s0039",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/spike_burst_v12_4.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "19760f5ce13740a23e48ccd829c23502887af45e",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/spike_burst_v12_4.pine"
+    },
+    {
+      "id": "s0040",
+      "repo": "darkforest-x/fable-trading",
+      "path": "yoyo/evaluation/pine/spike_burst_v12_9.pine",
+      "ref": "7d0fb97c2a9646af6fb738bb6754c47e924f7d6f",
+      "blobSha": "6e63372f68f5c73c7d8780ac315a54609cffd08f",
+      "htmlUrl": "https://github.com/darkforest-x/fable-trading/blob/7d0fb97c2a9646af6fb738bb6754c47e924f7d6f/yoyo/evaluation/pine/spike_burst_v12_9.pine"
+    },
+    {
+      "id": "s0041",
+      "repo": "DarthBuddha/TradingView",
+      "path": "src/BuddhaMarketLevels.pine",
+      "ref": "8423600794a69e8727887c50e91aa781dd2eca48",
+      "blobSha": "75ddbcb6017cc201dabf168b400f650024a64326",
+      "htmlUrl": "https://github.com/DarthBuddha/TradingView/blob/8423600794a69e8727887c50e91aa781dd2eca48/src/BuddhaMarketLevels.pine"
+    },
+    {
+      "id": "s0042",
+      "repo": "delawaGG/nebengah",
+      "path": "TV/QiPrime PRO v2/QiPrime PRO v2.pine",
+      "ref": "6e01ce2c4d4739cb69b4922620abfc7f7f9948a8",
+      "blobSha": "694816432a7615244a01f4aec5856a18576f2e79",
+      "htmlUrl": "https://github.com/delawaGG/nebengah/blob/6e01ce2c4d4739cb69b4922620abfc7f7f9948a8/TV/QiPrime PRO v2/QiPrime PRO v2.pine"
+    },
+    {
+      "id": "s0043",
+      "repo": "Dimmiditutto/Pinescript-laboratory",
+      "path": "scripts/126-Machine-Learning-kNN-(New-Approach).pine",
+      "ref": "3130853661f4a06b329937bbd6d777e2f30643e3",
+      "blobSha": "2c05194ef8220e9b8f996abf41a63767477ebeaf",
+      "htmlUrl": "https://github.com/Dimmiditutto/Pinescript-laboratory/blob/3130853661f4a06b329937bbd6d777e2f30643e3/scripts/126-Machine-Learning-kNN-(New-Approach).pine"
+    },
+    {
+      "id": "s0044",
+      "repo": "dwats250/strategy",
+      "path": "indicators/session_compass_v2.3.pine",
+      "ref": "1aefaaab53d907b5452939f4a26c5eb69aa45961",
+      "blobSha": "d56bf417cfa224700e178b58decfcb7b350fe43e",
+      "htmlUrl": "https://github.com/dwats250/strategy/blob/1aefaaab53d907b5452939f4a26c5eb69aa45961/indicators/session_compass_v2.3.pine"
+    },
+    {
+      "id": "s0045",
+      "repo": "erikabarker/zscore-pro-kama",
+      "path": "pine/indicator.pine",
+      "ref": "8821a588c710175a1465ae6646ad59dd63377c8c",
+      "blobSha": "2adfddbb56a79a04c58039702899aee80beef80e",
+      "htmlUrl": "https://github.com/erikabarker/zscore-pro-kama/blob/8821a588c710175a1465ae6646ad59dd63377c8c/pine/indicator.pine"
+    },
+    {
+      "id": "s0046",
+      "repo": "F87104/-",
+      "path": "pine/archive/wavebox_usdjpy_h1_rebreak_v0_3.pine",
+      "ref": "1b2f51ff65d056642ca2ed54f87bae9f3e86255e",
+      "blobSha": "828ba91c8f63d51b66e152ab8c530d1fa0da1fc7",
+      "htmlUrl": "https://github.com/F87104/-/blob/1b2f51ff65d056642ca2ed54f87bae9f3e86255e/pine/archive/wavebox_usdjpy_h1_rebreak_v0_3.pine"
+    },
+    {
+      "id": "s0047",
+      "repo": "F87104/-",
+      "path": "pine/archive/wavebox_usdjpy_h1_rebreak_v1_1.pine",
+      "ref": "1b2f51ff65d056642ca2ed54f87bae9f3e86255e",
+      "blobSha": "6f9c55df64a368509fb9a92dfe748a75e989101b",
+      "htmlUrl": "https://github.com/F87104/-/blob/1b2f51ff65d056642ca2ed54f87bae9f3e86255e/pine/archive/wavebox_usdjpy_h1_rebreak_v1_1.pine"
+    },
+    {
+      "id": "s0048",
+      "repo": "Finnlayy/Sigma",
+      "path": "data/strategies/tv_b38b46401309/code.pine",
+      "ref": "49429140650f4ed0686d6917b43e3ed74e11d376",
+      "blobSha": "d3c0de86f71a6da212f0817bf8ac012f69a55fc2",
+      "htmlUrl": "https://github.com/Finnlayy/Sigma/blob/49429140650f4ed0686d6917b43e3ed74e11d376/data/strategies/tv_b38b46401309/code.pine"
+    },
+    {
+      "id": "s0049",
+      "repo": "fmve1232/Trading-View-Xauusd",
+      "path": "reference/pine-v73/XAUUSD_Quantum_5_0_Brief.pine",
+      "ref": "021397744b52bcdeda26bc0b255c13ede6a9a413",
+      "blobSha": "72eba1f1a97da8f2f693c74fe8b926baa3b43ec1",
+      "htmlUrl": "https://github.com/fmve1232/Trading-View-Xauusd/blob/021397744b52bcdeda26bc0b255c13ede6a9a413/reference/pine-v73/XAUUSD_Quantum_5_0_Brief.pine"
+    },
+    {
+      "id": "s0050",
+      "repo": "fmve1232/Trading-View-Xauusd",
+      "path": "reference/pine-v73/XAUUSD_Quantum_5_0_Strategy_CHALLENGER.pine",
+      "ref": "021397744b52bcdeda26bc0b255c13ede6a9a413",
+      "blobSha": "f25b4ed53c577a1054cfcd5ce1ea7be52dfb405f",
+      "htmlUrl": "https://github.com/fmve1232/Trading-View-Xauusd/blob/021397744b52bcdeda26bc0b255c13ede6a9a413/reference/pine-v73/XAUUSD_Quantum_5_0_Strategy_CHALLENGER.pine"
+    },
+    {
+      "id": "s0051",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/csw-mtf-sentiment-line.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "7d82151b0044ddfde91516653a9fe0004efdb287",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/csw-mtf-sentiment-line.pine"
+    },
+    {
+      "id": "s0052",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/hercules-indicator-1-7.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "68507e4e81c045132e19e0543548601d351a4008",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/hercules-indicator-1-7.pine"
+    },
+    {
+      "id": "s0053",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/hercules-rewrite.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "1c68e65598d82b8df6d8a104c37375bc78efe18d",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/hercules-rewrite.pine"
+    },
+    {
+      "id": "s0054",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/mtf-charting.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "7fdbd4cf119617279a40fe71876db7f967814bb0",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/mtf-charting.pine"
+    },
+    {
+      "id": "s0055",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/pivot-trendlines-divergence-scanner-strategy-v2.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "b1bf09e0550a74e539c282127626b82c7bcecf93",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/pivot-trendlines-divergence-scanner-strategy-v2.pine"
+    },
+    {
+      "id": "s0056",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/price-action-candles-v14.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "f717277527a4f95eac299b5a7f68affbd7819b65",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/price-action-candles-v14.pine"
+    },
+    {
+      "id": "s0057",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/scaralgo-v1.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "60d61ed6a2e53bdc59655786c88b4aae2a05dfdf",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/scaralgo-v1.pine"
+    },
+    {
+      "id": "s0058",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/two-ma-indicator.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "d99ea8db4c69027ee0297f1c965521aaa0f76fe3",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/two-ma-indicator.pine"
+    },
+    {
+      "id": "s0059",
+      "repo": "g-moe/Trading-Indicators",
+      "path": "Tradingview/xact-panel.pine",
+      "ref": "d7c3f5e9060fa7e461f4946713cc7a30f154a1e6",
+      "blobSha": "bab4c2fea468b4bc4a1af5d680a3b16633296b06",
+      "htmlUrl": "https://github.com/g-moe/Trading-Indicators/blob/d7c3f5e9060fa7e461f4946713cc7a30f154a1e6/Tradingview/xact-panel.pine"
+    },
+    {
+      "id": "s0060",
+      "repo": "gestas666/Backtest-Lab",
+      "path": "knowledge/strategy_bundles/cipher_a_cipher_b_strategy/components/cipher_b.pine",
+      "ref": "418830cfa49e73c14f82d9531349e136928658b2",
+      "blobSha": "147e65742c23c28d9096e47b71b7b7b539f56a0f",
+      "htmlUrl": "https://github.com/gestas666/Backtest-Lab/blob/418830cfa49e73c14f82d9531349e136928658b2/knowledge/strategy_bundles/cipher_a_cipher_b_strategy/components/cipher_b.pine"
+    },
+    {
+      "id": "s0061",
+      "repo": "gitKheang/indicator",
+      "path": "modules/smart_trade_engine.pine",
+      "ref": "48bd7036b6a8b4f0d1d64f5688de853ad83b9f7e",
+      "blobSha": "1558849a5b35a8a72ae544f282bd68c348cabfa4",
+      "htmlUrl": "https://github.com/gitKheang/indicator/blob/48bd7036b6a8b4f0d1d64f5688de853ad83b9f7e/modules/smart_trade_engine.pine"
+    },
+    {
+      "id": "s0062",
+      "repo": "Harry-GNS/Proyecto-Grupo-HM-DE-ml",
+      "path": "c/01_Smart_Money_Concepts_LuxAlgo.pine",
+      "ref": "ee69156225b1e5ed2cda2539f2b0cb58e233242e",
+      "blobSha": "241fba2bb9069716fc5e3a71a5e68e4d622d5804",
+      "htmlUrl": "https://github.com/Harry-GNS/Proyecto-Grupo-HM-DE-ml/blob/ee69156225b1e5ed2cda2539f2b0cb58e233242e/c/01_Smart_Money_Concepts_LuxAlgo.pine"
+    },
+    {
+      "id": "s0063",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "3C QFL Mean reversal.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "1d873bb5fefbd4114df87671cceab7bf171b8e90",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/3C QFL Mean reversal.pine"
+    },
+    {
+      "id": "s0064",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "Combination Parabolic MA-IIR-ALMA Strategy, with other goodies.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "fbb256cbefc564a6b36f913a5122a62120bb2f70",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Combination Parabolic MA-IIR-ALMA Strategy, with other goodies.pine"
+    },
+    {
+      "id": "s0065",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "Mix1 - Ema Cross + Trend Channel [Gu5] - Backtest.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "34f1b52ec2aa34e6632859f9b511ca85cb565907",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Mix1 - Ema Cross + Trend Channel [Gu5] - Backtest.pine"
+    },
+    {
+      "id": "s0066",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "Open Close Cross Strategy plus Explorer.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "d5be15d26f042fda5c3b51c339e7815286eab011",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Open Close Cross Strategy plus Explorer.pine"
+    },
+    {
+      "id": "s0067",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "PickingupFromBottom Strategy.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "0ea25f2cacc8860361d87dbf473c2bd461446956",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/PickingupFromBottom Strategy.pine"
+    },
+    {
+      "id": "s0068",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "Super Z strategy - Thanks to Rafael Zioni.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "af1dff098e9507137418d6cdf3d0f8cf16a0d229",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Super Z strategy - Thanks to Rafael Zioni.pine"
+    },
+    {
+      "id": "s0069",
+      "repo": "hasnocool/tradingview-pine-scripts",
+      "path": "TDI Hedge Strategy.pine",
+      "ref": "69969aeaf271b2f7b5a7632a1bde43069a0cbe26",
+      "blobSha": "34e8695f1b16414c335209a774d6406398bbbed5",
+      "htmlUrl": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/TDI Hedge Strategy.pine"
+    },
+    {
+      "id": "s0070",
+      "repo": "Hugs-4-Bugs/Trading-Indicator",
+      "path": "Trading-view-Scripts/2024-Setup/vwap-trend.pine",
+      "ref": "1c5714041dd9d704d3ff158feade7aacae23b20f",
+      "blobSha": "430daf44cebfebec0a376e0da65d8b364da38911",
+      "htmlUrl": "https://github.com/Hugs-4-Bugs/Trading-Indicator/blob/1c5714041dd9d704d3ff158feade7aacae23b20f/Trading-view-Scripts/2024-Setup/vwap-trend.pine"
+    },
+    {
+      "id": "s0071",
+      "repo": "IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection",
+      "path": "Indicators/PRO_V3_SMRTALGO.PINE",
+      "ref": "9a72fe701cb800b831631747fb2ac458d5d466b2",
+      "blobSha": "009c9579bf3c7b0c671e2e342e8dbc1639225c3c",
+      "htmlUrl": "https://github.com/IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection/blob/9a72fe701cb800b831631747fb2ac458d5d466b2/Indicators/PRO_V3_SMRTALGO.PINE"
+    },
+    {
+      "id": "s0072",
+      "repo": "IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection",
+      "path": "Indicators/RIVER_STRAT_WITH-SUPERSCALPER_BY_LEO.pine",
+      "ref": "9a72fe701cb800b831631747fb2ac458d5d466b2",
+      "blobSha": "02ed97b8c8062440df7c6a9b5ba47fd9281d5fca",
+      "htmlUrl": "https://github.com/IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection/blob/9a72fe701cb800b831631747fb2ac458d5d466b2/Indicators/RIVER_STRAT_WITH-SUPERSCALPER_BY_LEO.pine"
+    },
+    {
+      "id": "s0073",
+      "repo": "IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection",
+      "path": "Indicators/Super Algo + Market Sentiment V1.7 .pine",
+      "ref": "9a72fe701cb800b831631747fb2ac458d5d466b2",
+      "blobSha": "784b92add7423fb503c3262490efc426c325f165",
+      "htmlUrl": "https://github.com/IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection/blob/9a72fe701cb800b831631747fb2ac458d5d466b2/Indicators/Super Algo + Market Sentiment V1.7 .pine"
+    },
+    {
+      "id": "s0074",
+      "repo": "IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection",
+      "path": "Indicators/VitAlgo.pine",
+      "ref": "9a72fe701cb800b831631747fb2ac458d5d466b2",
+      "blobSha": "076a7b4acf20bb5663024dd2ce5231a0dc6d46f8",
+      "htmlUrl": "https://github.com/IAMATOMIC001/TradingView-MT4-MT5-Indicators-Strategies-Collection/blob/9a72fe701cb800b831631747fb2ac458d5d466b2/Indicators/VitAlgo.pine"
+    },
+    {
+      "id": "s0075",
+      "repo": "iamc1oud/Tradingview-Scripts",
+      "path": "automatic-sr-mfi.pine",
+      "ref": "0d41b4aee288cba1a32e4739a9ce6b41e7c9cf53",
+      "blobSha": "fb08cfe5f181b79fb1cab8764ca99342328d6e61",
+      "htmlUrl": "https://github.com/iamc1oud/Tradingview-Scripts/blob/0d41b4aee288cba1a32e4739a9ce6b41e7c9cf53/automatic-sr-mfi.pine"
+    },
+    {
+      "id": "s0076",
+      "repo": "ict2023trader/Indicators",
+      "path": "LatestUpdate/FM_MTF_HTF-Latest.pine",
+      "ref": "54f8f3e926f1ec9a49d96bb9d2d6217a749b9aa6",
+      "blobSha": "8b225ca5d8e1ba6eb5e89f2921faee359a145d10",
+      "htmlUrl": "https://github.com/ict2023trader/Indicators/blob/54f8f3e926f1ec9a49d96bb9d2d6217a749b9aa6/LatestUpdate/FM_MTF_HTF-Latest.pine"
+    },
+    {
+      "id": "s0077",
+      "repo": "imikhlawi/projects",
+      "path": "Analyse_Indikatoren/Market_Structure_Engine.pine",
+      "ref": "fd88c61a99840cb70ea20aa582cb6c17819fde1f",
+      "blobSha": "842fd69b1b282eaac61270fd1e153ced47373b10",
+      "htmlUrl": "https://github.com/imikhlawi/projects/blob/fd88c61a99840cb70ea20aa582cb6c17819fde1f/Analyse_Indikatoren/Market_Structure_Engine.pine"
+    },
+    {
+      "id": "s0078",
+      "repo": "InNoobWeTrust/dotfiles",
+      "path": ".innoobwetrust/life_hacks/tradingview/mtf_multi_ema.pine",
+      "ref": "2d3cf5e44de991404d0876c1824b40c93e595412",
+      "blobSha": "939ed216cbdeaf7ad34b9e6d0549c7c2f722beb4",
+      "htmlUrl": "https://github.com/InNoobWeTrust/dotfiles/blob/2d3cf5e44de991404d0876c1824b40c93e595412/.innoobwetrust/life_hacks/tradingview/mtf_multi_ema.pine"
+    },
+    {
+      "id": "s0079",
+      "repo": "Isuruzenith/FVI-Indicator",
+      "path": "777.pine",
+      "ref": "025db666302e3c532d167d26994b74e3ec4ee4db",
+      "blobSha": "0b5fb8bd97d12b629d1f8047962c98f9d108d8b9",
+      "htmlUrl": "https://github.com/Isuruzenith/FVI-Indicator/blob/025db666302e3c532d167d26994b74e3ec4ee4db/777.pine"
+    },
+    {
+      "id": "s0080",
+      "repo": "itmakesyousick/Currency-Strength-Chart",
+      "path": "v31.0.pine",
+      "ref": "75078ef015d11f3c5c43e36bf40ec4217a5500b3",
+      "blobSha": "293eeb02f83e2e2b0cf4754bebe514327a1cb14e",
+      "htmlUrl": "https://github.com/itmakesyousick/Currency-Strength-Chart/blob/75078ef015d11f3c5c43e36bf40ec4217a5500b3/v31.0.pine"
+    },
+    {
+      "id": "s0081",
+      "repo": "itmakesyousick/Currency-Strength-Chart",
+      "path": "v33.0.pine",
+      "ref": "75078ef015d11f3c5c43e36bf40ec4217a5500b3",
+      "blobSha": "53a77a0db7bce726c20be1351cb11e2874034226",
+      "htmlUrl": "https://github.com/itmakesyousick/Currency-Strength-Chart/blob/75078ef015d11f3c5c43e36bf40ec4217a5500b3/v33.0.pine"
+    },
+    {
+      "id": "s0082",
+      "repo": "JALAL786451/JAS-SNIPER-BOT",
+      "path": "indicators/jas_pro_box.pine",
+      "ref": "8614625949492ac69d2a6186d31f52076638bf89",
+      "blobSha": "f10ac93d0ead2011ad61b7a7a4a16ba5fde9ac52",
+      "htmlUrl": "https://github.com/JALAL786451/JAS-SNIPER-BOT/blob/8614625949492ac69d2a6186d31f52076638bf89/indicators/jas_pro_box.pine"
+    },
+    {
+      "id": "s0083",
+      "repo": "JALAL786451/JAS-SNIPER-BOT",
+      "path": "indicators/jas_seerhi.pine",
+      "ref": "8614625949492ac69d2a6186d31f52076638bf89",
+      "blobSha": "da975a55c77cab5d84cf0a19c5e343a6eca91e59",
+      "htmlUrl": "https://github.com/JALAL786451/JAS-SNIPER-BOT/blob/8614625949492ac69d2a6186d31f52076638bf89/indicators/jas_seerhi.pine"
+    },
+    {
+      "id": "s0084",
+      "repo": "jboxman/thinkscripts",
+      "path": "pine/trinity-atr-levels.pine",
+      "ref": "85f38a545836006936384fab6df32355f1c7078e",
+      "blobSha": "d0478bc5d5cb4dbeeb736ad491791c370ffe9610",
+      "htmlUrl": "https://github.com/jboxman/thinkscripts/blob/85f38a545836006936384fab6df32355f1c7078e/pine/trinity-atr-levels.pine"
+    },
+    {
+      "id": "s0085",
+      "repo": "Jonnyahlt/ICT-Multi-Module-Strategy",
+      "path": "ICT_SessionEngine_Indicator.pine",
+      "ref": "c7cbd490c95307925794ec0f40a6d48a259d9969",
+      "blobSha": "6219610fb1f03d07eb8ce3ea4bb284b21e91e512",
+      "htmlUrl": "https://github.com/Jonnyahlt/ICT-Multi-Module-Strategy/blob/c7cbd490c95307925794ec0f40a6d48a259d9969/ICT_SessionEngine_Indicator.pine"
+    },
+    {
+      "id": "s0086",
+      "repo": "jpsm83/pineScript",
+      "path": "idOpportunities.pine",
+      "ref": "e389a16e847a3b012bb07063720dd18206f33486",
+      "blobSha": "3391eccd01b58c2b55d2319ea344b0ce072dddf6",
+      "htmlUrl": "https://github.com/jpsm83/pineScript/blob/e389a16e847a3b012bb07063720dd18206f33486/idOpportunities.pine"
+    },
+    {
+      "id": "s0087",
+      "repo": "jpsm83/pineScript",
+      "path": "stScalping.pine",
+      "ref": "e389a16e847a3b012bb07063720dd18206f33486",
+      "blobSha": "4aab5e6fc7276aae0f98b9fdc3250e3c61eb4ea0",
+      "htmlUrl": "https://github.com/jpsm83/pineScript/blob/e389a16e847a3b012bb07063720dd18206f33486/stScalping.pine"
+    },
+    {
+      "id": "s0088",
+      "repo": "jpsm83/pineScript",
+      "path": "tiago2.pine",
+      "ref": "e389a16e847a3b012bb07063720dd18206f33486",
+      "blobSha": "3451d3f4477309fa5f2ec10fdbca0e1557b6d9cd",
+      "htmlUrl": "https://github.com/jpsm83/pineScript/blob/e389a16e847a3b012bb07063720dd18206f33486/tiago2.pine"
+    },
+    {
+      "id": "s0089",
+      "repo": "jque-designs/msd-dashboard",
+      "path": "source.pine",
+      "ref": "192596f695332c2314d6ea0a543a2f1e91c25910",
+      "blobSha": "6349d954663f5682cdf00ed4f7616e337cb812da",
+      "htmlUrl": "https://github.com/jque-designs/msd-dashboard/blob/192596f695332c2314d6ea0a543a2f1e91c25910/source.pine"
+    },
+    {
+      "id": "s0090",
+      "repo": "kantomu/prm",
+      "path": "quantum_sniper_v5.pine",
+      "ref": "4a7b5f532d4b3b91b22b62fa8a60388f7b9a9c18",
+      "blobSha": "944f6b283897741b709a38c4d95e4e7000184633",
+      "htmlUrl": "https://github.com/kantomu/prm/blob/4a7b5f532d4b3b91b22b62fa8a60388f7b9a9c18/quantum_sniper_v5.pine"
+    },
+    {
+      "id": "s0091",
+      "repo": "kantomu/prm",
+      "path": "TRUE_NORTH_imported.pine",
+      "ref": "4a7b5f532d4b3b91b22b62fa8a60388f7b9a9c18",
+      "blobSha": "4f9bdae81082bc7c09d9b414ab6e611da3df677c",
+      "htmlUrl": "https://github.com/kantomu/prm/blob/4a7b5f532d4b3b91b22b62fa8a60388f7b9a9c18/TRUE_NORTH_imported.pine"
+    },
+    {
+      "id": "s0092",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v0_3f_IFVGConfirmation.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "b9018830bce43f2c19071e27813e35b399d8ec2d",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v0_3f_IFVGConfirmation.pine"
+    },
+    {
+      "id": "s0093",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v0_3m_v03b_LabelRenderer.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "ec87b97d777bf96e5779ddeb521090e910de3346",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v0_3m_v03b_LabelRenderer.pine"
+    },
+    {
+      "id": "s0094",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v0_5_POIFirstContinuation.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "1588b341e0e47b744149b3590e3ed28a1f74ec08",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v0_5_POIFirstContinuation.pine"
+    },
+    {
+      "id": "s0095",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v1_4_1_POI_InteractionRepair.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "53e97b1ed3d048300b8df307f8c748c914d4e62c",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v1_4_1_POI_InteractionRepair.pine"
+    },
+    {
+      "id": "s0096",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v1_5_3_POI_First_Continuation.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "afb7d1646f2fb8cc401de00d772e4b170bc6f3c0",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v1_5_3_POI_First_Continuation.pine"
+    },
+    {
+      "id": "s0097",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "master/ARTHA_MASTER_v1_7_1_OB_BB_TriggerRepair.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "6be5797a2fec5e8489084d4c526ee36ed14894b9",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/master/ARTHA_MASTER_v1_7_1_OB_BB_TriggerRepair.pine"
+    },
+    {
+      "id": "s0098",
+      "repo": "katzrams909-dev/ARTHA",
+      "path": "pine/v2/ARTHA_V2_P12_1_Visible_Production_Entries.pine",
+      "ref": "9446637739f7ca69c799844d4a1f1190d77f5a6d",
+      "blobSha": "89dac7db7264339deddb0eabc9d03b5ecedcf0f9",
+      "htmlUrl": "https://github.com/katzrams909-dev/ARTHA/blob/9446637739f7ca69c799844d4a1f1190d77f5a6d/pine/v2/ARTHA_V2_P12_1_Visible_Production_Entries.pine"
+    },
+    {
+      "id": "s0099",
+      "repo": "Kelushael/kelu",
+      "path": "indicators/kelu_liquidity.pine",
+      "ref": "421ab433327e18dd0fda2dc58e9791907b6cf585",
+      "blobSha": "ed4b519dd71ea968a6c2d56f50d358a4f589080d",
+      "htmlUrl": "https://github.com/Kelushael/kelu/blob/421ab433327e18dd0fda2dc58e9791907b6cf585/indicators/kelu_liquidity.pine"
+    },
+    {
+      "id": "s0100",
+      "repo": "krram712/stock-agent",
+      "path": "docs/AXIOM-Master-Pattern-Signal.pine",
+      "ref": "c491d46a7003dd17984ccc589a2672ab5120b584",
+      "blobSha": "6c1182969b5da3859fd0c31cc090494cd5e3df09",
+      "htmlUrl": "https://github.com/krram712/stock-agent/blob/c491d46a7003dd17984ccc589a2672ab5120b584/docs/AXIOM-Master-Pattern-Signal.pine"
+    },
+    {
+      "id": "s0101",
+      "repo": "lesari08/PineScripts",
+      "path": "LiquidyGapFinder.pine",
+      "ref": "fd16f66de2ff3c2702f34cf79f1fa84be9688e45",
+      "blobSha": "3e0a00da6853ece6ed207299e953d6be89995354",
+      "htmlUrl": "https://github.com/lesari08/PineScripts/blob/fd16f66de2ff3c2702f34cf79f1fa84be9688e45/LiquidyGapFinder.pine"
+    },
+    {
+      "id": "s0102",
+      "repo": "leviathan-devops/plutus-vision",
+      "path": "Checkpoints/v1-clean-baseline/smart-money-concepts.pine",
+      "ref": "fffc4af4af30feec62e4ad8f60eab4f3b10cbd2e",
+      "blobSha": "486fb23b8be9a9f1806a0ef5e1aed3ed0987ecbc",
+      "htmlUrl": "https://github.com/leviathan-devops/plutus-vision/blob/fffc4af4af30feec62e4ad8f60eab4f3b10cbd2e/Checkpoints/v1-clean-baseline/smart-money-concepts.pine"
+    },
+    {
+      "id": "s0103",
+      "repo": "louisalviss/runner-3",
+      "path": "reports/trinity-atr-supertrend/fixed_nonrepaint_strategy.pine",
+      "ref": "e8f118a5e82d6fb8e2dc06cc9755c1f5d53179b2",
+      "blobSha": "78372d2497d659673df027f58a50848d39e12dc3",
+      "htmlUrl": "https://github.com/louisalviss/runner-3/blob/e8f118a5e82d6fb8e2dc06cc9755c1f5d53179b2/reports/trinity-atr-supertrend/fixed_nonrepaint_strategy.pine"
+    },
+    {
+      "id": "s0104",
+      "repo": "louisgundelwein/tradingview-scripts",
+      "path": "ict-all-in-one.pine",
+      "ref": "17131a0e83953cca4547cf8641eb6f66ddc039aa",
+      "blobSha": "ed36d2d2cca458d62b7e7cb3906da588667c8215",
+      "htmlUrl": "https://github.com/louisgundelwein/tradingview-scripts/blob/17131a0e83953cca4547cf8641eb6f66ddc039aa/ict-all-in-one.pine"
+    },
+    {
+      "id": "s0105",
+      "repo": "lumduan/tradingview_tfex_usdthb",
+      "path": "financial.pine",
+      "ref": "f553481cf9c062310743d835760a957925b131ff",
+      "blobSha": "7bb5828f8dad070d861fc2ba14877259be99b186",
+      "htmlUrl": "https://github.com/lumduan/tradingview_tfex_usdthb/blob/f553481cf9c062310743d835760a957925b131ff/financial.pine"
+    },
+    {
+      "id": "s0106",
+      "repo": "major/tradingview",
+      "path": "market_fragility/market_fragility.pine",
+      "ref": "3a27d8f4b22f8ae678e3a0071a8b65cb547f199b",
+      "blobSha": "0d5832a3d83d23102360568e6e765a00ef610053",
+      "htmlUrl": "https://github.com/major/tradingview/blob/3a27d8f4b22f8ae678e3a0071a8b65cb547f199b/market_fragility/market_fragility.pine"
+    },
+    {
+      "id": "s0107",
+      "repo": "mayursavaliyams-dev/-maay-dashboard",
+      "path": "liquidity-sweep-reversal-pro-max.pine",
+      "ref": "258aadfb4eb33df13e2fee6fb7515b991967a970",
+      "blobSha": "5ec3cd265293bc8d1a134ee9dc351769d54ae12a",
+      "htmlUrl": "https://github.com/mayursavaliyams-dev/-maay-dashboard/blob/258aadfb4eb33df13e2fee6fb7515b991967a970/liquidity-sweep-reversal-pro-max.pine"
+    },
+    {
+      "id": "s0108",
+      "repo": "Methdam79/FGI",
+      "path": "FGI_Com_Complete_v6.pine",
+      "ref": "eb1628c484aa7d250625ef07f3a05f357e12377b",
+      "blobSha": "87026042758aa142efdf479ac7b88eeee799e917",
+      "htmlUrl": "https://github.com/Methdam79/FGI/blob/eb1628c484aa7d250625ef07f3a05f357e12377b/FGI_Com_Complete_v6.pine"
+    },
+    {
+      "id": "s0109",
+      "repo": "mikejuliano2/pine",
+      "path": "code/mj-scripts/mj-conditional-emas.pine",
+      "ref": "268c70980333587c9b992d20079af1e8ac3872a5",
+      "blobSha": "9b347beecc257fb2c2ca58bb18362b4a55d58954",
+      "htmlUrl": "https://github.com/mikejuliano2/pine/blob/268c70980333587c9b992d20079af1e8ac3872a5/code/mj-scripts/mj-conditional-emas.pine"
+    },
+    {
+      "id": "s0110",
+      "repo": "mikejuliano2/pine",
+      "path": "code/reference/ATH.pine",
+      "ref": "268c70980333587c9b992d20079af1e8ac3872a5",
+      "blobSha": "369ec5922f0e688d17f5a47e9a1d8004bdb7231e",
+      "htmlUrl": "https://github.com/mikejuliano2/pine/blob/268c70980333587c9b992d20079af1e8ac3872a5/code/reference/ATH.pine"
+    },
+    {
+      "id": "s0111",
+      "repo": "monty313/The-creator",
+      "path": "mark_here/strategy/factory_full/GV014_gravity_snap.pine",
+      "ref": "efd2b16731f1749f5a95cbf55c844282bf8a489b",
+      "blobSha": "6bc41cfc87ea9d098c168d54bb58ab7430b99230",
+      "htmlUrl": "https://github.com/monty313/The-creator/blob/efd2b16731f1749f5a95cbf55c844282bf8a489b/mark_here/strategy/factory_full/GV014_gravity_snap.pine"
+    },
+    {
+      "id": "s0112",
+      "repo": "moondevonyt/Trading-View-MCP-for-AI-by-Moon-Dev",
+      "path": "examples/moon_dev_lunar_sniper.pine",
+      "ref": "60f12fd5b42c4b4b9c8865e571e45cc3d05e48a8",
+      "blobSha": "68bc71e5d2e507966012f28221ae7925710abef0",
+      "htmlUrl": "https://github.com/moondevonyt/Trading-View-MCP-for-AI-by-Moon-Dev/blob/60f12fd5b42c4b4b9c8865e571e45cc3d05e48a8/examples/moon_dev_lunar_sniper.pine"
+    },
+    {
+      "id": "s0113",
+      "repo": "mphinance/webull_indicators",
+      "path": "Pivot_Ribbon/mphinance_combined_tv.pine",
+      "ref": "84db860e5470ac22da96d9ef7b6d16a73597d0b1",
+      "blobSha": "55da387f911ead378518681a51a84c1c5c922b79",
+      "htmlUrl": "https://github.com/mphinance/webull_indicators/blob/84db860e5470ac22da96d9ef7b6d16a73597d0b1/Pivot_Ribbon/mphinance_combined_tv.pine"
+    },
+    {
+      "id": "s0114",
+      "repo": "mradjie/stock",
+      "path": "SMC_luxalgo.pine",
+      "ref": "d49b9413f4417847ac115e1b49be352288af2c94",
+      "blobSha": "99b45d6e9346455a0703f3d145bc0e90124976dc",
+      "htmlUrl": "https://github.com/mradjie/stock/blob/d49b9413f4417847ac115e1b49be352288af2c94/SMC_luxalgo.pine"
+    },
+    {
+      "id": "s0115",
+      "repo": "mukisaivan/trading-experts",
+      "path": "strategies/candle-smt/pine/candle-smt-strategy-v2-2.pine",
+      "ref": "1f545796a3a6f913de02aa33df4cfb5a8955f97f",
+      "blobSha": "4191795fdad1fb68c20466d78d59fa8596cbac26",
+      "htmlUrl": "https://github.com/mukisaivan/trading-experts/blob/1f545796a3a6f913de02aa33df4cfb5a8955f97f/strategies/candle-smt/pine/candle-smt-strategy-v2-2.pine"
+    },
+    {
+      "id": "s0116",
+      "repo": "munlit/FxMarketSession-MarketStructureOsc-ZeroLag-Vidya-AiMfi-Adx-xTsi-xMtPanel",
+      "path": "base/Tsi xPanel.pine",
+      "ref": "64a7c903d6a170f419d5295de4b2ef24541aaaac",
+      "blobSha": "37c71fb5a3f36462514937b5bb1268952efad24b",
+      "htmlUrl": "https://github.com/munlit/FxMarketSession-MarketStructureOsc-ZeroLag-Vidya-AiMfi-Adx-xTsi-xMtPanel/blob/64a7c903d6a170f419d5295de4b2ef24541aaaac/base/Tsi xPanel.pine"
+    },
+    {
+      "id": "s0117",
+      "repo": "mushroom-men-Trading/clean-litter",
+      "path": "Indicators/indicators/premade indicators/reversals/pivotfib.pine",
+      "ref": "e4ebfd4745f5c0da76f4e7e34556508606536b16",
+      "blobSha": "58429080bb84a77c6290d80536e0a71b222605f6",
+      "htmlUrl": "https://github.com/mushroom-men-Trading/clean-litter/blob/e4ebfd4745f5c0da76f4e7e34556508606536b16/Indicators/indicators/premade indicators/reversals/pivotfib.pine"
+    },
+    {
+      "id": "s0118",
+      "repo": "naveen-web27/forex_trade_tv",
+      "path": "strategies/02_pdh_pdl_breakout_cpr.pine",
+      "ref": "48d7f39ad8e1f0e1d5eddaa626f9f225dfac2ab5",
+      "blobSha": "df0439d1fb294152b127593ef50ec8fc0436ecea",
+      "htmlUrl": "https://github.com/naveen-web27/forex_trade_tv/blob/48d7f39ad8e1f0e1d5eddaa626f9f225dfac2ab5/strategies/02_pdh_pdl_breakout_cpr.pine"
+    },
+    {
+      "id": "s0119",
+      "repo": "plutothedev/ai-trading-workflow",
+      "path": "pinescripts/path-c-pivot-bounce.pine",
+      "ref": "3045f12ac0124816b250f8ffd5c19999d53b9efe",
+      "blobSha": "09a8aea35e305d064b4b34c6122cc36e61a79f8a",
+      "htmlUrl": "https://github.com/plutothedev/ai-trading-workflow/blob/3045f12ac0124816b250f8ffd5c19999d53b9efe/pinescripts/path-c-pivot-bounce.pine"
+    },
+    {
+      "id": "s0120",
+      "repo": "radish060993/stock_strategy",
+      "path": "Darvas box.pine",
+      "ref": "45cc62753320b666a5d94c8437c06e03d416ff77",
+      "blobSha": "3402fd62f62742ba6f39de460a5f57b3073dea6e",
+      "htmlUrl": "https://github.com/radish060993/stock_strategy/blob/45cc62753320b666a5d94c8437c06e03d416ff77/Darvas box.pine"
+    },
+    {
+      "id": "s0121",
+      "repo": "raufmartins/ict_autonomous_agent",
+      "path": "tradingview/ict_signals.pine",
+      "ref": "dbc06613b151495fd24b15b521f566895a79265f",
+      "blobSha": "159cce389a124977ff9bb887970c232b097c7f8f",
+      "htmlUrl": "https://github.com/raufmartins/ict_autonomous_agent/blob/dbc06613b151495fd24b15b521f566895a79265f/tradingview/ict_signals.pine"
+    },
+    {
+      "id": "s0122",
+      "repo": "raybird/pine-trading-strategies",
+      "path": "strategies/tn_stoch_causal_divergence_v6.pine",
+      "ref": "2ea4830cfb63dc9ae287ad40fa64f030d58a9fdb",
+      "blobSha": "c7e0eda4f034fc7eb6af5a00095e134f7486b258",
+      "htmlUrl": "https://github.com/raybird/pine-trading-strategies/blob/2ea4830cfb63dc9ae287ad40fa64f030d58a9fdb/strategies/tn_stoch_causal_divergence_v6.pine"
+    },
+    {
+      "id": "s0123",
+      "repo": "raybird/pine-trading-strategies",
+      "path": "strategies/TnSovereignPineFlowOrbV6.pine",
+      "ref": "2ea4830cfb63dc9ae287ad40fa64f030d58a9fdb",
+      "blobSha": "49f801c80e9e766930940d8004e2cbc01bc7346b",
+      "htmlUrl": "https://github.com/raybird/pine-trading-strategies/blob/2ea4830cfb63dc9ae287ad40fa64f030d58a9fdb/strategies/TnSovereignPineFlowOrbV6.pine"
+    },
+    {
+      "id": "s0124",
+      "repo": "regalouisei/collect-tradingview",
+      "path": "pinescript/oscillators/b-xtrender-mtfa-xl-durex.pine",
+      "ref": "246585fa868efd79b3c8b8d56a9b7b5e19851742",
+      "blobSha": "0ed962665d8b834feacedd22e907dd10d23c0ae5",
+      "htmlUrl": "https://github.com/regalouisei/collect-tradingview/blob/246585fa868efd79b3c8b8d56a9b7b5e19851742/pinescript/oscillators/b-xtrender-mtfa-xl-durex.pine"
+    },
+    {
+      "id": "s0125",
+      "repo": "regalouisei/collect-tradingview",
+      "path": "pinescript/oscillators/macd-v-multi-timeframe-confluence-dashboard.pine",
+      "ref": "246585fa868efd79b3c8b8d56a9b7b5e19851742",
+      "blobSha": "48c0ed0f299c31ffd1760088449b28966b4fcdad",
+      "htmlUrl": "https://github.com/regalouisei/collect-tradingview/blob/246585fa868efd79b3c8b8d56a9b7b5e19851742/pinescript/oscillators/macd-v-multi-timeframe-confluence-dashboard.pine"
+    },
+    {
+      "id": "s0126",
+      "repo": "regalouisei/collect-tradingview",
+      "path": "pinescript/trend_analysis/htf-candle-dynamics-luxalgo.pine",
+      "ref": "246585fa868efd79b3c8b8d56a9b7b5e19851742",
+      "blobSha": "e67e57bd973d8789fc7398e3cf8a4fbc1592e335",
+      "htmlUrl": "https://github.com/regalouisei/collect-tradingview/blob/246585fa868efd79b3c8b8d56a9b7b5e19851742/pinescript/trend_analysis/htf-candle-dynamics-luxalgo.pine"
+    },
+    {
+      "id": "s0127",
+      "repo": "regalouisei/collect-tradingview",
+      "path": "pinescript/volatility/mnq-99-sniper-reversal.pine",
+      "ref": "246585fa868efd79b3c8b8d56a9b7b5e19851742",
+      "blobSha": "37b72576db3ac127aefd24d3ff8811f54fcf5941",
+      "htmlUrl": "https://github.com/regalouisei/collect-tradingview/blob/246585fa868efd79b3c8b8d56a9b7b5e19851742/pinescript/volatility/mnq-99-sniper-reversal.pine"
+    },
+    {
+      "id": "s0128",
+      "repo": "renessancek/tradingview_indicators",
+      "path": "indicators/cot_net_commercial_vs_net_non-commercial_positions_index.pine",
+      "ref": "05fc1f4897bf6ff939e88f493f677d7a3809afa4",
+      "blobSha": "31925b4ab9b306c116b67ebd0e5e098efdfb40c3",
+      "htmlUrl": "https://github.com/renessancek/tradingview_indicators/blob/05fc1f4897bf6ff939e88f493f677d7a3809afa4/indicators/cot_net_commercial_vs_net_non-commercial_positions_index.pine"
+    },
+    {
+      "id": "s0129",
+      "repo": "rib4ever/trading-dashboard",
+      "path": "pine-script/master-smc-sats-nci-story/03_CANDIDATES/master-smc-sats-nci-story-v0.1.3.pine",
+      "ref": "dcb9e2310f7bcc6cde42ef11adf06e41340a1783",
+      "blobSha": "5da4d92279eae13057569c42050fa48c65b088c1",
+      "htmlUrl": "https://github.com/rib4ever/trading-dashboard/blob/dcb9e2310f7bcc6cde42ef11adf06e41340a1783/pine-script/master-smc-sats-nci-story/03_CANDIDATES/master-smc-sats-nci-story-v0.1.3.pine"
+    },
+    {
+      "id": "s0130",
+      "repo": "rib4ever/trading-dashboard",
+      "path": "pine-script/master-smc-sats-nci-story/03_CANDIDATES/master-smc-sats-nci-story-v0.1.6.pine",
+      "ref": "dcb9e2310f7bcc6cde42ef11adf06e41340a1783",
+      "blobSha": "15ece427959c7288ced949195dd0ddee5ac94c65",
+      "htmlUrl": "https://github.com/rib4ever/trading-dashboard/blob/dcb9e2310f7bcc6cde42ef11adf06e41340a1783/pine-script/master-smc-sats-nci-story/03_CANDIDATES/master-smc-sats-nci-story-v0.1.6.pine"
+    },
+    {
+      "id": "s0131",
+      "repo": "rib4ever/trading-dashboard",
+      "path": "pine-script/master-smc-sats/03_MASTER_CANDIDATES/master-smc-sats-ravi-custom-01-v1.6-theme-engine-candidate.pine",
+      "ref": "dcb9e2310f7bcc6cde42ef11adf06e41340a1783",
+      "blobSha": "207f92d40cad60a392aff626e57fca6adca6ce97",
+      "htmlUrl": "https://github.com/rib4ever/trading-dashboard/blob/dcb9e2310f7bcc6cde42ef11adf06e41340a1783/pine-script/master-smc-sats/03_MASTER_CANDIDATES/master-smc-sats-ravi-custom-01-v1.6-theme-engine-candidate.pine"
+    },
+    {
+      "id": "s0132",
+      "repo": "Rickylel/RTD-indicator",
+      "path": "RTD_IFVG.pine",
+      "ref": "b28adbfaa3789315b30f06b9a5732aa03c1bd2b5",
+      "blobSha": "813618ac5cf98176d4b6ebd4b6d06fa3f3405a11",
+      "htmlUrl": "https://github.com/Rickylel/RTD-indicator/blob/b28adbfaa3789315b30f06b9a5732aa03c1bd2b5/RTD_IFVG.pine"
+    },
+    {
+      "id": "s0133",
+      "repo": "rosijay17-cmd/BackoBleedo",
+      "path": "Academia_PO3_Professional_v3.pine",
+      "ref": "0d41269065a5955aef7e7b6534bd7e5e91c70f74",
+      "blobSha": "5bb757c62f450edfcfbcd4879d8cc983e0c9a323",
+      "htmlUrl": "https://github.com/rosijay17-cmd/BackoBleedo/blob/0d41269065a5955aef7e7b6534bd7e5e91c70f74/Academia_PO3_Professional_v3.pine"
+    },
+    {
+      "id": "s0134",
+      "repo": "rosijay17-cmd/BackoBleedo",
+      "path": "P0_Delta_DBR_ChangePoint_Merged_Strategy.pine",
+      "ref": "0d41269065a5955aef7e7b6534bd7e5e91c70f74",
+      "blobSha": "a8095f73c291269bc385b5bbccce93bbb3cf6e65",
+      "htmlUrl": "https://github.com/rosijay17-cmd/BackoBleedo/blob/0d41269065a5955aef7e7b6534bd7e5e91c70f74/P0_Delta_DBR_ChangePoint_Merged_Strategy.pine"
+    },
+    {
+      "id": "s0135",
+      "repo": "rosijay17-cmd/BackoBleedo",
+      "path": "Sweep_Trend_Continuation_SVP_Merged.pine",
+      "ref": "0d41269065a5955aef7e7b6534bd7e5e91c70f74",
+      "blobSha": "8c065d03782f3c37027dd9fbb890001051a4911f",
+      "htmlUrl": "https://github.com/rosijay17-cmd/BackoBleedo/blob/0d41269065a5955aef7e7b6534bd7e5e91c70f74/Sweep_Trend_Continuation_SVP_Merged.pine"
+    },
+    {
+      "id": "s0136",
+      "repo": "s4mn0v/pinescript",
+      "path": "DEEP-CHART/DeepVWAP.pine",
+      "ref": "cd370b10ffebd446561d6564a152badf267a3b59",
+      "blobSha": "61ae98961914c2b7dcbe0d69bf8de80e1d23f75b",
+      "htmlUrl": "https://github.com/s4mn0v/pinescript/blob/cd370b10ffebd446561d6564a152badf267a3b59/DEEP-CHART/DeepVWAP.pine"
+    },
+    {
+      "id": "s0137",
+      "repo": "sappbr/pine-code",
+      "path": "strategies/full-version.pine",
+      "ref": "2c37268a0ce4efa16506c4f17f47d72afd11285b",
+      "blobSha": "2fecc8769fcea76550c1b96734c487a32b42ecfe",
+      "htmlUrl": "https://github.com/sappbr/pine-code/blob/2c37268a0ce4efa16506c4f17f47d72afd11285b/strategies/full-version.pine"
+    },
+    {
+      "id": "s0138",
+      "repo": "shaashish1/Pinescript-Laboratory",
+      "path": "scripts/080-SpreadTrade-Distance-(v2).pine",
+      "ref": "66489b02d592e2ace81c6761d4f0d49d1b0233ac",
+      "blobSha": "e5088138eeca5b01fb8f7b8f4b7e5d765a4f4360",
+      "htmlUrl": "https://github.com/shaashish1/Pinescript-Laboratory/blob/66489b02d592e2ace81c6761d4f0d49d1b0233ac/scripts/080-SpreadTrade-Distance-(v2).pine"
+    },
+    {
+      "id": "s0139",
+      "repo": "shail8000us-hobby/WorkingBot",
+      "path": "pinescripts/BankNifty_Institutional_Seller.pine",
+      "ref": "65e3bccc97a6f2945ebc88314d517c63eeeedfd1",
+      "blobSha": "fe971354c307fb9a4d5b1fab1f01624f868a8e67",
+      "htmlUrl": "https://github.com/shail8000us-hobby/WorkingBot/blob/65e3bccc97a6f2945ebc88314d517c63eeeedfd1/pinescripts/BankNifty_Institutional_Seller.pine"
+    },
+    {
+      "id": "s0140",
+      "repo": "spfogels-web/Titanedge",
+      "path": "strategies/titan-edge-v1.pine",
+      "ref": "b230ba95fe49e9807ea99c641d1836287bfa6b70",
+      "blobSha": "2e80854d8f23713cbd1fbffccb84941737bea0be",
+      "htmlUrl": "https://github.com/spfogels-web/Titanedge/blob/b230ba95fe49e9807ea99c641d1836287bfa6b70/strategies/titan-edge-v1.pine"
+    },
+    {
+      "id": "s0141",
+      "repo": "sukesan7/meridian-indicators",
+      "path": "src/futures/meridian-futures-setups.pine",
+      "ref": "2085449c6fe4f0cf6abdc092d4900b5e072bd9c9",
+      "blobSha": "643209ba41955c24d693ce43051cc8912e1d54e9",
+      "htmlUrl": "https://github.com/sukesan7/meridian-indicators/blob/2085449c6fe4f0cf6abdc092d4900b5e072bd9c9/src/futures/meridian-futures-setups.pine"
+    },
+    {
+      "id": "s0142",
+      "repo": "tc3oliver/tradingview-indicators",
+      "path": "btc-trading-assistant/tests/baseline/market-radar-v3.3.pine",
+      "ref": "a5a1f777732ee401fdacd8d92b2b5ec271d9c43c",
+      "blobSha": "6c64d3958d50c1c2bbb3e35857f37c5bc01a633a",
+      "htmlUrl": "https://github.com/tc3oliver/tradingview-indicators/blob/a5a1f777732ee401fdacd8d92b2b5ec271d9c43c/btc-trading-assistant/tests/baseline/market-radar-v3.3.pine"
+    },
+    {
+      "id": "s0143",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v12/provider-daily-counter-prefix-v5-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "f3541546fed5d7e2b2df81da45f16926369f4ec5",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v12/provider-daily-counter-prefix-v5-v1.pine"
+    },
+    {
+      "id": "s0144",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v16/htf-context-30m-v16-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "52842fec395eff9214287986490a027da0ffd918",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v16/htf-context-30m-v16-v1.pine"
+    },
+    {
+      "id": "s0145",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/captures/v58/consumers/numeric-method-int-receiver-reversed-chart-symbol-companion-v58-v1/default/attempt-v1/executed-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "5815c47202fb63c88ed859eed0b548956652cf7a",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/captures/v58/consumers/numeric-method-int-receiver-reversed-chart-symbol-companion-v58-v1/default/attempt-v1/executed-v1.pine"
+    },
+    {
+      "id": "s0146",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/captures/v58/consumers/numeric-method-int-receiver-reversed-exact-v58-v1/default/attempt-v1/executed-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "9f86a274d9272e2600a601587e9399d60d510a55",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/captures/v58/consumers/numeric-method-int-receiver-reversed-exact-v58-v1/default/attempt-v1/executed-v1.pine"
+    },
+    {
+      "id": "s0147",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/captures/v58/consumers/request-overload-last-v1/default/attempt-v1/executed-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "8c073cbc8b7f6b72a32d39f8d2813368bd6d3100",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/captures/v58/consumers/request-overload-last-v1/default/attempt-v1/executed-v1.pine"
+    },
+    {
+      "id": "s0148",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/imported-explicit-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "9d0c7da04d1c0a0254056285d20751f81af0c2af",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/imported-explicit-v1.pine"
+    },
+    {
+      "id": "s0149",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/parameter-reference-omitted-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "ebfb12d70372cbab50eda3e94ab18b0ea7113b70",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/parameter-reference-omitted-v1.pine"
+    },
+    {
+      "id": "s0150",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/root2-nested-5-namespace-v58-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "9abfc628068684c066bbfa7ad06d128f330560cd",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/root2-nested-5-namespace-v58-v1.pine"
+    },
+    {
+      "id": "s0151",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/same-expression-scalar-dispatch-exact-v58-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "cfc0e96d9b6eeeb812a8d49011293b68ac0dd82d",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/same-expression-scalar-dispatch-exact-v58-v1.pine"
+    },
+    {
+      "id": "s0152",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v58/TK-Lib-1-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "3f314db0754eb85fc902c13d1a16b55e1316ce7d",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v58/TK-Lib-1-v1.pine"
+    },
+    {
+      "id": "s0153",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v88/v88-v5-requested-daily-counter-p4250m-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "cfd0488a053a527e26dcfd029163fa9c9e1f7eea",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v88/v88-v5-requested-daily-counter-p4250m-v1.pine"
+    },
+    {
+      "id": "s0154",
+      "repo": "Tealstreet/tealscript-oracle",
+      "path": "v90/captures/v90/v90-daily-provider-v5/attempt-v4/executed-v1.pine",
+      "ref": "c339a85381b4217cf732d8ab0dfd8d7869ea1fd5",
+      "blobSha": "c0bf7561b922acf85caf3fbd124cb13d1bf1781a",
+      "htmlUrl": "https://github.com/Tealstreet/tealscript-oracle/blob/c339a85381b4217cf732d8ab0dfd8d7869ea1fd5/v90/captures/v90/v90-daily-provider-v5/attempt-v4/executed-v1.pine"
+    },
+    {
+      "id": "s0155",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/arun-pinescript/[Indicator] Magnetic Zones - Multi Timeframe.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "0333e161d4da81e9846dc9968893d2526e09cffc",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/arun-pinescript/[Indicator] Magnetic Zones - Multi Timeframe.pine"
+    },
+    {
+      "id": "s0156",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/Pinescript-Laboratory/scripts/066-Logistic Difference-(ps4).pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "0313e760045c041d5b834fe2a60187eb33064743",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/Pinescript-Laboratory/scripts/066-Logistic Difference-(ps4).pine"
+    },
+    {
+      "id": "s0157",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/pinescript/indicators/reversals/pivotwood.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "ef34309ba29e5b3e36b69652d99236439cfee4ee",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/pinescript/indicators/reversals/pivotwood.pine"
+    },
+    {
+      "id": "s0158",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pine-scripts/ATR_Trade_strategy.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "bd445419ce2f9c6f97d2c87e5db3202c7ec867aa",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pine-scripts/ATR_Trade_strategy.pine"
+    },
+    {
+      "id": "s0159",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pine-scripts/BBPBΔ(OBV-PVT)BB - Time Series Decomposition & Volume Weighted.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "16e67c8a7e915ae5211a1c1706af72cc434864e1",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pine-scripts/BBPBΔ(OBV-PVT)BB - Time Series Decomposition & Volume Weighted.pine"
+    },
+    {
+      "id": "s0160",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pine-scripts/Last Price  minus Open Price Intraday Volume.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "e75d90b75ba16e508b5905cd2bf48f96f6fd2e11",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pine-scripts/Last Price  minus Open Price Intraday Volume.pine"
+    },
+    {
+      "id": "s0161",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pine-scripts/Pivot Moving Average steteggy.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "9972edd4c646099255d0b471790bb2bc85abb773",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pine-scripts/Pivot Moving Average steteggy.pine"
+    },
+    {
+      "id": "s0162",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pine-scripts/VuManChu Cipher B + Divergences Strategy.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "b813b29c0b0fa82aa6129a06858403208b6de0f5",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pine-scripts/VuManChu Cipher B + Divergences Strategy.pine"
+    },
+    {
+      "id": "s0163",
+      "repo": "ThangLuuQuoc/finchart",
+      "path": "pine-corpus/cleaned/tradingview-pinescript-indicators/statistics/us_treasury_yields.pine",
+      "ref": "8f3dd2b16cdb8d1857de4e844452d9d5d929dc95",
+      "blobSha": "67b036cd983a1ddb2019ff53d776f4fb0649f0de",
+      "htmlUrl": "https://github.com/ThangLuuQuoc/finchart/blob/8f3dd2b16cdb8d1857de4e844452d9d5d929dc95/pine-corpus/cleaned/tradingview-pinescript-indicators/statistics/us_treasury_yields.pine"
+    },
+    {
+      "id": "s0164",
+      "repo": "thesenegalesehitch/Pine-Script",
+      "path": "pine-scripts/strategies/ict-smc-sniper.pine",
+      "ref": "7f83984526b4a88b2e67a3ef22941797be0b2122",
+      "blobSha": "c92e0067f5d0f636763c69829ef6cfb383adc99d",
+      "htmlUrl": "https://github.com/thesenegalesehitch/Pine-Script/blob/7f83984526b4a88b2e67a3ef22941797be0b2122/pine-scripts/strategies/ict-smc-sniper.pine"
+    },
+    {
+      "id": "s0165",
+      "repo": "thesenegalesehitch/Pine-Script",
+      "path": "pine-scripts/strategies/multi-confluence-strategy.pine",
+      "ref": "7f83984526b4a88b2e67a3ef22941797be0b2122",
+      "blobSha": "c1a36c6c7312355b329b3462258e6f02e681073b",
+      "htmlUrl": "https://github.com/thesenegalesehitch/Pine-Script/blob/7f83984526b4a88b2e67a3ef22941797be0b2122/pine-scripts/strategies/multi-confluence-strategy.pine"
+    },
+    {
+      "id": "s0166",
+      "repo": "trsdn/meta-strategy",
+      "path": "strategies/ai-bull-market-support-band.pine",
+      "ref": "99705b5acff3d44613d7223b7cda1e903d1afd17",
+      "blobSha": "c868c84f82b5d9f8b8a35a32d64716ad9bfcb7f3",
+      "htmlUrl": "https://github.com/trsdn/meta-strategy/blob/99705b5acff3d44613d7223b7cda1e903d1afd17/strategies/ai-bull-market-support-band.pine"
+    },
+    {
+      "id": "s0167",
+      "repo": "trsdn/meta-strategy",
+      "path": "strategies/ai-macd.pine",
+      "ref": "99705b5acff3d44613d7223b7cda1e903d1afd17",
+      "blobSha": "0560b2ac712c8454cd4bd339eb0a6803f6148290",
+      "htmlUrl": "https://github.com/trsdn/meta-strategy/blob/99705b5acff3d44613d7223b7cda1e903d1afd17/strategies/ai-macd.pine"
+    },
+    {
+      "id": "s0168",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "21_8_26/GROK_PA_DAILY_LEVELS/TL_RANGE_X.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "7b82bd4c8155bf41c495eebffdf68752b47bb1c4",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/21_8_26/GROK_PA_DAILY_LEVELS/TL_RANGE_X.pine"
+    },
+    {
+      "id": "s0169",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "indicator/olg_7_6_26/CODEX_NO1_TRADINGVIEW_V1/CODEX_NO1_FLIP_ENGINE_V1.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "fe9fa05246ac02c2e2d30453301879b1adf2bd25",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/indicator/olg_7_6_26/CODEX_NO1_TRADINGVIEW_V1/CODEX_NO1_FLIP_ENGINE_V1.pine"
+    },
+    {
+      "id": "s0170",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "indicator/olg_7_6_26/Codex/v1_indicator/CODEX_NEXUS_V2_ANTI_WHIPSAW_MTF.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "633b61cf3c1f7d5202f4dd13850473627b3b5473",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/indicator/olg_7_6_26/Codex/v1_indicator/CODEX_NEXUS_V2_ANTI_WHIPSAW_MTF.pine"
+    },
+    {
+      "id": "s0171",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "indicator/olg_7_6_26/deepseek_v4_flash_new_1_8_26/NEXUS_NO1_FLIP_ENGINE_v12_FINAL.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "03482263985079354ac273e54a8b6c4c7e9b350d",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/indicator/olg_7_6_26/deepseek_v4_flash_new_1_8_26/NEXUS_NO1_FLIP_ENGINE_v12_FINAL.pine"
+    },
+    {
+      "id": "s0172",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "indicator/olg_7_6_26/ll_indi_seprate/NEXUS_PRIME_ENGINE_v9_MAJOR_MOVE_CONFIRMED.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "7a9dd4c555fb691bfd6db54b3a4e4a211cc48d84",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/indicator/olg_7_6_26/ll_indi_seprate/NEXUS_PRIME_ENGINE_v9_MAJOR_MOVE_CONFIRMED.pine"
+    },
+    {
+      "id": "s0173",
+      "repo": "vedkanani123/shakuni_trap",
+      "path": "indicator/v1_final/NO1_V1_FINAL.pine",
+      "ref": "f822942bab643dc2b2bc5f690c5a936dfca5fcf5",
+      "blobSha": "397234e73bbbbc651f2f220b6793676b6892568d",
+      "htmlUrl": "https://github.com/vedkanani123/shakuni_trap/blob/f822942bab643dc2b2bc5f690c5a936dfca5fcf5/indicator/v1_final/NO1_V1_FINAL.pine"
+    },
+    {
+      "id": "s0174",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/8Si9e0te-Kloom-Session-Levels-NY-and-London-Sessions-PDH-PDL.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "43871d171e898fc81e326f7a8317b30ad745823b",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/8Si9e0te-Kloom-Session-Levels-NY-and-London-Sessions-PDH-PDL.pine"
+    },
+    {
+      "id": "s0175",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/EomPX0z9-Sessions-New-York-London-Asia.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "f764ad609a0d6552d5b2a5e4359bd2db7aba61b4",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/EomPX0z9-Sessions-New-York-London-Asia.pine"
+    },
+    {
+      "id": "s0176",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/ewdfTPRU-CantLewz-Jody-Execution-Engine-LIQUIDITY-LIFECYCLE-v5-4-1.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "1c84aac367b52beef667e5be9917b48d70403a21",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/ewdfTPRU-CantLewz-Jody-Execution-Engine-LIQUIDITY-LIFECYCLE-v5-4-1.pine"
+    },
+    {
+      "id": "s0177",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/gPcCSMQR-Andrew-Malek-Trading-Ultimate-Overlay.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "699e2de4a50216eedf12ddc633072dadc6679bae",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/gPcCSMQR-Andrew-Malek-Trading-Ultimate-Overlay.pine"
+    },
+    {
+      "id": "s0178",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/mJHljKmD-Volume-Profile-Pullback-Sniper.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "1ef5d3d12ce918f511559cdb4f8400349d3a4ddb",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/mJHljKmD-Volume-Profile-Pullback-Sniper.pine"
+    },
+    {
+      "id": "s0179",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/qB9aqViC-Institutional-Structure-Liquidity-Flow-Matrix-Pro-V2.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "100cf3fc4e112414bf7c44ec896ee2b82b04744f",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/qB9aqViC-Institutional-Structure-Liquidity-Flow-Matrix-Pro-V2.pine"
+    },
+    {
+      "id": "s0180",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/rmk53SBR-Market-Mood-Smart-Support-Resistance.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "ea3319b8fff1acde73f578eab9ec848d34e3e12b",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/rmk53SBR-Market-Mood-Smart-Support-Resistance.pine"
+    },
+    {
+      "id": "s0181",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/s4mGfYjs-CHAM-TREND-SYSTEM-PRO-v4-0.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "275624007b3f89320e33b3759ce9cc18a0ce9572",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/s4mGfYjs-CHAM-TREND-SYSTEM-PRO-v4-0.pine"
+    },
+    {
+      "id": "s0182",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/tg3ZQNy1-dom-change-correlation.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "db044961b26356fe166cbc220608bce2630a3469",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/tg3ZQNy1-dom-change-correlation.pine"
+    },
+    {
+      "id": "s0183",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/uqkiOnCb.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "b7fa7d090d2f2f26c4e5374f54aca85e4e06e768",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/uqkiOnCb.pine"
+    },
+    {
+      "id": "s0184",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/WvyDHv2b-MSSTD-ZigZag-Pure-Analyzer-V5-1-1.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "5923ba21bb4a14bb585f8900256daaa44ada822c",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/WvyDHv2b-MSSTD-ZigZag-Pure-Analyzer-V5-1-1.pine"
+    },
+    {
+      "id": "s0185",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/WzN7Heo8-Short-Vol-Stats.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "b46fa33ce054bdcd7049bc60e40d67fd71d8da1d",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/WzN7Heo8-Short-Vol-Stats.pine"
+    },
+    {
+      "id": "s0186",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/XaquTbRg.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "76974df22dad5ede07b2b23c3d523452a6fc6a39",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/XaquTbRg.pine"
+    },
+    {
+      "id": "s0187",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/indicators/zbOD8Ffn-Stair-Step-Strategy-Signals-Risk-V1-1.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "4bb3876552277c2d76f57643817b9a3ea0072ed0",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/indicators/zbOD8Ffn-Stair-Step-Strategy-Signals-Risk-V1-1.pine"
+    },
+    {
+      "id": "s0188",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/strategies/mVkDf8qh-TrendMaster-Pro-2-3-with-Alerts.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "03d21d8bf8ad97961a991e1a26634328ccca6aa8",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/strategies/mVkDf8qh-TrendMaster-Pro-2-3-with-Alerts.pine"
+    },
+    {
+      "id": "s0189",
+      "repo": "venkatalokeshanne/trading_strategies_indicators",
+      "path": "TradingView/strategies/njQsSFjo-Clean-Trend-System-HTF-Bias-Filtered.pine",
+      "ref": "a9a6f4a9145de22bacacc24b827fb4095a3a425c",
+      "blobSha": "c34711fdd2cf056ef513efa3fa23c628e1cab8ee",
+      "htmlUrl": "https://github.com/venkatalokeshanne/trading_strategies_indicators/blob/a9a6f4a9145de22bacacc24b827fb4095a3a425c/TradingView/strategies/njQsSFjo-Clean-Trend-System-HTF-Bias-Filtered.pine"
+    },
+    {
+      "id": "s0190",
+      "repo": "vinentHuynh/QuantResearch",
+      "path": "pine/gap_fill.pine",
+      "ref": "b5733bad33fa1d763ed2fc789a52afc0cdf409c0",
+      "blobSha": "c8b79eac44fd68eb73e29a6c44f9ffeb6ffcb1e5",
+      "htmlUrl": "https://github.com/vinentHuynh/QuantResearch/blob/b5733bad33fa1d763ed2fc789a52afc0cdf409c0/pine/gap_fill.pine"
+    },
+    {
+      "id": "s0191",
+      "repo": "vinentHuynh/QuantResearch",
+      "path": "pine/snd_fresh_retest_zones.pine",
+      "ref": "b5733bad33fa1d763ed2fc789a52afc0cdf409c0",
+      "blobSha": "ab63b3f92057635fc3baf9b856e566cc19ed70fb",
+      "htmlUrl": "https://github.com/vinentHuynh/QuantResearch/blob/b5733bad33fa1d763ed2fc789a52afc0cdf409c0/pine/snd_fresh_retest_zones.pine"
+    },
+    {
+      "id": "s0192",
+      "repo": "VJ1587/Algo-Scripts-Broker-Test-1",
+      "path": "tradingview/kl_fib_confluence_strategy.pine",
+      "ref": "4ae29f53ff8e08152d610743f77e2079e14a2213",
+      "blobSha": "bf50f4bf97959fad0bd254645f7ec84b44b3f139",
+      "htmlUrl": "https://github.com/VJ1587/Algo-Scripts-Broker-Test-1/blob/4ae29f53ff8e08152d610743f77e2079e14a2213/tradingview/kl_fib_confluence_strategy.pine"
+    },
+    {
+      "id": "s0193",
+      "repo": "webcrack4/pine-script-combine",
+      "path": "8原版WaveTrend.pine",
+      "ref": "919f0d3caaceec3875eb2b221b77f57b8dd0d8fb",
+      "blobSha": "f904d63a1e397cbb6ea855907fb0caf540c35081",
+      "htmlUrl": "https://github.com/webcrack4/pine-script-combine/blob/919f0d3caaceec3875eb2b221b77f57b8dd0d8fb/8原版WaveTrend.pine"
+    },
+    {
+      "id": "s0194",
+      "repo": "webcrack4/pine-script-combine",
+      "path": "v5组合/V5_4+11+13+14+15.pine",
+      "ref": "919f0d3caaceec3875eb2b221b77f57b8dd0d8fb",
+      "blobSha": "5c5eeddb1eb60dabe0bd2bf4c2515dd48f135b49",
+      "htmlUrl": "https://github.com/webcrack4/pine-script-combine/blob/919f0d3caaceec3875eb2b221b77f57b8dd0d8fb/v5组合/V5_4+11+13+14+15.pine"
+    },
+    {
+      "id": "s0195",
+      "repo": "Ye-Yu-Mo/mean-reversion-t",
+      "path": "MRT.pine",
+      "ref": "083253458dac78373104a76a48252bec03711e39",
+      "blobSha": "1557a46288e03a79bc16ebf6e68f433541f2dda5",
+      "htmlUrl": "https://github.com/Ye-Yu-Mo/mean-reversion-t/blob/083253458dac78373104a76a48252bec03711e39/MRT.pine"
+    },
+    {
+      "id": "s0196",
+      "repo": "YuceSezar89/Trader",
+      "path": "pine_scripts/depv2/debug/DEBUG_S17.pine",
+      "ref": "dd6ba6b593e3937b6dff071f5f8f54b2517609b8",
+      "blobSha": "99cdf5cb9f2970e4d901ce2b5567a9c830932f88",
+      "htmlUrl": "https://github.com/YuceSezar89/Trader/blob/dd6ba6b593e3937b6dff071f5f8f54b2517609b8/pine_scripts/depv2/debug/DEBUG_S17.pine"
+    },
+    {
+      "id": "s0197",
+      "repo": "YuceSezar89/Trader",
+      "path": "pine_scripts/depv2/debug/DEBUG_S28.pine",
+      "ref": "dd6ba6b593e3937b6dff071f5f8f54b2517609b8",
+      "blobSha": "e522598e056058ece72fc8a9639af71e3c4ba6d9",
+      "htmlUrl": "https://github.com/YuceSezar89/Trader/blob/dd6ba6b593e3937b6dff071f5f8f54b2517609b8/pine_scripts/depv2/debug/DEBUG_S28.pine"
+    },
+    {
+      "id": "s0198",
+      "repo": "YuceSezar89/Trader",
+      "path": "pine_scripts/depv2/debug/DEBUG_S38.pine",
+      "ref": "dd6ba6b593e3937b6dff071f5f8f54b2517609b8",
+      "blobSha": "16b1925c1feeaa731d69a3866f2561648065ce7d",
+      "htmlUrl": "https://github.com/YuceSezar89/Trader/blob/dd6ba6b593e3937b6dff071f5f8f54b2517609b8/pine_scripts/depv2/debug/DEBUG_S38.pine"
+    },
+    {
+      "id": "s0199",
+      "repo": "YuceSezar89/Trader",
+      "path": "pine_scripts/depv2/debug/DEBUG_S48.pine",
+      "ref": "dd6ba6b593e3937b6dff071f5f8f54b2517609b8",
+      "blobSha": "9516d919c476444d7efba07bef2e12cb959f5d26",
+      "htmlUrl": "https://github.com/YuceSezar89/Trader/blob/dd6ba6b593e3937b6dff071f5f8f54b2517609b8/pine_scripts/depv2/debug/DEBUG_S48.pine"
+    }
+  ]
+}

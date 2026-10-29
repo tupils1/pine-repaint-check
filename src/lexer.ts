@@ -33,7 +33,10 @@ export function lex(src: string): Lexed {
       let j = i + 1;
       while (j < src.length && src[j] !== c && src[j] !== '\n') { if (src[j] === '\\') j++; j++; }
       for (let k = i + 1; k < j && k < src.length; k++) masked[k] = ' ';
-      i = j + 1; continue;
+      // An unclosed string stops at the newline. Leave that newline for the line counter;
+      // skipping it shifts every later finding up by one line.
+      i = j < src.length && src[j] === '\n' ? j : j + 1;
+      continue;
     }
     i++;
   }

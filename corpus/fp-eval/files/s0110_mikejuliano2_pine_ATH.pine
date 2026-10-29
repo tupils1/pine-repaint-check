@@ -1,0 +1,38 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © akrizary
+
+//@version=4
+study("ATH/L & 52WH/L",overlay=true)
+
+g=bar_index==1
+ath()=>
+    a=0.0
+    a:=g ? high : high>a[1] ? high:a[1]
+    
+a = security(syminfo.tickerid, 'M', ath(),lookahead=barmerge.lookahead_on)
+plot(a, title='ATH',linewidth=2, trackprice=true, color=color.maroon, offset=-9999)
+
+atl()=>
+    r=0.0
+    r:=g ? low : low<r[1] ? low:r[1]
+    
+r = security(syminfo.tickerid, 'M', atl(),lookahead=barmerge.lookahead_on)
+plot(r, title='ATL',linewidth=2, trackprice=true, color=color.maroon, offset=-9999)
+
+
+ftwh()=>
+    h= highest(high[1],52) 
+    
+h = security(syminfo.tickerid, 'W', ftwh(),lookahead=barmerge.lookahead_on)
+plot(h, title='52weekhigh',linewidth=2, trackprice=true, color=color.red, offset=-9999)
+
+ftwl()=>
+    l= lowest(low[1],52) 
+    
+l = security(syminfo.tickerid, 'W', ftwl(),lookahead=barmerge.lookahead_on)
+plot(l, title='52weeklow',linewidth=2, trackprice=true, color=color.red, offset=-9999)
+
+
+plot(h-h*25/100, title='52weekhigh 25% low',linewidth=2, trackprice=true, color=color.lime, offset=-9999)
+plot(l+l*30/100, title='52weeklow 30% high',linewidth=2, trackprice=true, color=color.lime, offset=-9999)
+

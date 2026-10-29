@@ -43,7 +43,9 @@ function lex(src) {
             }
             for (let k = i + 1; k < j && k < src.length; k++)
                 masked[k] = ' ';
-            i = j + 1;
+            // An unclosed string stops at the newline. Leave that newline for the line counter;
+            // skipping it shifts every later finding up by one line.
+            i = j < src.length && src[j] === '\n' ? j : j + 1;
             continue;
         }
         i++;

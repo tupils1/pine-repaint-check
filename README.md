@@ -12,12 +12,12 @@ TradingView itself estimates that >95% of indicators repaint in *some* way and t
 
 | id | severity | what | source |
 |---|---|---|---|
-| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` with an expression not offset by `[1]` → future leak on historical bars. Warning when the expression is a wrapper-function parameter; not reported when every same-file call site passes a `[1]` (or other history) offset | [Future leak](https://www.tradingview.com/pine-script-docs/concepts/repainting/#future-leak-with-requestsecurity) |
+| PRC001 | error | `request.security(..., lookahead = barmerge.lookahead_on)` with an expression not offset by `[1]` → future leak on historical bars. Not reported when the expression is built only from prior-bar values. Warning when the expression is a wrapper-function parameter; not reported when every same-file call site passes a `[1]` (or other history) offset | [Future leak](https://www.tradingview.com/pine-script-docs/concepts/repainting/#future-leak-with-requestsecurity) |
 | PRC002 | warning | `request.security()` on another timeframe without the `[1]` + `lookahead_on` pattern → unconfirmed realtime values | [Repainting request.security() calls](https://www.tradingview.com/pine-script-docs/concepts/repainting/#repainting-requestsecurity-calls) |
 | PRC003 | warning | `strategy(..., calc_on_every_tick = true)` | [Strategies](https://www.tradingview.com/pine-script-docs/concepts/repainting/#strategies) |
 | PRC004 | warning | `varip` | [varip](https://www.tradingview.com/pine-script-docs/concepts/repainting/#varip) |
 | PRC005 | warning | `timenow` | [timenow](https://www.tradingview.com/pine-script-docs/concepts/repainting/#timenow) |
-| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`. `barstate.islast` is not reported when it only draws a table/label/line/box or raises a runtime notice on the last bar | [Bar state built-ins](https://www.tradingview.com/pine-script-docs/concepts/repainting/#bar-state-built-ins) |
+| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`. `barstate.islast` findings are info and are hidden at `min-severity: warning` (the Action default). `isnew` / `isrealtime` / `ishistory` / `islastconfirmedhistory` stay at this rule's severity (info). `barstate.islast` is not reported when it only draws a table/label/line/box or raises a runtime notice on the last bar | [Bar state built-ins](https://www.tradingview.com/pine-script-docs/concepts/repainting/#bar-state-built-ins) |
 | PRC007 | warning | `alertcondition()` / `alert()` not gated by `barstate.isconfirmed`, a `[1]`-offset condition, or `alert.freq_once_per_bar_close` | [Fluid data values](https://www.tradingview.com/pine-script-docs/concepts/repainting/#fluid-data-values) |
 | PRC008 | info | plots with negative `offset`, or `label/line/box.new` at `bar_index[n]` / `bar_index - n` | [Plotting in the past](https://www.tradingview.com/pine-script-docs/concepts/repainting/#plotting-in-the-past) |
 
@@ -60,11 +60,11 @@ Without rule ids, `ignore` / `ignore-next-line` / `disable-file` silence all rul
 - uses: github/codeql-action/upload-sarif@v3
   with: { sarif_file: pine.sarif }
 ```
-Findings appear as PR annotations (`error` / `warning` / `notice`). The Action's default `min-severity` is `warning`, so info-level rules (PRC006, PRC008) are hidden unless you set `min-severity: info`. The CLI default remains `info`.
+Findings appear as PR annotations (`error` / `warning` / `notice`). The Action's default `min-severity` is `warning`, so info findings are hidden unless you set `min-severity: info`. That includes every `barstate.islast` hit (PRC006) and the rest of PRC006, which stays info, plus PRC008. The CLI default remains `info`.
 
 ## Accuracy
 
-Measured on a corpus of 31 real permissively-licensed scripts plus 21 own fixtures; see [corpus/RESULTS.md](corpus/RESULTS.md) and [corpus/SOURCES.md](corpus/SOURCES.md). The real-world sample is small, and labels are hand-made by the author, so treat the numbers as a sanity check, not a benchmark.
+Measured on a corpus of 31 real permissively-licensed scripts plus 21 own fixtures; see [corpus/RESULTS.md](corpus/RESULTS.md) and [corpus/SOURCES.md](corpus/SOURCES.md). A separate false-positive sample of 200 public `.pine` files that contain `lookahead_on` is written up in [docs/false-positive-eval.md](docs/false-positive-eval.md). The hand labels are a review of hits, not an external benchmark.
 
 Known limitations: regex/bracket-based analysis, not a full parser; identifier resolution is one assignment deep within a file, except a `lookahead_on` wrapper parameter, which is checked at same-file call sites (including tuple returns of user functions); alerts inside user functions are flagged without checking call sites; libraries (`import`) are not followed.
 

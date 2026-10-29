@@ -1,0 +1,479 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0
+// © MarketM00d
+
+//@version=6
+indicator("Market Mood | Smart Support & Resistance ", shorttitle = "MM S/R ", overlay = true, max_bars_back = 2000, max_boxes_count = 100, max_lines_count = 100, max_labels_count = 100)
+
+//=============================================================================
+// INPUTS
+//=============================================================================
+
+string profile = input.string("High Risk", "Risk Profile", options = ["High Risk", "Medium Risk", "Low Risk"], group = "Detection")
+int adrLength = input.int(5, "ADR length (completed days)", minval = 2, maxval = 50, group = "Detection")
+string breakoutMode = input.string("Close", "Breakout confirmation", options = ["Close", "Wick"], group = "Detection")
+float breakoutBufferAtr = input.float(0.05, "Breakout buffer (ATR)", minval = 0.0, maxval = 1.0, step = 0.05, group = "Detection")
+float invalidationBufferAtr = input.float(0.10, "Zone invalidation buffer (ATR)", minval = 0.0, maxval = 2.0, step = 0.05, group = "Detection")
+int atrLength = input.int(14, "ATR length", minval = 2, maxval = 100, group = "Detection")
+int maxPatternAge = input.int(500, "Maximum pattern age (bars)", minval = 20, maxval = 1500, group = "Detection")
+int maxScanBars = input.int(500, "Maximum impulse scan (bars)", minval = 20, maxval = 1000, group = "Detection")
+
+float retraceMin = input.float(0.50, "BC minimum retracement", minval = 0.1, maxval = 2.0, step = 0.01, group = "ABCD ratios")
+float retraceMax = input.float(1.00, "BC maximum retracement", minval = 0.1, maxval = 2.0, step = 0.01, group = "ABCD ratios")
+float extendMin = input.float(1.272, "CD minimum extension", minval = 0.1, maxval = 5.0, step = 0.001, group = "ABCD ratios")
+float extendMax = input.float(2.618, "CD maximum extension", minval = 0.1, maxval = 5.0, step = 0.001, group = "ABCD ratios")
+
+int maxZones = input.int(20, "Zones kept on chart", minval = 1, maxval = 50, group = "Display")
+bool showBreakLines = input.bool(true, "Show structure-break lines", group = "Display")
+bool showZoneText = input.bool(true, "Show zone information", group = "Display")
+bool showDashboard = input.bool(true, "Show dashboard", group = "Display")
+color demandColor = input.color(#22C55E, "Demand Color", group = "Display")
+color supplyColor = input.color(#F59E0B, "Supply Color", group = "Display")
+
+//=============================================================================
+// PROFILE SETTINGS
+//=============================================================================
+
+int pivotLegs = switch profile
+    "High Risk"   => 3
+    "Medium Risk" => 5
+    => 10
+
+int minStreak = switch profile
+    "High Risk"   => 3
+    "Medium Risk" => 4
+    => 5
+
+float adrImpulseFactor = switch profile
+    "High Risk"   => 0.10
+    "Medium Risk" => 0.20
+    => 0.50
+
+float atrValue = ta.atr(atrLength)
+
+// The calculation is performed inside the daily context and shifted by one
+// full day. Therefore intraday movement cannot change the ADR threshold.
+float adrPercent = request.security(syminfo.tickerid, "D", ta.sma(high - low, adrLength)[1] / close[1] * 100.0, gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+float requiredImpulsePercent = adrPercent * adrImpulseFactor
+
+//=============================================================================
+// NORMALIZED SWINGS
+// Consecutive pivots of the same type are replaced by the more extreme pivot.
+// This creates a clean High-Low-High-Low sequence for the ABCD detector.
+//=============================================================================
+
+var array<int> swingBars = array.new<int>()
+var array<float> swingPrices = array.new<float>()
+var array<int> swingTypes = array.new<int>() // 1 = high, -1 = low
+
+f_addSwing(int newBar, float newPrice, int newType) =>
+    bool changed = false
+    int count = array.size(swingTypes)
+    if count == 0
+        array.push(swingBars, newBar)
+        array.push(swingPrices, newPrice)
+        array.push(swingTypes, newType)
+        changed := true
+    else
+        int lastIndex = count - 1
+        int lastType = array.get(swingTypes, lastIndex)
+        int lastBar = array.get(swingBars, lastIndex)
+        float lastPrice = array.get(swingPrices, lastIndex)
+
+        if newType == lastType
+            bool moreExtreme = newType == 1 ? newPrice > lastPrice : newPrice < lastPrice
+            if moreExtreme
+                array.set(swingBars, lastIndex, newBar)
+                array.set(swingPrices, lastIndex, newPrice)
+                changed := true
+        else if newBar > lastBar
+            array.push(swingBars, newBar)
+            array.push(swingPrices, newPrice)
+            array.push(swingTypes, newType)
+            changed := true
+
+    if array.size(swingTypes) > 12
+        array.shift(swingBars)
+        array.shift(swingPrices)
+        array.shift(swingTypes)
+
+    changed
+
+float pivotHigh = ta.pivothigh(high, pivotLegs, pivotLegs)
+float pivotLow = ta.pivotlow(low, pivotLegs, pivotLegs)
+int confirmedPivotBar = bar_index - pivotLegs
+bool swingChanged = false
+
+// An outside bar can be both a pivot high and pivot low. In that case only the
+// pivot that preserves alternation is accepted because the intrabar order is unknown.
+if not na(pivotHigh) and not na(pivotLow)
+    if array.size(swingTypes) == 0
+        swingChanged := f_addSwing(confirmedPivotBar, pivotHigh, 1)
+    else
+        int expectedType = -array.get(swingTypes, array.size(swingTypes) - 1)
+        swingChanged := expectedType == 1 ? f_addSwing(confirmedPivotBar, pivotHigh, 1) : f_addSwing(confirmedPivotBar, pivotLow, -1)
+else if not na(pivotHigh)
+    swingChanged := f_addSwing(confirmedPivotBar, pivotHigh, 1)
+else if not na(pivotLow)
+    swingChanged := f_addSwing(confirmedPivotBar, pivotLow, -1)
+
+//=============================================================================
+// ABCD CANDIDATES
+//=============================================================================
+
+var bool bullCandidateActive = false
+var bool bearCandidateActive = false
+var float bullBreakLevel = na
+var float bearBreakLevel = na
+var int bullLevelBar = na
+var int bearLevelBar = na
+var int bullDBar = na
+var int bearDBar = na
+var int bullActivationBar = na
+var int bearActivationBar = na
+
+if swingChanged and array.size(swingTypes) >= 4
+    int size = array.size(swingTypes)
+    int barA = array.get(swingBars, size - 4)
+    int barD = array.get(swingBars, size - 1)
+    float priceA = array.get(swingPrices, size - 4)
+    float priceB = array.get(swingPrices, size - 3)
+    float priceC = array.get(swingPrices, size - 2)
+    float priceD = array.get(swingPrices, size - 1)
+    int typeA = array.get(swingTypes, size - 4)
+    int typeB = array.get(swingTypes, size - 3)
+    int typeC = array.get(swingTypes, size - 2)
+    int typeD = array.get(swingTypes, size - 1)
+
+    bool bullSequence = typeA == 1 and typeB == -1 and typeC == 1 and typeD == -1
+    bool bearSequence = typeA == -1 and typeB == 1 and typeC == -1 and typeD == 1
+
+    if bullSequence
+        float ab = priceA - priceB
+        float bc = priceC - priceB
+        float cd = priceC - priceD
+        float ratioBC = ab > 0.0 ? bc / ab : na
+        float ratioCD = bc > 0.0 ? cd / bc : na
+        bool validBull = priceA > priceC and priceD < priceB and ratioBC >= retraceMin and ratioBC <= retraceMax and ratioCD >= extendMin and ratioCD <= extendMax
+        if validBull
+            bullBreakLevel := priceA
+            bullLevelBar := barA
+            bullDBar := barD
+            bullActivationBar := bar_index
+            bullCandidateActive := true
+            bearCandidateActive := false
+
+    if bearSequence
+        float ab = priceB - priceA
+        float bc = priceB - priceC
+        float cd = priceD - priceC
+        float ratioBC = ab > 0.0 ? bc / ab : na
+        float ratioCD = bc > 0.0 ? cd / bc : na
+        bool validBear = priceA < priceC and priceD > priceB and ratioBC >= retraceMin and ratioBC <= retraceMax and ratioCD >= extendMin and ratioCD <= extendMax
+        if validBear
+            bearBreakLevel := priceA
+            bearLevelBar := barA
+            bearDBar := barD
+            bearActivationBar := bar_index
+            bearCandidateActive := true
+            bullCandidateActive := false
+
+if bullCandidateActive and not na(bullDBar) and bar_index - bullDBar > maxPatternAge
+    bullCandidateActive := false
+
+if bearCandidateActive and not na(bearDBar) and bar_index - bearDBar > maxPatternAge
+    bearCandidateActive := false
+
+float bullThreshold = bullBreakLevel + atrValue * breakoutBufferAtr
+float bearThreshold = bearBreakLevel - atrValue * breakoutBufferAtr
+float bullBreakSource = breakoutMode == "Close" ? close : high
+float bearBreakSource = breakoutMode == "Close" ? close : low
+
+// If price already crossed A during the right-bar pivot confirmation delay,
+// the candidate is confirmed on its activation bar instead of being lost.
+bool bullFreshCross = bullBreakSource[1] <= bullThreshold or bar_index == bullActivationBar
+bool bearFreshCross = bearBreakSource[1] >= bearThreshold or bar_index == bearActivationBar
+bool bullBreakout = bullCandidateActive and barstate.isconfirmed and not na(bullThreshold) and bullBreakSource > bullThreshold and bullFreshCross
+bool bearBreakout = bearCandidateActive and barstate.isconfirmed and not na(bearThreshold) and bearBreakSource < bearThreshold and bearFreshCross
+
+//=============================================================================
+// IMPULSE AND ORIGIN-CANDLE SEARCH
+// Demand: last bearish candle before a qualified bullish impulse.
+// Supply: last bullish candle before a qualified bearish impulse.
+//=============================================================================
+
+f_findDemand(int lookback, int requiredStreak, float minimumMovePercent) =>
+    bool found = false
+    float bestMove = na
+    float zoneTop = na
+    float zoneBottom = na
+    int originOffset = na
+
+    if lookback >= requiredStreak and minimumMovePercent > 0.0
+        for origin = requiredStreak to lookback
+            if close[origin] < open[origin]
+                int streak = 0
+                float firstGreenLow = na
+                float lastGreenClose = na
+
+                for step = 1 to origin
+                    int candle = origin - step
+                    if close[candle] > open[candle]
+                        streak += 1
+                        if na(firstGreenLow)
+                            firstGreenLow := low[candle]
+                        lastGreenClose := close[candle]
+                    else
+                        break
+
+                if streak >= requiredStreak and not na(firstGreenLow) and not na(lastGreenClose)
+                    float movePercent = (lastGreenClose - firstGreenLow) / firstGreenLow * 100.0
+                    if movePercent >= minimumMovePercent and (na(bestMove) or movePercent > bestMove)
+                        found := true
+                        bestMove := movePercent
+                        zoneTop := high[origin]
+                        zoneBottom := low[origin]
+                        originOffset := origin
+
+    [found, zoneTop, zoneBottom, bestMove, originOffset]
+
+f_findSupply(int lookback, int requiredStreak, float minimumMovePercent) =>
+    bool found = false
+    float bestMove = na
+    float zoneTop = na
+    float zoneBottom = na
+    int originOffset = na
+
+    if lookback >= requiredStreak and minimumMovePercent > 0.0
+        for origin = requiredStreak to lookback
+            if close[origin] > open[origin]
+                int streak = 0
+                float firstRedHigh = na
+                float lastRedClose = na
+
+                for step = 1 to origin
+                    int candle = origin - step
+                    if close[candle] < open[candle]
+                        streak += 1
+                        if na(firstRedHigh)
+                            firstRedHigh := high[candle]
+                        lastRedClose := close[candle]
+                    else
+                        break
+
+                if streak >= requiredStreak and not na(firstRedHigh) and not na(lastRedClose)
+                    float movePercent = (firstRedHigh - lastRedClose) / firstRedHigh * 100.0
+                    if movePercent >= minimumMovePercent and (na(bestMove) or movePercent > bestMove)
+                        found := true
+                        bestMove := movePercent
+                        zoneTop := high[origin]
+                        zoneBottom := low[origin]
+                        originOffset := origin
+
+    [found, zoneTop, zoneBottom, bestMove, originOffset]
+
+f_qualityScore(float movePercent, float minimumMovePercent, float breakDistance, float zoneHeight, float atrAtCreation) =>
+    float safeAtr = math.max(atrAtCreation, syminfo.mintick)
+    float impulseRatio = minimumMovePercent > 0.0 ? movePercent / minimumMovePercent : 0.0
+    float impulseScore = math.min(50.0, impulseRatio * 30.0)
+    float breakoutScore = math.min(30.0, 10.0 + breakDistance / safeAtr * 20.0)
+    float widthScore = math.max(0.0, 20.0 - zoneHeight / safeAtr * 10.0)
+    int(math.round(math.min(100.0, impulseScore + breakoutScore + widthScore)))
+
+//=============================================================================
+// ZONE STORAGE AND LIFECYCLE
+//=============================================================================
+
+var array<box> zoneBoxes = array.new<box>()
+var array<int> zoneDirections = array.new<int>()       // 1 = demand, -1 = supply
+var array<float> zoneInvalidation = array.new<float>()
+var array<bool> zoneActive = array.new<bool>()
+var array<bool> zoneTouched = array.new<bool>()
+var array<int> zoneCreatedBars = array.new<int>()
+
+var array<line> breakLines = array.new<line>()
+
+f_removeOldestZone() =>
+    box oldestBox = array.shift(zoneBoxes)
+    box.delete(oldestBox)
+    array.shift(zoneDirections)
+    array.shift(zoneInvalidation)
+    array.shift(zoneActive)
+    array.shift(zoneTouched)
+    array.shift(zoneCreatedBars)
+
+f_addBreakLine(int levelBar, float levelPrice, color lineColor) =>
+    if showBreakLines
+        int safeLeftBar = math.max(levelBar, bar_index - 9999)
+        line newLine = line.new(safeLeftBar, levelPrice, bar_index, levelPrice, xloc = xloc.bar_index, color = color.new(lineColor, 25), style = line.style_dotted, width = 2)
+        array.push(breakLines, newLine)
+        if array.size(breakLines) > maxZones
+            line.delete(array.shift(breakLines))
+
+bool newDemandZone = false
+bool newSupplyZone = false
+bool demandFirstRetest = false
+bool supplyFirstRetest = false
+bool demandInvalidated = false
+bool supplyInvalidated = false
+
+if bullBreakout
+    int rawLookback = bar_index - bullDBar
+    int lookback = math.min(math.max(rawLookback, minStreak), maxScanBars)
+    [foundDemand, demandTop, demandBottom, demandMove, demandOriginOffset] = f_findDemand(lookback, minStreak, requiredImpulsePercent)
+
+    f_addBreakLine(bullLevelBar, bullBreakLevel, demandColor)
+    bullCandidateActive := false
+
+    if foundDemand
+        if array.size(zoneBoxes) >= maxZones
+            f_removeOldestZone()
+
+        float breakDistance = math.max(0.0, bullBreakSource - bullBreakLevel)
+        int score = f_qualityScore(demandMove, requiredImpulsePercent, breakDistance, demandTop - demandBottom, atrValue)
+        string zoneText = showZoneText ? "DEMAND • Q " + str.tostring(score) + " • " + str.tostring(demandMove, "#.##") + "%" : ""
+        box demandBox = box.new(left = bar_index, top = demandTop, right = bar_index + 1, bottom = demandBottom, xloc = xloc.bar_index, bgcolor = color.new(demandColor, 74), border_color = color.new(demandColor, 5), text = zoneText, text_color = color.white, text_size = size.tiny, text_halign = text.align_left)
+
+        array.push(zoneBoxes, demandBox)
+        array.push(zoneDirections, 1)
+        array.push(zoneInvalidation, demandBottom - atrValue * invalidationBufferAtr)
+        array.push(zoneActive, true)
+        array.push(zoneTouched, false)
+        array.push(zoneCreatedBars, bar_index)
+        newDemandZone := true
+
+if bearBreakout
+    int rawLookback = bar_index - bearDBar
+    int lookback = math.min(math.max(rawLookback, minStreak), maxScanBars)
+    [foundSupply, supplyTop, supplyBottom, supplyMove, supplyOriginOffset] = f_findSupply(lookback, minStreak, requiredImpulsePercent)
+
+    f_addBreakLine(bearLevelBar, bearBreakLevel, supplyColor)
+    bearCandidateActive := false
+
+    if foundSupply
+        if array.size(zoneBoxes) >= maxZones
+            f_removeOldestZone()
+
+        float breakDistance = math.max(0.0, bearBreakLevel - bearBreakSource)
+        int score = f_qualityScore(supplyMove, requiredImpulsePercent, breakDistance, supplyTop - supplyBottom, atrValue)
+        string zoneText = showZoneText ? "SUPPLY • Q " + str.tostring(score) + " • " + str.tostring(supplyMove, "#.##") + "%" : ""
+        box supplyBox = box.new(left = bar_index, top = supplyTop, right = bar_index + 1, bottom = supplyBottom, xloc = xloc.bar_index, bgcolor = color.new(supplyColor, 74), border_color = color.new(supplyColor, 5), text = zoneText, text_color = color.white, text_size = size.tiny, text_halign = text.align_left)
+
+        array.push(zoneBoxes, supplyBox)
+        array.push(zoneDirections, -1)
+        array.push(zoneInvalidation, supplyTop + atrValue * invalidationBufferAtr)
+        array.push(zoneActive, true)
+        array.push(zoneTouched, false)
+        array.push(zoneCreatedBars, bar_index)
+        newSupplyZone := true
+
+int activeDemandZones = 0
+int activeSupplyZones = 0
+
+if array.size(zoneBoxes) > 0
+    for i = 0 to array.size(zoneBoxes) - 1
+        box zoneBox = array.get(zoneBoxes, i)
+        int direction = array.get(zoneDirections, i)
+        bool isActive = array.get(zoneActive, i)
+
+        if isActive
+            box.set_right(zoneBox, bar_index)
+
+            float zoneTop = box.get_top(zoneBox)
+            float zoneBottom = box.get_bottom(zoneBox)
+            float invalidation = array.get(zoneInvalidation, i)
+            bool invalidNow = barstate.isconfirmed and (direction == 1 ? close < invalidation : close > invalidation)
+
+            if invalidNow
+                array.set(zoneActive, i, false)
+                box.set_bgcolor(zoneBox, color.new(direction == 1 ? demandColor : supplyColor, 91))
+                box.set_border_color(zoneBox, color.new(color.gray, 55))
+                if showZoneText
+                    box.set_text(zoneBox, direction == 1 ? "DEMAND • INVALID" : "SUPPLY • INVALID")
+                if direction == 1
+                    demandInvalidated := true
+                else
+                    supplyInvalidated := true
+            else
+                if direction == 1
+                    activeDemandZones += 1
+                else
+                    activeSupplyZones += 1
+
+                bool wasTouched = array.get(zoneTouched, i)
+                int createdBar = array.get(zoneCreatedBars, i)
+                bool overlapsZone = bar_index > createdBar and high >= zoneBottom and low <= zoneTop
+
+                if not wasTouched and overlapsZone
+                    array.set(zoneTouched, i, true)
+                    if direction == 1
+                        demandFirstRetest := true
+                    else
+                        supplyFirstRetest := true
+
+//=============================================================================
+// ALERTS
+//=============================================================================
+
+alertcondition(newDemandZone, "New demand zone", "New confirmed demand zone on {{ticker}} {{interval}}")
+alertcondition(newSupplyZone, "New supply zone", "New confirmed supply zone on {{ticker}} {{interval}}")
+alertcondition(demandFirstRetest, "First demand retest", "First demand-zone retest on {{ticker}} {{interval}}")
+alertcondition(supplyFirstRetest, "First supply retest", "First supply-zone retest on {{ticker}} {{interval}}")
+alertcondition(demandInvalidated, "Demand invalidated", "Demand zone invalidated on {{ticker}} {{interval}}")
+alertcondition(supplyInvalidated, "Supply invalidated", "Supply zone invalidated on {{ticker}} {{interval}}")
+
+//=============================================================================
+// MARKET MOOD DASHBOARD
+//=============================================================================
+
+color brandNavy = #070B1A
+color brandPanel = #10182D
+color brandPanelAlt = #151F3A
+color brandPurple = #7C3AED
+color brandBlue = #2563EB
+color brandWhite = #F8FAFC
+color brandMuted = #94A3B8
+
+f_timeframeLabel() =>
+    string period = timeframe.period
+    period == "1" ? "M1" : period == "3" ? "M3" : period == "5" ? "M5" : period == "15" ? "M15" : period == "30" ? "M30" : period == "45" ? "M45" : period == "60" ? "H1" : period == "120" ? "H2" : period == "180" ? "H3" : period == "240" ? "H4" : period == "D" ? "D1" : period == "W" ? "W1" : period == "M" ? "MN1" : period
+
+var table dashboard = table.new(position.top_right, 4, 7, bgcolor = brandNavy, frame_color = color.new(brandPurple, 10), frame_width = 2, border_color = color.new(brandBlue, 72), border_width = 1)
+
+if barstate.isfirst
+    table.merge_cells(dashboard, 0, 0, 3, 0)
+    table.merge_cells(dashboard, 0, 1, 3, 1)
+    table.merge_cells(dashboard, 0, 6, 3, 6)
+
+if barstate.islast
+    if showDashboard
+        table.cell(dashboard, 0, 0, "MARKET MOOD", text_color = brandWhite, bgcolor = brandPurple, text_size = size.normal)
+        table.cell(dashboard, 0, 1, "SMART SUPPORT & RESISTANCE", text_color = brandWhite, bgcolor = brandBlue, text_size = size.normal)
+
+        table.cell(dashboard, 0, 2, "SYMBOL", text_color = brandMuted, bgcolor = brandNavy, text_size = size.normal)
+        table.cell(dashboard, 1, 2, syminfo.ticker, text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+        table.cell(dashboard, 2, 2, "TIMEFRAME", text_color = brandMuted, bgcolor = brandNavy, text_size = size.normal)
+        table.cell(dashboard, 3, 2, f_timeframeLabel(), text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+
+        table.cell(dashboard, 0, 3, "PROFILE", text_color = brandMuted, bgcolor = brandPanelAlt, text_size = size.normal)
+        table.cell(dashboard, 1, 3, profile, text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+        table.cell(dashboard, 2, 3, "BREAKOUT", text_color = brandMuted, bgcolor = brandPanelAlt, text_size = size.normal)
+        table.cell(dashboard, 3, 3, breakoutMode, text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+
+        table.cell(dashboard, 0, 4, "ADR (" + str.tostring(adrLength) + "D)", text_color = brandMuted, bgcolor = brandNavy, text_size = size.normal)
+        table.cell(dashboard, 1, 4, na(adrPercent) ? "N/A" : str.tostring(adrPercent, "#.##") + "%", text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+        table.cell(dashboard, 2, 4, "MIN IMPULSE", text_color = brandMuted, bgcolor = brandNavy, text_size = size.normal)
+        table.cell(dashboard, 3, 4, na(requiredImpulsePercent) ? "N/A" : str.tostring(requiredImpulsePercent, "#.##") + "%", text_color = brandWhite, bgcolor = brandPanel, text_size = size.normal)
+
+        table.cell(dashboard, 0, 5, "DEMAND", text_color = demandColor, bgcolor = color.new(demandColor, 88), text_size = size.normal)
+        table.cell(dashboard, 1, 5, str.tostring(activeDemandZones), text_color = demandColor, bgcolor = color.new(demandColor, 92), text_size = size.small)
+        table.cell(dashboard, 2, 5, "SUPPLY", text_color = supplyColor, bgcolor = color.new(supplyColor, 88), text_size = size.normal)
+        table.cell(dashboard, 3, 5, str.tostring(activeSupplyZones), text_color = supplyColor, bgcolor = color.new(supplyColor, 92), text_size = size.small)
+
+        table.cell(dashboard, 0, 6, "SMART MARKET SIGNALS  •  © MARKETM00D", text_color = brandMuted, bgcolor = brandNavy, text_size = size.normal)
+    else
+        table.cell(dashboard, 0, 0, "", bgcolor = color.new(color.black, 100))
+        table.cell(dashboard, 0, 1, "", bgcolor = color.new(color.black, 100))
+        for row = 2 to 5
+            for column = 0 to 3
+                table.cell(dashboard, column, row, "", bgcolor = color.new(color.black, 100))
+        table.cell(dashboard, 0, 6, "", bgcolor = color.new(color.black, 100))
