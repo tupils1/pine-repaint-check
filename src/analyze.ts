@@ -552,7 +552,10 @@ export function analyze(src: string, file = '<input>'): Finding[] {
     let m: RegExpExecArray | null;
     while ((m = re.exec(lx.masked))) {
       if (id === 'PRC006' && m[1] === 'islast' && isHarmlessIslast(lx, m.index)) continue;
-      add(id, m.index, msg(m[0]));
+      // islast is info so the Action default min-severity=warning hides it.
+      // isnew / isrealtime / ishistory / islastconfirmedhistory keep PRC006's own severity.
+      const severity = id === 'PRC006' && m[1] === 'islast' ? 'info' as const : undefined;
+      add(id, m.index, msg(m[0]), severity);
     }
   }
 

@@ -465,12 +465,29 @@ function report() {
     const fpr = wilson(v.fp, n);
     rows.push({ id, name: RULES[id].name, ...v, n, prec, fpr });
   }
+  const ci = (w) => w ? `${pct(w.low)}–${pct(w.high)}` : 'n/a';
   const lines = [];
   lines.push('| rule | hits | TP | FP | precision | 95% CI | FP rate | 95% CI |');
   lines.push('|---|---:|---:|---:|---:|---|---:|---|');
   for (const r of rows) {
-    const ci = (w) => w ? `${pct(w.low)}–${pct(w.high)}` : 'n/a';
     lines.push(`| ${r.id} ${r.name} | ${r.n} | ${r.tp} | ${r.fp} | ${pct(r.prec?.p)} | ${ci(r.prec)} | ${pct(r.fpr?.p)} | ${ci(r.fpr)} |`);
+  }
+  const split = { islast: { tp: 0, fp: 0 }, other: { tp: 0, fp: 0 } };
+  for (const f of findingsDoc.findings) {
+    if (f.ruleId !== 'PRC006') continue;
+    const lab = labels.items?.[f.id];
+    if (!lab || (lab.verdict !== 'tp' && lab.verdict !== 'fp')) continue;
+    const bucket = /barstate\.islast\b/.test(f.message) && !/islastconfirmedhistory/.test(f.message) ? 'islast' : 'other';
+    split[bucket][lab.verdict]++;
+  }
+  lines.push('', 'PRC006 split. `barstate.islast` findings are info and are omitted when `min-severity` is `warning` (the Action default). `isnew` / `isrealtime` / `ishistory` / `islastconfirmedhistory` stay at PRC006\'s severity (info).', '');
+  lines.push('| PRC006 builtin | hits | TP | FP | precision | 95% CI | FP rate | 95% CI |');
+  lines.push('|---|---:|---:|---:|---:|---|---:|---|');
+  for (const [name, v] of Object.entries(split)) {
+    const n = v.tp + v.fp;
+    const prec = wilson(v.tp, n);
+    const fpr = wilson(v.fp, n);
+    lines.push(`| ${name} | ${n} | ${v.tp} | ${v.fp} | ${pct(prec?.p)} | ${ci(prec)} | ${pct(fpr?.p)} | ${ci(fpr)} |`);
   }
   const md = lines.join('\n') + '\n';
   fs.writeFileSync(path.join(OUT, 'precision-table.md'), md);

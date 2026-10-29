@@ -38,7 +38,7 @@ export const RULES: Record<string, RuleMeta> = {
   },
   PRC006: {
     id: 'PRC006', name: 'barstate-realtime-dependent', severity: 'info',
-    summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars. barstate.islast is not reported when it only gates last-bar drawing (table/label/line/box) or a runtime notice.',
+    summary: 'barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory behave differently on historical and realtime bars. barstate.islast findings are info, so they are hidden when min-severity is warning. The other barstate builtins stay at this rule\'s severity (info). barstate.islast is not reported when it only gates last-bar drawing (table/label/line/box) or a runtime notice.',
     docs: DOCS + '#bar-state-built-ins',
   },
   PRC007: {

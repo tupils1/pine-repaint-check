@@ -17,7 +17,7 @@ TradingView 官方估计 95% 以上的指标都有某种形式的重绘，其中
 | PRC003 | warning | 策略使用 `calc_on_every_tick = true` |
 | PRC004 | warning | 使用 `varip` |
 | PRC005 | warning | 使用 `timenow` |
-| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`。`barstate.islast` 只用来在最后一根 K 线上画 table/label/line/box，或只弹出 runtime 提示时，不报告 |
+| PRC006 | info | `barstate.isnew / isrealtime / islast / ishistory / islastconfirmedhistory`。`barstate.islast` 的命中是 info，`min-severity: warning`（Action 默认）时不显示。`isnew` / `isrealtime` / `ishistory` / `islastconfirmedhistory` 保持本规则的 info。`barstate.islast` 只用来在最后一根 K 线上画 table/label/line/box，或只弹出 runtime 提示时，不报告 |
 | PRC007 | warning | `alertcondition()` / `alert()` 没有用 `barstate.isconfirmed`、`[1]` 偏移或 `alert.freq_once_per_bar_close` 把关 |
 | PRC008 | info | 负 `offset` 的绘图，或在 `bar_index[n]` / `bar_index - n` 处画 label/line/box（画到过去） |
 
@@ -53,7 +53,7 @@ x = time > timenow - 86400000      // pine-repaint-check: ignore PRC005
     min-severity: warning   # 默认值。info 级别（PRC006、PRC008）默认不显示
     sarif-output: pine.sarif
 ```
-结果会作为 PR 注释（annotation）显示，也可以把 SARIF 上传到 Code scanning。Action 的默认 `min-severity` 是 `warning`；命令行默认仍是 `info`。
+结果会作为 PR 注释（annotation）显示，也可以把 SARIF 上传到 Code scanning。Action 的默认 `min-severity` 是 `warning`，因此 info 不显示，包括全部 `barstate.islast`（PRC006）以及同样保持 info 的其它 `barstate` 命中和 PRC008。命令行默认仍是 `info`。
 
 ## 准确率
 

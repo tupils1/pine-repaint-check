@@ -69,6 +69,15 @@ Wilson score interval, 95% (`z = 1.959963984540054`). Precision is TP / (TP + FP
 
 PRC003 has only six hits, so its interval is wide. PRC002, PRC004, PRC005, and PRC008 had no false positives in this sample; the upper end of the interval is the useful number.
 
+`barstate.islast` findings are severity **info**. `isnew`, `isrealtime`, `ishistory`, and `islastconfirmedhistory` stay at PRC006's severity, which is also info. The Action default `min-severity=warning` therefore does not show `islast` hits (nor the other PRC006 hits). The CLI default remains `info`, so it still prints them. On the judged sample:
+
+| PRC006 builtin | hits | TP | FP | precision | 95% CI | FP rate | 95% CI |
+|---|---:|---:|---:|---:|---|---:|---|
+| islast (info; hidden at warning) | 260 | 104 | 156 | 40.0% | 34.2%–46.1% | 60.0% | 53.9%–65.8% |
+| isnew / isrealtime / islastconfirmedhistory (info) | 92 | 92 | 0 | 100.0% | 96.0%–100.0% | 0.0% | 0.0%–4.0% |
+
+The 60% false-positive rate is the `islast` slice (156 of 260). The other barstate builtins had no false positives (52 `islastconfirmedhistory`, 37 `isrealtime`, 3 `isnew`). `node scripts/fp-sample.mjs report` prints this split under the main table.
+
 ## False-positive patterns
 
 **PRC006, last-bar drawing (156 of 352 hits).** `barstate.islast` that only fills a dashboard, deletes and recreates labels or lines, or logs. The checker already skips a simple `if barstate.islast` whose body is `table.*` / `label.*` / `line.*` / `box.*` or `runtime.error`. It missed the common forms: `lb := label.new(...)` when `lb` is declared outside the `if`, `lb.delete()` / `boxes.clear()`, `for lb in labels`, and a dashboard that computes a local string or color before `table.cell`. That is the dominant false-positive pattern in this sample. `barstate.isrealtime`, `isnew`, and `islastconfirmedhistory` did not show the same class of miss; those hits matched the documented historical-versus-realtime difference.
@@ -87,6 +96,7 @@ No new rules.
 - `alertcondition(..., alert.freq_once_per_bar_close)` is treated like the same argument on `alert()`.
 - An unclosed string no longer consumes the newline, so later findings keep their line numbers.
 - `barstate.islast` is not reported when the body only draws and the only assignments are new locals or `lb := label.new` / `line.new` / `box.new` / `table.new`, including `for lb in boxes` with `lb.delete()`. An `alert()`, `plot()`, or `request.*` inside the `if`, or `y := close`, is still reported.
+- Remaining `barstate.islast` hits are severity info, so `min-severity=warning` (the Action default) does not show them. `isnew`, `isrealtime`, `ishistory`, and `islastconfirmedhistory` stay at PRC006's severity (info).
 
 On this sample the post-fix checker reports 1886 hits (was 1942): PRC001 327 (was 333), PRC006 306 (was 352), PRC007 587 (was 591). The four PRC001 historical-expression false positives and the four PRC007 bar-close false positives are gone. About 46 `barstate.islast` hits are gone; the ones inspected were dashboards, label rebinding, or an `islast` match inside a string whose newline had been skipped. 120 judged display-only `islast` hits remain, mostly dashboards that do local arithmetic or call a `draw*` helper before `table.cell`. Those were left in place rather than widening the suppression until it starts hiding `islast` blocks that compute a signal.
 
