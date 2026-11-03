@@ -254,3 +254,10 @@ test('Action default min-severity is warning', () => {
   assert.doesNotMatch(info.stdout.toString(), /::warning .*barstate\.islast /);
   assert.doesNotMatch(info.stdout.toString(), /::warning .*barstate\.isrealtime /);
 });
+test('PRC001 accepts any history offset >= 1, not only [1]', () => {
+  const L = (e) => hdr + `x = request.security(syminfo.tickerid, "D", ${e}, lookahead = barmerge.lookahead_on)`;
+  for (const e of ['close[2]', 'high[10]', '(close - open)[2]', 'ta.sma(close, 5)[3]', 'high[n]', '[close[2], high[1]]'])
+    assert.deepStrictEqual(ids(L(e)), [], e);
+  assert.deepStrictEqual(ids(L('close[0]')), ['PRC001@3']);
+  assert.deepStrictEqual(ids(hdr + 'src = close[2]\n' + 'x = request.security(syminfo.tickerid, "D", src, lookahead = barmerge.lookahead_on)'), []);
+});

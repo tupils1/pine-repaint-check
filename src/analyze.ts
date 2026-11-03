@@ -519,14 +519,14 @@ export function analyze(src: string, file = '<input>'): Finding[] {
           const name = norm(u);
           return wrapperCallsArePast(lx, fn.name, name, fn.params.indexOf(name));
         });
-        if (!proven) add('PRC001', c.start, `lookahead_on with expression parameter '${unsafe.map(norm).join(', ')}' of a wrapper function: a same-file call site passes a series that is not offset by [1].`, 'warning');
+        if (!proven) add('PRC001', c.start, `lookahead_on with expression parameter '${unsafe.map(norm).join(', ')}' of a wrapper function: a same-file call site passes a series without a history offset of [n>=1].`, 'warning');
       } else {
         const resolved = unsafe.filter((e) => {
           if (!/^[A-Za-z_]\w*$/.test(norm(e))) return true;
           const d = defOf(lx, norm(e), c.start);
           return !(d && hasOffset(d));
         });
-        if (resolved.length) add('PRC001', c.start, `Future leak: lookahead_on without [1] offset on ${resolved.map((e) => '`' + norm(e) + '`').join(', ')}. Use expr[1] with lookahead_on.`);
+        if (resolved.length) add('PRC001', c.start, `Future leak: lookahead_on without a history offset of [n>=1] on ${resolved.map((e) => '`' + norm(e) + '`').join(', ')}. Use expr[n] (n >= 1, e.g. expr[1]) with lookahead_on.`);
       }
     } else {
       const tft = tf ? norm(tf.text) : '';
